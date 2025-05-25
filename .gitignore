@@ -1,0 +1,63 @@
+# Environment files
+.env
+.env.local
+.env.production
+.env.backup*
+
+# Docker volumes and data
+*_data/
+*_storage/
+*/data/
+*/storage/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Backup files
+*_backup_*
+*.backup
+*.bak
+
+# SSH keys
+*.pem
+*.key
+id_rsa*
+digitalocean*
+
+# Node modules (if any)
+node_modules/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker specific
+.dockerignore
+
+# Credentials and secrets
+credentials.txt
+secrets/
+*.secret 

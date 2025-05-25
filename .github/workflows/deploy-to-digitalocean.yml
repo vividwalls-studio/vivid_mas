@@ -1,0 +1,112 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches: [ vivid-main ]
+  pull_request:
+    branches: [ vivid-main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.DIGITALOCEAN_SSH_KEY }}
+        
+    - name: Add server to known hosts
+      run: |
+        ssh-keyscan -H ${{ secrets.DIGITALOCEAN_HOST }} >> ~/.ssh/known_hosts
+        
+    - name: Deploy to DigitalOcean
+      env:
+        DIGITALOCEAN_HOST: ${{ secrets.DIGITALOCEAN_HOST }}
+        DIGITALOCEAN_USER: ${{ secrets.DIGITALOCEAN_USER }}
+      run: |
+        echo "🚀 Starting deployment to DigitalOcean..."
+        
+        # Create deployment directory on server
+        ssh $DIGITALOCEAN_USER@$DIGITALOCEAN_HOST "mkdir -p /tmp/vivid_mas_deploy"
+        
+        # Copy files to server (excluding .git and node_modules)
+        rsync -avz --delete \
+          --exclude='.git' \
+          --exclude='node_modules' \
+          --exclude='.env' \
+          ./ $DIGITALOCEAN_USER@$DIGITALOCEAN_HOST:/tmp/vivid_mas_deploy/
+        
+        # Execute deployment script on server
+        ssh $DIGITALOCEAN_USER@$DIGITALOCEAN_HOST << 'EOF'
+          set -e
+          echo "📦 Updating VividMAS platform..."
+          
+          # Backup current deployment
+          sudo cp -r /home/vivid/vivid_mas /home/vivid/vivid_mas_backup_$(date +%Y%m%d_%H%M%S) || true
+          
+          # Copy new files (preserve .env and other sensitive files)
+          sudo rsync -av --exclude='.env' /tmp/vivid_mas_deploy/ /home/vivid/vivid_mas/
+          
+          # Set proper ownership
+          sudo chown -R vivid:vivid /home/vivid/vivid_mas
+          
+          # Navigate to project directory
+          cd /home/vivid/vivid_mas
+          
+          # Pull latest Docker images
+          sudo docker-compose pull
+          
+          # Restart services with new configuration
+          sudo docker-compose up -d --remove-orphans
+          
+          # Restart WordPress if compose file exists
+          if [ -f "wordpress-compose.yml" ]; then
+            sudo docker-compose -f wordpress-compose.yml up -d
+          fi
+          
+          # Clean up temporary files
+          rm -rf /tmp/vivid_mas_deploy
+          
+          echo "✅ Deployment completed successfully!"
+          echo "🌐 Services available at:"
+          echo "  - n8n: https://n8n.vividwalls.blog"
+          echo "  - WebUI: https://webui.vividwalls.blog"
+          echo "  - WordPress: https://wordpress.vividwalls.blog"
+          
+          # Show running containers
+          sudo docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+        EOF
+        
+        echo "🎉 Deployment to DigitalOcean completed!"
+        
+    - name: Verify Deployment
+      env:
+        DIGITALOCEAN_HOST: ${{ secrets.DIGITALOCEAN_HOST }}
+        DIGITALOCEAN_USER: ${{ secrets.DIGITALOCEAN_USER }}
+      run: |
+        echo "🔍 Verifying deployment..."
+        
+        # Check if services are responding
+        sleep 30  # Wait for services to start
+        
+        # Test n8n endpoint
+        if curl -f -s https://n8n.vividwalls.blog > /dev/null; then
+          echo "✅ n8n is responding"
+        else
+          echo "❌ n8n is not responding"
+          exit 1
+        fi
+        
+        # Test WordPress endpoint  
+        if curl -f -s https://wordpress.vividwalls.blog > /dev/null; then
+          echo "✅ WordPress is responding"
+        else
+          echo "❌ WordPress is not responding"
+          exit 1
+        fi
+        
+        echo "🎯 All services verified successfully!" 

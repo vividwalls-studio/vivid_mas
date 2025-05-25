@@ -1,0 +1,63 @@
+{
+  "mcpClient": {
+    "enabled": true,
+    "servers": [
+      {
+        "name": "neo-mas-sdlc-mcp",
+        "alwaysAllow": [
+          "mcp_taskmaster-ai_get_tasks",
+          "mcp_taskmaster-ai_set_task_status",
+          "mcp_taskmaster-ai_parse_prd",
+          "mcp_taskmaster-ai_update",
+          "mcp_taskmaster-ai_update_task",
+          "mcp_taskmaster-ai_update_subtask",
+          "mcp_taskmaster-ai_generate",
+          "mcp_taskmaster-ai_get_task",
+          "mcp_taskmaster-ai_next_task",
+          "mcp_taskmaster-ai_expand_task",
+          "mcp_taskmaster-ai_add_task",
+          "mcp_taskmaster-ai_add_subtask",
+          "mcp_taskmaster-ai_remove_subtask",
+          "mcp_taskmaster-ai_analyze_project_complexity",
+          "mcp_taskmaster-ai_clear_subtasks",
+          "mcp_taskmaster-ai_expand_all",
+          "mcp_taskmaster-ai_remove_dependency",
+          "mcp_taskmaster-ai_validate_dependencies",
+          "mcp_taskmaster-ai_fix_dependencies",
+          "mcp_taskmaster-ai_complexity_report",
+          "mcp_taskmaster-ai_add_dependency",
+          "mcp_taskmaster-ai_remove_task",
+          "mcp_taskmaster-ai_initialize_project",
+          "mcp_fetch_fetch_html",
+          "mcp_fetch_fetch_markdown",
+          "mcp_fetch_fetch_txt",
+          "mcp_fetch_fetch_json",
+          "mcp_crawl4ai_crawl_urls",
+          "mcp_context7_resolve-library-id",
+          "mcp_context7_get-library-docs",
+          "mcp_ai-reasoning-mcp_create_triple",
+          "mcp_ai-reasoning-mcp_add_fact",
+          "mcp_ai-reasoning-mcp_add_rule",
+          "mcp_ai-reasoning-mcp_validate_fact",
+          "mcp_ai-reasoning-mcp_apply_rules",
+          "mcp_ai-reasoning-mcp_deductive_reasoning",
+          "mcp_ai-reasoning-mcp_inductive_reasoning",
+          "mcp_ai-reasoning-mcp_abductive_reasoning",
+          "mcp_ai-reasoning-mcp_analyze_options",
+          "mcp_ai-reasoning-mcp_risk_assessment",
+          "mcp_ai-reasoning-mcp_ethical_validation",
+          "mcp_ai-reasoning-mcp_apply_mental_model",
+          "mcp_ai-reasoning-mcp_generate_solutions",
+          "mcp_ai-reasoning-mcp_evaluate_solution",
+          "mcp_ai-reasoning-mcp_sequential_analysis",
+          "mcp_ai-reasoning-mcp_extract_knowledge",
+          "mcp_ai-reasoning-mcp_update_domain_ontology",
+          "mcp_ai-reasoning-mcp_validate_knowledge_consistency",
+          "mcp_shadcn-ui-mcp_add_component",
+          "mcp_shadcn-ui-mcp_add_atomic_package"
+        ]
+      }
+    ]
+  },
+  "env": {}
+}
