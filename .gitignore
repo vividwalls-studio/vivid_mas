@@ -3,6 +3,9 @@
 .env.local
 .env.production
 .env.backup*
+.env.optimized
+env.optimized
+supabase-env-fix.env
 
 # Docker volumes and data
 *_data/
