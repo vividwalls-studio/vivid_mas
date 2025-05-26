@@ -48,13 +48,12 @@ jobs:
           # Backup current deployment
           sudo cp -r /home/vivid/vivid_mas /home/vivid/vivid_mas_backup_$(date +%Y%m%d_%H%M%S) || true
           
-          # Copy new files (preserve existing .env) but include env.optimized
+          # Copy new files (preserve existing .env)
           sudo rsync -av --exclude='.env' /tmp/vivid_mas_deploy/ /home/vivid/vivid_mas/
           
-          # If an optimized environment file is present, use it when no .env exists
-          if [ ! -f /home/vivid/vivid_mas/.env ] && [ -f /home/vivid/vivid_mas/env.optimized ]; then
-            echo "🔄 No .env found – using env.optimized as .env"
-            sudo cp /home/vivid/vivid_mas/env.optimized /home/vivid/vivid_mas/.env
+          # Ensure .env exists (should be manually configured on server)
+          if [ ! -f /home/vivid/vivid_mas/.env ]; then
+            echo "⚠️  Warning: No .env file found. Please configure environment variables manually."
           fi
           
           # Set proper ownership
