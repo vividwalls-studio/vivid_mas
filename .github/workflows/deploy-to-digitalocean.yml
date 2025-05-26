@@ -48,8 +48,14 @@ jobs:
           # Backup current deployment
           sudo cp -r /home/vivid/vivid_mas /home/vivid/vivid_mas_backup_$(date +%Y%m%d_%H%M%S) || true
           
-          # Copy new files (preserve .env and other sensitive files)
+          # Copy new files (preserve existing .env) but include env.optimized
           sudo rsync -av --exclude='.env' /tmp/vivid_mas_deploy/ /home/vivid/vivid_mas/
+          
+          # If an optimized environment file is present, use it when no .env exists
+          if [ ! -f /home/vivid/vivid_mas/.env ] && [ -f /home/vivid/vivid_mas/env.optimized ]; then
+            echo "🔄 No .env found – using env.optimized as .env"
+            sudo cp /home/vivid/vivid_mas/env.optimized /home/vivid/vivid_mas/.env
+          fi
           
           # Set proper ownership
           sudo chown -R vivid:vivid /home/vivid/vivid_mas
@@ -57,16 +63,36 @@ jobs:
           # Navigate to project directory
           cd /home/vivid/vivid_mas
           
-          # Pull latest Docker images
-          sudo docker-compose pull
+          # ------------------------------------------------------------
+          # 🐳 1. Stop & remove any legacy containers / networks
+          # ------------------------------------------------------------
+          echo "🧹 Removing legacy containers (if any) ..."
+          sudo docker compose -f docker-compose.yml down --remove-orphans || true
+          sudo docker compose -f wordpress-compose.yml down --remove-orphans || true
           
-          # Restart services with new configuration
-          sudo docker-compose up -d --remove-orphans
+          # ------------------------------------------------------------
+          # 🐳 2. Pull latest images for the _optimized_ stack
+          # ------------------------------------------------------------
+          echo "📥 Pulling images for optimized stack ..."
+          sudo docker compose -f docker-compose.optimized.yml pull
+          sudo docker compose -f wordpress-compose.optimized.yml pull || true
           
-          # Restart WordPress if compose file exists
-          if [ -f "wordpress-compose.yml" ]; then
-            sudo docker-compose -f wordpress-compose.yml up -d
+          # ------------------------------------------------------------
+          # 🐳 3. Start core platform services
+          # ------------------------------------------------------------
+          sudo docker compose -f docker-compose.optimized.yml up -d --remove-orphans
+          
+          # ------------------------------------------------------------
+          # 🐳 4. Start WordPress (optional) services
+          # ------------------------------------------------------------
+          if [ -f "../wordpress-compose.optimized.yml" ] || [ -f "wordpress-compose.optimized.yml" ]; then
+            sudo docker compose -f wordpress-compose.optimized.yml up -d --remove-orphans
           fi
+          
+          # ------------------------------------------------------------
+          # 🧽 5. Prune dangling images to save disk space
+          # ------------------------------------------------------------
+          sudo docker image prune -af || true
           
           # Clean up temporary files
           rm -rf /tmp/vivid_mas_deploy
@@ -75,7 +101,7 @@ jobs:
           echo "🌐 Services available at:"
           echo "  - n8n: https://n8n.vividwalls.blog"
           echo "  - WebUI: https://webui.vividwalls.blog"
-          echo "  - WordPress: https://wordpress.vividwalls.blog"
+          echo "  - WordPress: https://vividwalls.blog"
           
           # Show running containers
           sudo docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
@@ -102,7 +128,7 @@ jobs:
         fi
         
         # Test WordPress endpoint  
-        if curl -f -s https://wordpress.vividwalls.blog > /dev/null; then
+        if curl -f -s https://vividwalls.blog > /dev/null; then
           echo "✅ WordPress is responding"
         else
           echo "❌ WordPress is not responding"

@@ -1,0 +1,75 @@
+{
+    # Global options - works for both environments
+    email {$LETSENCRYPT_EMAIL}
+}
+
+# N8N - Workflow Automation
+{$N8N_HOSTNAME} {
+    # For domains, Caddy will automatically use Let's Encrypt
+    # For localhost/port addresses, HTTPS won't be enabled
+    reverse_proxy localhost:5678
+    
+    # Add security headers
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}
+
+# Open WebUI - AI Chat Interface
+{$WEBUI_HOSTNAME} {
+    reverse_proxy localhost:3000
+    
+    # Add security headers
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}
+
+# Supabase - Database & Auth
+{$SUPABASE_HOSTNAME} {
+    reverse_proxy localhost:8000
+    
+    # Add CORS headers for API access
+    header {
+        Access-Control-Allow-Origin "*"
+        Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+        Access-Control-Allow-Headers "Content-Type, Authorization, apikey"
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}
+
+# WordPress - Main Website
+{$WORDPRESS_HOSTNAME} {
+    reverse_proxy localhost:8080
+    
+    # WordPress-specific optimizations
+    encode gzip
+    
+    # Cache static assets
+    @static {
+        path *.css *.js *.png *.jpg *.jpeg *.gif *.ico *.svg *.woff *.woff2 *.ttf *.eot
+    }
+    
+    header @static {
+        Cache-Control "public, max-age=31536000"
+    }
+    
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+} 
