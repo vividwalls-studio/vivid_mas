@@ -1,0 +1,29 @@
+{
+  "conversion_date": "2025-06-19T14:34:28.563270",
+  "tables": [
+    "agents",
+    "agent_beliefs",
+    "agent_desires",
+    "agent_intentions",
+    "agent_heuristic_imperatives",
+    "agent_personalities",
+    "agent_domain_knowledge",
+    "agent_goals",
+    "agent_llm_config",
+    "agent_voice_config"
+  ],
+  "record_counts": {
+    "agents": 30,
+    "agent_beliefs": 90,
+    "agent_desires": 90,
+    "agent_intentions": 90,
+    "agent_heuristic_imperatives": 90,
+    "agent_personalities": 30,
+    "agent_domain_knowledge": 30,
+    "agent_goals": 90,
+    "agent_llm_config": 30,
+    "agent_voice_config": 30
+  },
+  "total_records": 600,
+  "mcp_commands": 10
+}

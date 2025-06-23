@@ -1,0 +1,11 @@
+# Task ID: 7
+# Title: Perplexity and Tavily API Integration
+# Status: pending
+# Dependencies: 2
+# Priority: medium
+# Description: Integrate Perplexity and Tavily APIs for real-time web search and content extraction
+# Details:
+Implement API clients for Perplexity (web search with recency filters) and Tavily (real-time web search and domain-specific search). Include proper authentication and error handling.
+
+# Test Strategy:
+Test search capabilities, recency filtering, and content extraction accuracy

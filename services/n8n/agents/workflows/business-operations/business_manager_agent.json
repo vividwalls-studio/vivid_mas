@@ -1,0 +1,639 @@
+{
+  "name": "VividWalls Business Manager Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🎯 Business Manager Agent - Strategic Orchestration Hub\n\n### 📋 Workflow Overview\nThis is the highest-level orchestrator responsible for strategic decision-making and coordinating all business operations. It delegates tasks to specialized directors and agents while maintaining strategic vision and cross-functional alignment.\n\n### 🎨 Business Context\n- **Role**: CEO-level orchestrator and decision maker\n- **Authority**: Full delegation to all director and operational agents\n- **Focus**: Strategic planning, resource allocation, crisis management\n- **Model**: Pure delegation - no direct MCP tool access\n\n### 🛠️ Integration Points\n- **Director Agents**: Marketing, Social Media, Analytics Directors\n- **Operational Agents**: Sales, Customer Service, Shopify, Email Marketing\n- **Knowledge Base**: Business strategies, policies, best practices\n- **Cross-functional**: Coordinates multi-agent initiatives\n\n### 📊 Performance Metrics\n- **Revenue Growth**: Monthly targets and trends\n- **Customer Satisfaction**: NPS >50, CSAT >90%\n- **Operational Efficiency**: Cost optimization, process improvement\n- **Strategic Execution**: Initiative completion rates\n\n### 🔗 Connected Workflows\n- **All Director Agents**: Strategic delegation\n- **All Operational Agents**: Task coordination\n- **Crisis Response**: Emergency protocols\n- **Board Reporting**: Performance summaries",
+        "height": 520.8958333333334,
+        "width": 445.51041666666674
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-840, -300],
+      "id": "sticky-overview"
+    },
+    {
+      "parameters": {
+        "content": "## 🏢 Delegation Hierarchy\n\n### Director Level\n- **Marketing Director**: Campaigns, positioning\n- **Social Media Director**: Platform strategies\n- **Analytics Director**: Data insights\n- **Finance Director**: Budget, P&L\n- **Product Director**: Catalog, pricing\n- **Technology Director**: Systems, tools\n- **Operations Director**: Fulfillment\n- **Customer Experience**: Support, retention\n\n### Operational Level\n- **Sales Agent**: Direct sales\n- **Customer Service**: Support tickets\n- **Email Marketing**: Campaigns\n- **Shopify Agent**: E-commerce\n- **Order Fulfillment**: Shipping",
+        "height": 409.375,
+        "width": 334.375
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-840, 240],
+      "id": "sticky-hierarchy"
+    },
+    {
+      "parameters": {
+        "content": "## 📊 Strategic Framework\n\n### Decision Making\n1. Assess holistically\n2. Identify stakeholders\n3. Create action plans\n4. Delegate clearly\n5. Monitor execution\n\n### Resource Allocation\n- ROI prioritization\n- Balance short/long term\n- Prevent silos\n- Optimize growth\n\n### Crisis Management\n- Revenue decline >10%\n- Customer satisfaction <4.0\n- Inventory stockouts\n- PR/Brand issues\n- System failures",
+        "height": 390.625,
+        "width": 297.9166666666667
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-480, 240],
+      "id": "sticky-framework"
+    },
+    {
+      "parameters": {
+        "content": "## 📋 Delegation Protocol\n\n### Format Template\n```\nAgent: [Target Agent]\nObjective: [Clear goal]\nContext: [Background]\nPriority: [High/Med/Low]\nDeadline: [If applicable]\nSuccess Criteria: [Metrics]\n```\n\n### Best Practices\n- Provide context, not commands\n- Trust agent expertise\n- Focus on outcomes\n- Enable collaboration\n- Monitor progress",
+        "height": 353.125,
+        "width": 297.9166666666667
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-160, 240],
+      "id": "sticky-protocol"
+    },
+    {
+      "parameters": {
+        "content": "## 🎯 Marketing Director\n\nDelegates:\n- Campaign strategies\n- Market positioning\n- Brand management\n- Budget allocation\n- Performance tracking",
+        "height": 200,
+        "width": 260
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [840, 60],
+      "id": "sticky-marketing"
+    },
+    {
+      "parameters": {
+        "content": "## 📱 Social Media Director\n\nDelegates:\n- Platform strategies\n- Content planning\n- Community building\n- Influencer relations\n- Engagement metrics",
+        "height": 200,
+        "width": 260
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [840, 280],
+      "id": "sticky-social"
+    },
+    {
+      "parameters": {
+        "content": "## 📈 Analytics Director\n\nRequests:\n- Performance reports\n- Data insights\n- Trend analysis\n- KPI monitoring\n- Predictive models",
+        "height": 200,
+        "width": 260
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [840, 500],
+      "id": "sticky-analytics"
+    },
+    {
+      "parameters": {
+        "content": "## 🛍️ Operational Agents\n\n### Shopify Agent\n- Product management\n- Inventory updates\n- Pricing changes\n\n### Sales Agent\n- Direct sales\n- Promotions\n- Conversions\n\n### Customer Service\n- Support tickets\n- Issue resolution\n- Satisfaction",
+        "height": 290.625,
+        "width": 260
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [840, 720],
+      "id": "sticky-operations"
+    },
+    {
+      "parameters": {
+        "content": "## 🧠 Knowledge Base\n\nContains:\n- Business strategies\n- Company policies\n- Best practices\n- Historical data\n- Decision frameworks\n\nUsed for:\n- Strategic context\n- Policy reference\n- Decision support\n- Learning from past",
+        "height": 268.75,
+        "width": 260
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [840, 1040],
+      "id": "sticky-knowledge"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.5
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [-20, 100],
+      "id": "bm1a2b3c-4d5e-6f7g-8h9i-0j1k2l3m4n5o",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "d6OaJCsy6QryngZX",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionKey": "={{ $json.chatId || $json.session_id || 'business_manager_' + $now.toMillis() }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [120, 180],
+      "id": "bm2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "cm4WrXg1MnK2sWUm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [-400, 100],
+      "id": "bm3c4d5e-6f7g-8h9i-0j1k-2l3m4n5o6p7q",
+      "name": "When chat message received",
+      "webhookId": "business-manager-chat-trigger"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [820, 100],
+      "id": "bm4d5e6f-7g8h-9i0j-1k2l-3m4n5o6p7q8r",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "request_type"
+            },
+            {
+              "name": "priority"
+            },
+            {
+              "name": "context",
+              "type": "json"
+            },
+            {
+              "name": "deadline"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-400, -100],
+      "id": "bm5e6f7g-8h9i-0j1k-2l3m-4n5o6p7q8r9s",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseMessage": "=## Business Manager Agent\n\n### Request: {{ $json.request_type }}\n### Status: {{ $json.status }}\n\n{{ $json.response }}\n\n#### Strategic Overview:\n{{ $json.strategic_overview || 'Analyzing business situation...' }}\n\n#### Delegated Tasks:\n{{ $json.delegated_tasks || 'Coordinating with specialized agents...' }}\n\n#### Next Steps:\n{{ $json.next_steps || 'Formulating action plan...' }}\n\n{{ $json.additional_info || '' }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [380, 100],
+      "id": "bm6f7g8h-9i0j-1k2l-3m4n-5o6p7q8r9s0t",
+      "name": "Business Manager Agent"
+    },
+    {
+      "parameters": {
+        "path": "business-manager-webhook",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-400, 300],
+      "id": "bm7g8h9i-0j1k-2l3m-4n5o-6p7q8r9s0t1u",
+      "name": "Business Manager Webhook",
+      "webhookId": "business-manager-webhook"
+    },
+    {
+      "parameters": {
+        "systemPromptTemplate": "# VividWalls Business Manager Agent\n\nYou are the Business Manager for VividWalls, the highest-level orchestrator responsible for strategic decision-making and coordinating all business operations through delegation to specialized director and operational agents.\n\n## Core Responsibilities\n\n### Strategic Orchestration\n- Make high-level business decisions\n- Coordinate cross-functional initiatives\n- Resolve conflicts between departments\n- Allocate resources strategically\n- Monitor overall business health\n\n### Pure Delegation Model\nYou do NOT have direct access to any MCP tools. Instead, you delegate all tasks to specialized agents:\n- **Marketing Director**: All marketing campaigns and strategies\n- **Social Media Director**: Social media presence and engagement\n- **Analytics Director**: Data analysis and reporting\n- **Email Marketing Agent**: Email campaigns and newsletters\n- **Sales Agent**: Sales operations and customer conversions\n- **Customer Service Agent**: Customer support and satisfaction\n- **Shopify Agent**: E-commerce operations and inventory\n- **Orders Fulfillment Agent**: Order processing and shipping\n\n## Decision Framework\n\n### Strategic Planning\n1. Assess business situation holistically\n2. Identify which agents need to be involved\n3. Create coordinated action plans\n4. Delegate with clear objectives\n5. Monitor execution through directors\n\n### Resource Allocation\n- Prioritize initiatives by ROI\n- Balance short-term and long-term goals\n- Ensure efficient resource utilization\n- Prevent department silos\n- Optimize for business growth\n\n## Delegation Protocols\n\n### To Director Agents\n- Marketing Director: Campaign strategies, market positioning\n- Social Media Director: Platform strategies, community building\n- Analytics Director: Performance reports, data insights\n\n### To Operational Agents\n- Shopify Agent: Product management, inventory updates\n- Sales Agent: Direct sales activities, promotions\n- Customer Service: Support tickets, customer issues\n- Email Marketing: Newsletter campaigns, automation\n- Orders Fulfillment: Shipping, order processing\n\n## Communication Standards\n\n### Request Analysis\n1. Understand the business need\n2. Identify required capabilities\n3. Determine optimal agent(s)\n4. Create clear delegation brief\n5. Set success metrics\n\n### Delegation Format\n```\nAgent: [Target Agent]\nObjective: [Clear goal]\nContext: [Relevant background]\nPriority: [High/Medium/Low]\nDeadline: [If applicable]\nSuccess Criteria: [Measurable outcomes]\n```\n\n## Business Priorities\n\n### Revenue Growth\n- New customer acquisition\n- Customer retention improvement\n- Average order value increase\n- Market expansion opportunities\n\n### Operational Excellence\n- Cost optimization\n- Process efficiency\n- Quality maintenance\n- Risk management\n\n### Customer Satisfaction\n- Experience enhancement\n- Support responsiveness\n- Product quality\n- Brand reputation\n\n## Crisis Management\n\n### Escalation Triggers\n- Revenue decline >10%\n- Customer satisfaction <4.0\n- Inventory stockouts\n- PR/Brand crises\n- System failures\n\n### Response Protocol\n1. Rapid situation assessment\n2. Convene relevant agents\n3. Develop action plan\n4. Execute with urgency\n5. Monitor and adjust\n\n## Performance Monitoring\n\n### Key Metrics (via Analytics Director)\n- Monthly revenue growth\n- Customer acquisition cost\n- Customer lifetime value\n- Net promoter score\n- Operational efficiency\n\n### Review Cadence\n- Daily: Operational status\n- Weekly: Performance review\n- Monthly: Strategic planning\n- Quarterly: Business review\n\n## Best Practices\n\n### Effective Orchestration\n1. Think strategically, act through others\n2. Provide context, not just commands\n3. Trust agent expertise\n4. Focus on outcomes, not methods\n5. Facilitate collaboration\n\n### Communication\n- Clear, concise directives\n- Regular status updates\n- Proactive issue identification\n- Constructive feedback\n- Recognition of success\n\nWhen handling requests:\n1. Analyze the business impact and requirements\n2. Identify which agents have the necessary capabilities\n3. Create a coordinated plan if multiple agents are needed\n4. Delegate with clear objectives and context\n5. Monitor progress through status updates\n6. Adjust strategy based on results\n7. Report outcomes and learnings\n\nRemember: Your power comes from orchestration, not direct action. Enable your team of specialized agents to excel in their domains while you maintain the strategic vision."
+      },
+      "type": "@n8n/n8n-nodes-langchain.systemMessage",
+      "typeVersion": 1.1,
+      "position": [180, 20],
+      "id": "bm8h9i0j-1k2l-3m4n-5o6p-7q8r9s0t1u2v",
+      "name": "System Message"
+    },
+    {
+      "parameters": {
+        "description": "Delegate marketing strategies and campaigns to Marketing Director",
+        "workflowId": {
+          "__rl": true,
+          "value": "MarketingDirectorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Marketing Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task_type": "={{ $fromAI('task_type', 'marketing task type') }}",
+            "objectives": "={{ $fromAI('objectives', 'marketing objectives') }}",
+            "budget": "={{ $fromAI('budget', 'marketing budget allocation') }}",
+            "timeline": "={{ $fromAI('timeline', 'campaign timeline') }}",
+            "context": "={{ $fromAI('context', 'business context') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [640, 120],
+      "id": "bm9i0j1k-2l3m-4n5o-6p7q-8r9s0t1u2v3w",
+      "name": "Marketing Director Tool"
+    },
+    {
+      "parameters": {
+        "description": "Delegate social media strategies to Social Media Director",
+        "workflowId": {
+          "__rl": true,
+          "value": "SocialMediaDirectorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Social Media Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task_type": "={{ $fromAI('task_type', 'social media task') }}",
+            "campaign_brief": "={{ $fromAI('campaign_brief', 'campaign details') }}",
+            "platforms": "={{ $fromAI('platforms', 'target platforms') }}",
+            "content_requirements": "={{ $fromAI('content_requirements', 'content needs') }}",
+            "timeline": "={{ $fromAI('timeline', 'posting schedule') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [640, 240],
+      "id": "bm0j1k2l-3m4n-5o6p-7q8r-9s0t1u2v3w4x",
+      "name": "Social Media Director Tool"
+    },
+    {
+      "parameters": {
+        "description": "Request analytics and reports from Analytics Director",
+        "workflowId": {
+          "__rl": true,
+          "value": "AnalyticsDirectorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Analytics Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "report_type": "={{ $fromAI('report_type', 'type of analysis needed') }}",
+            "date_range": "={{ $fromAI('date_range', 'analysis period') }}",
+            "metrics": "={{ $fromAI('metrics', 'specific metrics') }}",
+            "segments": "={{ $fromAI('segments', 'data segments') }}",
+            "format": "={{ $fromAI('format', 'report format') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [640, 360],
+      "id": "bm1k2l3m-4n5o-6p7q-8r9s-0t1u2v3w4x5y",
+      "name": "Analytics Director Tool"
+    },
+    {
+      "parameters": {
+        "description": "Delegate e-commerce operations to Shopify Agent",
+        "workflowId": {
+          "__rl": true,
+          "value": "ShopifyAgentWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Shopify Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task_type": "={{ $fromAI('task_type', 'shopify task') }}",
+            "product_data": "={{ $fromAI('product_data', 'product information') }}",
+            "inventory_updates": "={{ $fromAI('inventory_updates', 'inventory changes') }}",
+            "pricing_strategy": "={{ $fromAI('pricing_strategy', 'pricing updates') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [640, 480],
+      "id": "bm2l3m4n-5o6p-7q8r-9s0t-1u2v3w4x5y6z",
+      "name": "Shopify Agent Tool"
+    },
+    {
+      "parameters": {
+        "description": "Delegate sales activities to Sales Agent",
+        "workflowId": {
+          "__rl": true,
+          "value": "SalesAgentWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Sales Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task_type": "={{ $fromAI('task_type', 'sales task') }}",
+            "customer_segment": "={{ $fromAI('customer_segment', 'target customers') }}",
+            "promotion_details": "={{ $fromAI('promotion_details', 'sales promotion') }}",
+            "sales_goals": "={{ $fromAI('sales_goals', 'revenue targets') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [640, 600],
+      "id": "bm3m4n5o-6p7q-8r9s-0t1u-2v3w4x5y6z7a",
+      "name": "Sales Agent Tool"
+    },
+    {
+      "parameters": {
+        "description": "Delegate customer support to Customer Service Agent",
+        "workflowId": {
+          "__rl": true,
+          "value": "CustomerServiceAgentWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Customer Service Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "issue_type": "={{ $fromAI('issue_type', 'support issue type') }}",
+            "priority": "={{ $fromAI('priority', 'issue priority') }}",
+            "customer_context": "={{ $fromAI('customer_context', 'customer details') }}",
+            "resolution_needed": "={{ $fromAI('resolution_needed', 'desired outcome') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [640, 720],
+      "id": "bm4n5o6p-7q8r-9s0t-1u2v-3w4x5y6z7a8b",
+      "name": "Customer Service Tool"
+    },
+    {
+      "parameters": {
+        "description": "Delegate email marketing to Email Marketing Agent",
+        "workflowId": {
+          "__rl": true,
+          "value": "EmailMarketingAgentWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Email Marketing Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "campaign_type": "={{ $fromAI('campaign_type', 'email campaign type') }}",
+            "email_subject": "={{ $fromAI('email_subject', 'email subject line') }}",
+            "content_request": "={{ $fromAI('content_request', 'content requirements') }}",
+            "target_audience": "={{ $fromAI('target_audience', 'email recipients') }}",
+            "send_immediately": "={{ $fromAI('send_immediately', 'scheduling preference') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [640, 840],
+      "id": "bm5o6p7q-8r9s-0t1u-2v3w-4x5y6z7a8b9c",
+      "name": "Email Marketing Tool"
+    },
+    {
+      "parameters": {
+        "toolDescription": "=Access business strategy documents, policies, and best practices",
+        "mode": "retrieve-as-tool",
+        "toolName": "business_knowledge_base",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.1,
+      "position": [640, 960],
+      "id": "bm6p7q8r-9s0t-1u2v-3w4x-5y6z7a8b9c0d",
+      "name": "Business Knowledge Base",
+      "credentials": {
+        "postgres": {
+          "id": "cm4WrXg1MnK2sWUm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [800, 1040],
+      "id": "bm7q8r9s-0t1u-2v3w-4x5y-6z7a8b9c0d1e",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "d6OaJCsy6QryngZX",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Business Manager Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Business Manager Webhook": {
+      "main": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "System Message": {
+      "ai_prompt": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_prompt",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Director Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Media Director Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analytics Director Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer Service Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Marketing Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Business Knowledge Base": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Business Knowledge Base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "8d886cbbbe7cfda2db691b67a2dadcc8c19353a4c691d51c622e4656cfd22240"
+  }
+}

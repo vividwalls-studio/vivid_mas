@@ -1,0 +1,792 @@
+{
+  "name": "VividWalls Business Manager Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [-20, 100],
+      "id": "bm1a2b3c-4d5e-6f7g-8h9i-0j1k2l3m4n5o",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "d6OaJCsy6QryngZX",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionKey": "={{ $json.chatId || $json.session_id || 'business_manager_' + $now.toMillis() }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [120, 180],
+      "id": "bm2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "cm4WrXg1MnK2sWUm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 120],
+      "id": "bm3c4d5e-6f7g-8h9i-0j1k-2l3m4n5o6p7q",
+      "name": "Shopify MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ShopifyMCPClient789",
+          "name": "Shopify MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 140],
+      "id": "bm4d5e6f-7g8h-9i0j-1k2l-3m4n5o6p7q8r",
+      "name": "Shopify MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ShopifyMCPClient789",
+          "name": "Shopify MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 200],
+      "id": "bm5e6f7g-8h9i-0j1k-2l3m-4n5o6p7q8r9s",
+      "name": "Facebook Ads MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "FacebookAdsMCPClient123",
+          "name": "Facebook Ads MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 220],
+      "id": "bm6f7g8h-9i0j-1k2l-3m4n-5o6p7q8r9s0t",
+      "name": "Facebook Ads MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "FacebookAdsMCPClient123",
+          "name": "Facebook Ads MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 280],
+      "id": "bm7g8h9i-0j1k-2l3m-4n5o-6p7q8r9s0t1u",
+      "name": "Pinterest MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "PinterestMCPClient456",
+          "name": "Pinterest MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 300],
+      "id": "bm8h9i0j-1k2l-3m4n-5o6p-7q8r9s0t1u2v",
+      "name": "Pinterest MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "PinterestMCPClient456",
+          "name": "Pinterest MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 360],
+      "id": "bm9i0j1k-2l3m-4n5o-6p7q-8r9s0t1u2v3w",
+      "name": "Email Marketing MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "EmailMarketingMCPClient789",
+          "name": "Email Marketing MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 380],
+      "id": "bm0j1k2l-3m4n-5o6p-7q8r-9s0t1u2v3w4x",
+      "name": "Email Marketing MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "EmailMarketingMCPClient789",
+          "name": "Email Marketing MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 440],
+      "id": "bm1k2l3m-4n5o-6p7q-8r9s-0t1u2v3w4x5y",
+      "name": "n8n MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "n8nMCPClient012",
+          "name": "n8n MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 460],
+      "id": "bm2l3m4n-5o6p-7q8r-9s0t-1u2v3w4x5y6z",
+      "name": "n8n MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "n8nMCPClient012",
+          "name": "n8n MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [-180, -240],
+      "id": "bm3m4n5o-6p7q-8r9s-0t1u-2v3w4x5y6z7a",
+      "name": "When chat message received",
+      "webhookId": "business-manager-chat-trigger"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [680, -200],
+      "id": "bm4n5o6p-7q8r-9s0t-1u2v-3w4x5y6z7a8b",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "task_type",
+              "type": "string"
+            },
+            {
+              "name": "priority",
+              "type": "string"
+            },
+            {
+              "name": "data",
+              "type": "json"
+            },
+            {
+              "name": "requesting_agent",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-180, -440],
+      "id": "bm5o6p7q-8r9s-0t1u-2v3w-4x5y6z7a8b9c",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "systemPromptTemplate": "# Business Manager Agent System Prompt\n\n## Role & Purpose\nYou are the Business Manager Agent for VividWalls, the central orchestrator of all marketing operations. You oversee performance across all channels, coordinate between specialized agents, and ensure strategic alignment with business objectives.\n\n## Core Responsibilities\n1. **Strategic Oversight**: Monitor overall business performance and market position\n2. **Resource Management**: Optimize budget allocation across all marketing channels\n3. **Agent Coordination**: Manage workflow between all marketing agents\n4. **Performance Analysis**: Consolidate metrics and identify optimization opportunities\n5. **Executive Reporting**: Provide comprehensive insights to stakeholders\n\n## Available MCP Tools & Functions\n\n### 🛒 Shopify MCP Tools\n- `shopify_get_orders`: Retrieve order data and sales analytics\n- `shopify_get_customers`: Access customer database and behavior\n- `shopify_get_products`: Monitor product catalog and performance\n- `shopify_get_inventory`: Check stock levels and availability\n- `shopify_update_product`: Modify pricing and product information\n\n### 📱 Facebook Ads MCP Tools  \n- `facebook-ads_get_adaccount_insights`: Account-level performance metrics\n- `facebook-ads_get_campaign_insights`: Campaign performance analysis\n- `facebook-ads_update_campaign`: Adjust campaign budgets and status\n- `facebook-ads_bulk_update_campaigns`: Batch campaign optimizations\n- `facebook-ads_list_ad_accounts`: Monitor ad account status\n\n### ⚡ n8n MCP Tools\n- `n8n_execute_workflow`: Trigger business automation workflows\n- `n8n_list_workflows`: Monitor available business processes\n- `n8n_get_executions`: Track workflow performance and errors\n\n### 📌 Pinterest MCP Tools\n- `get_pin_metrics`: Track Pinterest pin performance\n- `create_promoted_pin`: Launch Pinterest advertising campaigns\n- `get_trending_topics`: Monitor visual marketing trends\n\n### 📧 Email Marketing MCP Tools\n- `get_analytics`: Email campaign performance metrics\n- `segment_audience`: Customer segmentation analysis\n- `create_campaign`: Launch email marketing initiatives\n\n## Management Framework\n\n### Daily Operations with MCP Tools\n\n#### Morning Performance Review (9:00 AM)\nCheck overnight sales performance, review Facebook Ads performance, check email campaign results, and monitor workflow executions for errors. Apply automated optimization decisions based on ROAS thresholds.\n\n#### Midday Performance Monitoring (1:00 PM)\nAnalyze real-time campaign performance, check inventory status, reallocate budgets to high-performing campaigns, and trigger promotions for low-stock items.\n\n#### Evening Summary & Planning (5:00 PM)\nCompile daily performance data, execute end-of-day reporting workflow, and plan tomorrow's priorities based on performance.\n\n### Weekly Management Cycle\n- **Monday**: Receive and review research insights, approve campaign strategies\n- **Tuesday**: Allocate weekly budgets, brief platform agents\n- **Wednesday**: Mid-week performance review, optimization decisions\n- **Thursday**: Test results analysis, scaling decisions\n- **Friday**: Weekly report compilation, next week planning\n\n### Monthly Strategic Review\n1. Analyze comprehensive performance metrics\n2. Evaluate agent effectiveness\n3. Adjust strategic priorities\n4. Plan resource allocation\n5. Set next month's targets\n\n## Decision Making Framework\n\n### Budget Allocation Rules\n- If channel_roi > 4: increase_budget by 25%\n- If channel_roi > 3: maintain_budget\n- If channel_roi > 2: decrease_budget by 15%\n- Otherwise: pause_channel and reallocate_to_top_performers\n\n### Performance Thresholds\n- **Green** (Scale): ROAS >3.5, CAC <$40\n- **Yellow** (Optimize): ROAS 2.5-3.5, CAC $40-50\n- **Red** (Pause/Fix): ROAS <2.5, CAC >$50\n\n### Agent Performance Metrics\n| Agent | Response Time | Task Completion | Quality Score |\n|-------|---------------|-----------------|---------------|\n| Research | <24 hrs | 95%+ | 90%+ |\n| Campaign | <48 hrs | 90%+ | 85%+ |\n| Platform | <2 hrs | 95%+ | 90%+ |\n\n## Resource Management\n\n### Budget Distribution Guidelines\n- **Testing Budget**: 20% reserved for new strategies\n- **Proven Channels**: 70% to channels with consistent ROI\n- **Emergency Reserve**: 10% for opportunistic campaigns\n\n### Channel Investment Priorities\n1. **Tier 1** (40-50%): Highest performing channel\n2. **Tier 2** (30-40%): Secondary profitable channels\n3. **Tier 3** (10-20%): Testing and emerging channels\n\n## Coordination Protocols\n\n### Agent Communication Flow\n- Marketing Research Agent → Monthly insights\n- Business Manager Agent ← → Marketing Campaign Agent\n- Task allocation → Campaign briefs\n- Platform Agents (Facebook, Instagram, Pinterest, Shopify, Pictorem)\n- Performance data → Business Manager Agent\n- Optimization decisions → All Agents\n\n### Task Assignment Matrix\n| Task Type | Primary Agent | Support Agent | Deadline |\n|-----------|---------------|---------------|----------|\n| Market Research | Research | - | Monthly 5th |\n| Campaign Planning | Campaign | Research | 48 hrs |\n| Ad Creation | Platform | Campaign | 24 hrs |\n| Performance Analysis | Business | Platform | Daily |\n| Optimization | Platform | Business | Real-time |\n\n## Reporting Framework\n\n### Daily Performance Dashboard\nProvide total revenue, spend, new customers, and conversion rate metrics. Include channel performance breakdown with spend, revenue, ROAS, and status indicators. List top actions taken and their results. Outline tomorrow's priorities.\n\n### Weekly Executive Summary\nInclude business performance metrics (revenue, profit, customer acquisition, AOV), key achievements with metrics, challenges and solutions table, strategic recommendations (immediate, short-term, long-term), and budget reallocation decisions with rationale.\n\n## Crisis Management Protocol\n\n### Performance Crisis Triggers\n- Daily ROAS drops below 2.0\n- CAC increases >30% from baseline\n- Conversion rate drops >25%\n- Major platform algorithm change\n- Competitor aggressive campaign\n\n### Response Framework\n1. **Immediate** (0-2 hours): Pause underperforming campaigns, notify relevant agents, analyze root cause\n2. **Short-term** (2-24 hours): Implement fixes, reallocate budget, test alternatives\n3. **Recovery** (24-72 hours): Scale successful fixes, document learnings, update protocols\n\n## Success Metrics\n- **Overall ROAS**: Maintain >3.5:1\n- **Multi-channel Attribution**: Track 40%+ multi-touch conversions\n- **Agent Efficiency**: 95%+ task completion rate\n- **Budget Utilization**: 90-95% optimal spend\n- **Revenue Growth**: 20%+ MoM\n\n## Integration Requirements\n- Real-time data sync with all platform APIs\n- Automated alerting for threshold breaches\n- Weekly strategy alignment meetings\n- Monthly performance deep dives\n- Quarterly strategic planning sessions",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [200, -200],
+      "id": "bm6p7q8r-9s0t-1u2v-3w4x-5y6z7a8b9c0d",
+      "name": "Business Manager Agent"
+    },
+    {
+      "parameters": {
+        "path": "business-manager-webhook",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-180, -60],
+      "id": "bm7q8r9s-0t1u-2v3w-4x5y-6z7a8b9c0d1e",
+      "name": "Business Manager Webhook",
+      "webhookId": "business-manager-webhook"
+    },
+    {
+      "parameters": {
+        "description": "Call Marketing Research Agent to gather market insights and trend analysis",
+        "workflowId": {
+          "__rl": true,
+          "value": "MarketingResearchAgentWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Marketing Research Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task_type": "={{ $fromAI('task_type', 'research task type') }}",
+            "parameters": "={{ $fromAI('parameters', 'research parameters') }}",
+            "requesting_agent": "business_manager"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [540, 120],
+      "id": "bm8r9s0t-1u2v-3w4x-5y6z-7a8b9c0d1e2f",
+      "name": "Marketing Research Agent Tool"
+    },
+    {
+      "parameters": {
+        "description": "Call Marketing Campaign Agent to create and manage marketing campaigns",
+        "workflowId": {
+          "__rl": true,
+          "value": "MarketingCampaignAgentWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Marketing Campaign Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task_type": "={{ $fromAI('task_type', 'campaign task type') }}",
+            "campaign_data": "={{ $fromAI('campaign_data', 'campaign details') }}",
+            "requesting_agent": "business_manager"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [540, 200],
+      "id": "bm9s0t1u-2v3w-4x5y-6z7a-8b9c0d1e2f3g",
+      "name": "Marketing Campaign Agent Tool"
+    },
+    {
+      "parameters": {
+        "description": "Call Customer Service Agent for customer-related inquiries and support escalations",
+        "workflowId": {
+          "__rl": true,
+          "value": "CustomerServiceAgentWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Customer Service Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customer_id": "={{ $fromAI('customer_id', 'customer identifier') }}",
+            "inquiry_type": "={{ $fromAI('inquiry_type', 'type of customer inquiry') }}",
+            "priority_level": "={{ $fromAI('priority_level', 'priority level') }}",
+            "requesting_agent": "business_manager"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [540, 280],
+      "id": "bm0t1u2v-3w4x-5y6z-7a8b-9c0d1e2f3g4h",
+      "name": "Customer Service Agent Tool"
+    },
+    {
+      "parameters": {
+        "description": "Call Orders Fulfillment Agent to manage order processing and fulfillment operations",
+        "workflowId": {
+          "__rl": true,
+          "value": "OrdersFulfillmentAgentWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Orders Fulfillment Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "order_id": "={{ $fromAI('order_id', 'order identifier') }}",
+            "action": "={{ $fromAI('action', 'fulfillment action') }}",
+            "parameters": "={{ $fromAI('parameters', 'action parameters') }}",
+            "requesting_agent": "business_manager"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [540, 360],
+      "id": "bm1u2v3w-4x5y-6z7a-8b9c-0d1e2f3g4h5i",
+      "name": "Orders Fulfillment Agent Tool"
+    },
+    {
+      "parameters": {
+        "collection": "vividwalls_business_knowledge",
+        "options": {
+          "limit": 10,
+          "similarityThreshold": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePostgres",
+      "typeVersion": 1,
+      "position": [120, 300],
+      "id": "bm2v3w4x-5y6z-7a8b-9c0d-1e2f3g4h5i6j",
+      "name": "Business Knowledge Base",
+      "credentials": {
+        "postgres": {
+          "id": "cm4WrXg1MnK2sWUm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "store",
+        "collection": "business_manager_episodes",
+        "data": {
+          "eventType": "{{ $json.eventType }}",
+          "timestamp": "{{ $now }}",
+          "sessionId": "{{ $json.sessionId || $json.chatId }}",
+          "context": "{{ $json.context }}",
+          "outcome": "{{ $json.outcome }}",
+          "metadata": "{{ $json.metadata }}"
+        },
+        "retentionDays": 30
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePostgres",
+      "typeVersion": 1,
+      "position": [120, 400],
+      "id": "bm3w4x5y-6z7a-8b9c-0d1e-2f3g4h5i6j7k",
+      "name": "Episodic Memory Store",
+      "credentials": {
+        "postgres": {
+          "id": "cm4WrXg1MnK2sWUm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "jsonOutput": "={{ \n  {\n    \"response\": {\n      \"status\": $json.status || \"success\",\n      \"data\": $json.data || {},\n      \"message\": $json.message || \"\"\n    },\n    \"metadata\": {\n      \"timestamp\": $now.toISO(),\n      \"agent\": \"business_manager\",\n      \"sessionId\": $json.sessionId || $json.chatId,\n      \"requestId\": $json.requestId || $json.messageId,\n      \"processingTime\": $now.diff($json.startTime, 'milliseconds')\n    },\n    \"routing\": {\n      \"source\": \"{{ $json.requesting_agent || 'direct' }}\",\n      \"destination\": $json.destination_agent || null,\n      \"replyTo\": $json.replyTo || null\n    }\n  }\n}}"
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [480, -200],
+      "id": "bm4x5y6z-7a8b-9c0d-1e2f-3g4h5i6j7k8l",
+      "name": "Format Structured Output"
+    },
+    {
+      "parameters": {
+        "method": "={{ $json.method || 'GET' }}",
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Agent-ID",
+              "value": "business_manager"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "data",
+              "value": "={{ $json.body }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 400],
+      "id": "bm5y6z7a-8b9c-0d1e-2f3g-4h5i6j7k8l9m",
+      "name": "External API Request"
+    },
+    {
+      "parameters": {
+        "values": {
+          "values": [
+            {
+              "name": "message",
+              "type": "json",
+              "value": "={{ \n  {\n    \"header\": {\n      \"messageId\": $uuid.v4(),\n      \"sender\": \"business_manager\",\n      \"receiver\": $json.target_agent,\n      \"timestamp\": $now.toISO(),\n      \"priority\": $json.priority || \"medium\",\n      \"messageType\": $json.messageType || \"request\"\n    },\n    \"payload\": {\n      \"action\": $json.action,\n      \"data\": $json.data || {},\n      \"context\": {\n        \"sessionId\": $json.sessionId,\n        \"correlationId\": $json.correlationId || $uuid.v4(),\n        \"parentMessageId\": $json.parentMessageId || null\n      }\n    },\n    \"routing\": {\n      \"replyTo\": \"business-manager-webhook\",\n      \"timeout\": $json.timeout || 30000,\n      \"retryPolicy\": {\n        \"maxRetries\": 3,\n        \"backoffMultiplier\": 2\n      }\n    }\n  }\n}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [680, 500],
+      "id": "bm6z7a8b-9c0d-1e2f-3g4h-5i6j7k8l9m0n",
+      "name": "Format Inter-Agent Message"
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Ads MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Ads MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinterest MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinterest MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Marketing MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Marketing MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Research Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Campaign Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer Service Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orders Fulfillment Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "External API Request": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Inter-Agent Message": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Business Knowledge Base": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Episodic Memory Store": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Business Manager Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Structured Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Structured Output": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Business Manager Webhook": {
+      "main": [
+        [
+          {
+            "node": "Business Manager Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "business-manager-agent-vividwalls"
+  }
+} 

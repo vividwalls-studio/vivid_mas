@@ -1,0 +1,591 @@
+{
+  "name": "VividWalls Customer Relationship Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🎯 Customer Relationship Agent - Lifecycle & Retention Excellence\n\n### 📋 Workflow Overview\nThis workflow manages customer segmentation, lifecycle journeys, retention campaigns, and personalization strategies to maximize customer lifetime value and build lasting relationships with VividWalls collectors.\n\n### 🎨 Business Context\n- **Premium Market**: Art collectors and interior designers\n- **LTV Focus**: Average customer value $500+\n- **Retention Priority**: 40%+ annual retention target\n- **Segmentation**: Dynamic behavioral and value-based groups\n\n### 🛠️ Integration Points\n- **Shopify MCP**: Customer data, purchase history, segmentation\n- **Facebook Ads MCP**: Custom audiences, lookalike targeting\n- **Email Marketing MCP**: Automated journeys, campaigns\n- **n8n MCP**: Workflow automation, orchestration\n\n### 📊 Performance Metrics\n- **Customer Retention**: >40% annually\n- **Email Revenue**: 35% of total sales\n- **VIP Contribution**: 40% of revenue\n- **Reactivation Rate**: 15% of dormant\n\n### 🔗 Connected Workflows\n- **Customer Service Agent**: Support context\n- **Sales Agent**: VIP handling coordination\n- **Marketing Campaign Agent**: Campaign alignment\n- **Analytics Director**: Performance insights",
+        "height": 520.8958333333334,
+        "width": 445.51041666666674
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-640, -480],
+      "id": "sticky-overview"
+    },
+    {
+      "parameters": {
+        "content": "## 💎 Customer Segmentation Framework\n\n### Behavioral Segments\n- **VIP**: $1000+ spent, 5+ orders\n- **High Value**: $500+ spent, 3+ orders\n- **Frequent**: 2+ orders, <60 days recent\n- **At Risk**: >90 days, $200+ spent\n- **Dormant**: >180 days inactive\n- **New**: <30 days since signup\n\n### Engagement Segments\n- **Email Engaged**: >25% open, >5% click\n- **Social Active**: 10+ interactions\n- **Brand Advocates**: 2+ reviews\n- **Cart Abandoners**: Recent abandons\n\n### Product Affinity\n- **Collection Loyalists**: 80% single style\n- **Style Explorers**: 3+ different styles\n- **Premium Buyers**: $200+ AOV\n- **Sale Shoppers**: 70% on promotion",
+        "height": 472.91666666666663,
+        "width": 334.375
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-640, 80],
+      "id": "sticky-segments"
+    },
+    {
+      "parameters": {
+        "content": "## 🚀 Lifecycle Journeys\n\n### New Customer (0-90 days)\n1. Welcome series (5 emails/21 days)\n2. First purchase follow-up\n3. Engagement nurturing\n4. VIP invitation\n\n### Retention Campaigns\n**At-Risk (90-180 days)**\n- \"We miss you\" + 20% off\n- Browsing history reminder\n- Survey with incentive\n\n**Dormant (180+ days)**\n- \"What's new\" showcase\n- 25% win-back offer\n- Free shipping\n- Personal consultation\n\n### VIP Program\n- Early access (48hr)\n- Free shipping always\n- 25% quarterly bonus\n- Personal consultant\n- Birthday month 30% off",
+        "height": 472.91666666666663,
+        "width": 297.9166666666667
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-280, 80],
+      "id": "sticky-journeys"
+    },
+    {
+      "parameters": {
+        "content": "## 🔧 MCP Tool Strategy\n\n### Shopify Tools\n- `get_customers`: Segment data\n- `update_customer`: Tag management\n- `get_orders`: Purchase analysis\n- `create_discount`: Personalized offers\n- `create_metafield`: Custom data\n\n### Facebook Ads Tools\n- `create_custom_audience`: Segments\n- `create_lookalike`: Expansion\n- `get_insights`: Performance\n\n### Email Marketing Tools\n- `segment_audience`: Behavioral groups\n- `create_automation`: Journeys\n- `create_campaign`: Retention\n- `track_engagement`: Monitoring",
+        "height": 409.375,
+        "width": 297.9166666666667
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [40, 80],
+      "id": "sticky-tools"
+    },
+    {
+      "parameters": {
+        "content": "## 📈 Segmentation Analysis\n\nAnalyzes:\n- Segment migration patterns\n- Lifetime value by segment\n- Engagement trends\n- Purchase behavior\n\nDelivers:\n- Segment performance\n- Growth opportunities\n- Risk indicators\n- Action recommendations",
+        "height": 268.75,
+        "width": 260
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [700, 60],
+      "id": "sticky-segmentation"
+    },
+    {
+      "parameters": {
+        "content": "## 🎯 Retention Campaigns\n\nManages:\n- Win-back sequences\n- Loyalty programs\n- Reactivation offers\n- VIP benefits\n\nAutomation:\n- Trigger conditions\n- Offer generation\n- Multi-channel delivery\n- Performance tracking",
+        "height": 268.75,
+        "width": 260
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [700, 360],
+      "id": "sticky-retention"
+    },
+    {
+      "parameters": {
+        "content": "## 📊 Success Metrics\n\n### Segment Targets\n| Segment | Retention | AOV | Frequency |\n|---------|-----------|-----|------------|\n| VIP | 80% | $300+ | 4x/year |\n| High Value | 60% | $200+ | 3x/year |\n| Regular | 40% | $150+ | 2x/year |\n| New | 30% | $120+ | 2x/90 days |\n\n### Campaign Performance\n- Welcome series: 65% completion\n- Win-back: 15% conversion\n- VIP offers: 45% redemption\n- Cart recovery: 25% success",
+        "height": 353.125,
+        "width": 334.375
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [360, 140],
+      "id": "sticky-metrics"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.6
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [-20, 100],
+      "id": "cr1a2b3c-4d5e-6f7g-8h9i-0j1k2l3m4n5o",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "d6OaJCsy6QryngZX",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionKey": "={{ $json.chatId || $json.session_id || 'customer_relationship_' + $now.toMillis() }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [120, 180],
+      "id": "cr2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "cm4WrXg1MnK2sWUm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 120],
+      "id": "cr3c4d5e-6f7g-8h9i-0j1k-2l3m4n5o6p7q",
+      "name": "Shopify MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ShopifyMCPClient789",
+          "name": "Shopify MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 140],
+      "id": "cr4d5e6f-7g8h-9i0j-1k2l-3m4n5o6p7q8r",
+      "name": "Shopify MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ShopifyMCPClient789",
+          "name": "Shopify MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 200],
+      "id": "cr5e6f7g-8h9i-0j1k-2l3m-4n5o6p7q8r9s",
+      "name": "Facebook Ads MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "FacebookAdsMCPClient123",
+          "name": "Facebook Ads MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 220],
+      "id": "cr6f7g8h-9i0j-1k2l-3m4n-5o6p7q8r9s0t",
+      "name": "Facebook Ads MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "FacebookAdsMCPClient123",
+          "name": "Facebook Ads MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 280],
+      "id": "cr7g8h9i-0j1k-2l3m-4n5o-6p7q8r9s0t1u",
+      "name": "Email Marketing MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "EmailMarketingMCPClient789",
+          "name": "Email Marketing MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 300],
+      "id": "cr8h9i0j-1k2l-3m4n-5o6p-7q8r9s0t1u2v",
+      "name": "Email Marketing MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "EmailMarketingMCPClient789",
+          "name": "Email Marketing MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 360],
+      "id": "cr9i0j1k-2l3m-4n5o-6p7q-8r9s0t1u2v3w",
+      "name": "n8n MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "n8nMCPClient012",
+          "name": "n8n MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 380],
+      "id": "cr0j1k2l-3m4n-5o6p-7q8r-9s0t1u2v3w4x",
+      "name": "n8n MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "n8nMCPClient012",
+          "name": "n8n MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [-180, -240],
+      "id": "cr1k2l3m-4n5o-6p7q-8r9s-0t1u2v3w4x5y",
+      "name": "When chat message received",
+      "webhookId": "customer-relationship-chat-trigger"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [680, -200],
+      "id": "cr2l3m4n-5o6p-7q8r-9s0t-1u2v3w4x5y6z",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "task_type",
+              "type": "string"
+            },
+            {
+              "name": "customer_ids",
+              "type": "json"
+            },
+            {
+              "name": "segment",
+              "type": "string"
+            },
+            {
+              "name": "campaign_type",
+              "type": "string"
+            },
+            {
+              "name": "parameters",
+              "type": "json"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-180, -440],
+      "id": "cr3m4n5o-6p7q-8r9s-0t1u-2v3w4x5y6z7a",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "systemPromptTemplate": "# Customer Relationship Agent System Prompt\n\n## Role & Purpose\nYou are the Customer Relationship Agent for VividWalls, responsible for managing customer lifecycle, segmentation, retention campaigns, and personalized experiences. You leverage MCP tools to create data-driven customer journeys that maximize lifetime value and satisfaction.\n\n## Core Responsibilities\n1. **Customer Segmentation**: Create and maintain dynamic customer segments\n2. **Lifecycle Management**: Design automated customer journey workflows\n3. **Retention Campaigns**: Develop win-back and loyalty programs\n4. **Personalization**: Deliver tailored experiences across all touchpoints\n5. **Customer Analytics**: Monitor satisfaction, LTV, and engagement metrics\n\n## Available MCP Tools & Functions\n\n### 🛒 Shopify MCP Tools\n- `shopify_get_customers`: Retrieve customer database and behavior data\n- `shopify_get_customer`: Get detailed individual customer profiles\n- `shopify_update_customer`: Modify customer information and tags\n- `shopify_get_orders`: Analyze customer purchase history and patterns\n- `shopify_create_discount`: Generate personalized offers and codes\n- `shopify_create_metafield`: Add custom customer data fields\n\n### 📱 Facebook Ads MCP Tools\n- `facebook-ads_create_custom_audience`: Build customer segments for advertising\n- `facebook-ads_update_custom_audience`: Maintain audience segments\n- `facebook-ads_create_lookalike_audience`: Find similar high-value customers\n- `facebook-ads_get_insights`: Monitor customer engagement metrics\n\n### 📧 Email Marketing MCP Tools\n- `segment_audience`: Create behavioral customer segments\n- `create_automation`: Build customer lifecycle email sequences\n- `send_transactional`: Deliver order confirmations and updates\n- `create_campaign`: Launch retention and reactivation campaigns\n- `track_engagement`: Monitor email interactions and preferences\n- `manage_subscribers`: Update customer email preferences\n\n### ⚡ n8n MCP Tools\n- `n8n_create_workflow`: Build customer journey automation\n- `n8n_execute_workflow`: Trigger customer experience workflows\n- `n8n_get_executions`: Monitor workflow performance\n\n## Customer Segmentation Framework\n\n### Dynamic Segmentation Criteria\n\n#### Behavioral Segments\n- **VIP Customers**: Total spent >$1000 AND orders >5\n- **High Value**: Total spent >$500 AND orders >3\n- **Frequent Buyers**: Orders >2 AND last order <60 days\n- **At Risk**: Last order >90 days AND total spent >$200\n- **Dormant**: Last order >180 days\n- **New Customers**: Account created <30 days\n- **One-Time Buyers**: Orders = 1 AND last order >30 days\n\n#### Engagement Segments\n- **Email Engaged**: Open rate >25% AND click rate >5%\n- **Social Engaged**: Facebook/Instagram interactions >10\n- **Brand Advocates**: Reviews submitted >2 OR referrals >1\n- **Cart Abandoners**: Abandoned checkouts >1 in last 30 days\n\n#### Product Affinity Segments\n- **Collection Loyalists**: 80%+ purchases from single collection\n- **Style Explorers**: Purchases across 3+ different styles\n- **Premium Buyers**: Average order value >$200\n- **Sale Shoppers**: 70%+ purchases during promotions\n\n## Customer Lifecycle Automation\n\n### New Customer Journey (0-90 days)\n1. **Welcome Series** (5 emails over 21 days)\n   - Welcome + 15% discount (immediate)\n   - Brand story + artist features (day 3)\n   - Bestsellers showcase (day 7)\n   - Interior design guide (day 14)\n   - VIP program invitation (day 21)\n\n2. **First Purchase Follow-up**\n   - Order confirmation (immediate)\n   - Shipping notification (when shipped)\n   - Delivery confirmation + care tips (on delivery)\n   - Review request + photo contest (day 7)\n   - Complementary products (day 30)\n\n3. **Engagement Nurturing**\n   - Weekly art spotlights\n   - Monthly style guides\n   - Seasonal collection previews\n   - Birthday special offers\n\n### Retention & Win-back Campaigns\n\n#### At-Risk Customer Recovery (90-180 days)\n- Personalized \"We miss you\" email with browsing history\n- Exclusive 20% discount valid for 7 days\n- Customer survey with incentive\n- Final offer with urgency messaging\n\n#### Dormant Customer Reactivation (180+ days)\n- \"What's new since you left\" showcase\n- 25% win-back offer\n- Free shipping incentive\n- Personal curator consultation offer\n\n#### VIP Loyalty Program\n- Tier qualification: $1000+ lifetime value\n- Benefits:\n  - Early access to new collections (48 hours)\n  - Free shipping on all orders\n  - Exclusive 25% discount quarterly\n  - Personal art consultant access\n  - Preview of limited editions\n  - Birthday month 30% bonus discount\n\n## Personalization Engine\n\n### Customer Profile Enrichment\n- Purchase history analysis\n- Browsing behavior tracking\n- Email engagement scoring\n- Social media interactions\n- Support ticket history\n- Preference indicators\n\n### Dynamic Content Personalization\n- Product recommendations based on:\n  - Previous purchases\n  - Browsing history\n  - Similar customer purchases\n  - Trending in customer's style\n- Email content adaptation:\n  - Subject line personalization\n  - Dynamic product blocks\n  - Personalized offers\n  - Location-based content\n\n### Cross-channel Consistency\n- Unified customer view across:\n  - Email marketing\n  - Facebook/Instagram ads\n  - On-site experience\n  - Customer service\n- Synchronized messaging and offers\n- Consistent segmentation rules\n\n## Campaign Execution Framework\n\n### Monthly Segmentation Review\n1. Pull all customer data from Shopify\n2. Recalculate segment membership\n3. Update customer tags in Shopify\n4. Sync segments to email platform\n5. Create/update Facebook custom audiences\n6. Report segment changes to Business Manager\n\n### Weekly Campaign Calendar\n- **Monday**: VIP early access launches\n- **Tuesday**: General newsletter\n- **Wednesday**: Segment-specific campaigns\n- **Thursday**: Cart abandonment recovery\n- **Friday**: Weekend preview content\n- **Saturday**: Flash sale announcements\n- **Sunday**: Week recap + upcoming\n\n### Performance Monitoring\n- **Daily KPIs**:\n  - New customers acquired\n  - Customer retention rate\n  - Email engagement rates\n  - Segment migration patterns\n  \n- **Weekly Metrics**:\n  - Customer lifetime value trends\n  - Churn rate by segment\n  - Campaign ROI by segment\n  - Reactivation success rate\n  \n- **Monthly Analysis**:\n  - Cohort retention curves\n  - Segment profitability\n  - Channel attribution\n  - Personalization effectiveness\n\n## Success Metrics\n\n### Primary KPIs\n- **Customer Retention Rate**: >40% annual\n- **Customer Lifetime Value**: $500+ average\n- **Email Revenue**: 35% of total sales\n- **Reactivation Rate**: 15% of dormant\n- **VIP Contribution**: 40% of revenue\n\n### Segment-Specific Targets\n| Segment | Retention | AOV | Purchase Frequency |\n|---------|-----------|-----|--------------------|\n| VIP | 80% | $300+ | 4x/year |\n| High Value | 60% | $200+ | 3x/year |\n| Regular | 40% | $150+ | 2x/year |\n| New | 30% | $120+ | 2x in 90 days |\n\n## Coordination Protocol\n1. Receive customer insights requests from Business Manager\n2. Share segment performance with Marketing Campaign Agent\n3. Coordinate with Sales Agent on VIP handling\n4. Support Customer Service with customer context\n5. Update all agents on significant customer trends",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [200, -200],
+      "id": "cr4n5o6p-7q8r-9s0t-1u2v-3w4x5y6z7a8b",
+      "name": "Customer Relationship Agent"
+    },
+    {
+      "parameters": {
+        "path": "customer-relationship-webhook",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-180, -60],
+      "id": "cr5o6p7q-8r9s-0t1u-2v3w-4x5y6z7a8b9c",
+      "name": "Customer Relationship Webhook",
+      "webhookId": "customer-relationship-webhook"
+    },
+    {
+      "parameters": {
+        "description": "Analyze customer segments and generate insights",
+        "workflowId": {
+          "__rl": true,
+          "value": "CustomerSegmentationWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Customer Segmentation Analysis"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "analysis_type": "={{ $fromAI('analysis_type', 'type of segmentation analysis') }}",
+            "date_range": "={{ $fromAI('date_range', 'period to analyze') }}",
+            "segments": "={{ $fromAI('segments', 'specific segments to analyze') }}",
+            "metrics": "={{ $fromAI('metrics', 'metrics to calculate') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [540, 120],
+      "id": "cr6p7q8r-9s0t-1u2v-3w4x-5y6z7a8b9c0d",
+      "name": "Customer Segmentation Tool"
+    },
+    {
+      "parameters": {
+        "description": "Create and manage customer retention campaigns",
+        "workflowId": {
+          "__rl": true,
+          "value": "RetentionCampaignWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Retention Campaign Manager"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "campaign_type": "={{ $fromAI('campaign_type', 'win-back, loyalty, or reactivation') }}",
+            "target_segment": "={{ $fromAI('target_segment', 'customer segment to target') }}",
+            "offer_type": "={{ $fromAI('offer_type', 'discount or incentive type') }}",
+            "duration": "={{ $fromAI('duration', 'campaign duration') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [540, 200],
+      "id": "cr7q8r9s-0t1u-2v3w-4x5y-6z7a8b9c0d1e",
+      "name": "Retention Campaign Tool"
+    },
+    {
+      "parameters": {
+        "collection": "vividwalls_customer_insights",
+        "options": {
+          "limit": 15,
+          "similarityThreshold": 0.8
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePostgres",
+      "typeVersion": 1,
+      "position": [120, 300],
+      "id": "cr8r9s0t-1u2v-3w4x-5y6z-7a8b9c0d1e2f",
+      "name": "Customer Insights Knowledge Base",
+      "credentials": {
+        "postgres": {
+          "id": "cm4WrXg1MnK2sWUm",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Customer Relationship Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Customer Relationship Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Customer Relationship Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Customer Relationship Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Ads MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Customer Relationship Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Ads MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Customer Relationship Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Marketing MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Customer Relationship Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Marketing MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Customer Relationship Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Customer Relationship Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Customer Relationship Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer Segmentation Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Customer Relationship Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retention Campaign Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Customer Relationship Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer Insights Knowledge Base": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Customer Relationship Agent",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Customer Relationship Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Customer Relationship Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer Relationship Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer Relationship Webhook": {
+      "main": [
+        [
+          {
+            "node": "Customer Relationship Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "customer-relationship-agent-vividwalls"
+  }
+}

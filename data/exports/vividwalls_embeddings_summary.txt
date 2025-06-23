@@ -1,0 +1,32 @@
+VividWalls Knowledge Base Embeddings Summary
+==================================================
+
+Generated at: 2025-06-17T11:17:24.249655
+Provider: mock
+Total records: 149
+Total embeddings: 149
+Embedding dimensions: 384
+
+Records by source type:
+  qa: 32
+  product: 61
+  inventory: 56
+
+Embeddings by source type:
+  qa: 32
+  product: 61
+  inventory: 56
+
+Sample chunks:
+
+1. qa - Chunk 0
+   Text: Q: What types of abstract art collections are available at Vivid Walls? A: Vivid Walls offers a dive...
+   Words: 40
+
+2. qa - Chunk 0
+   Text: Q: Can I customize the size of an artwork? A: Yes, we offer customization options for artwork sizes ...
+   Words: 32
+
+3. qa - Chunk 0
+   Text: Q: What materials are used in your artworks? A: Our artworks are created using high-quality canvases...
+   Words: 25

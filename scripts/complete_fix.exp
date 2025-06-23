@@ -1,0 +1,147 @@
+#!/usr/bin/expect -f
+
+set timeout 600
+set passphrase "freedom"
+
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        send "cd /root/vivid_mas\r"
+    }
+}
+
+# Add ALL missing columns including episodic_memory
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres << 'EOF'\r"
+send "ALTER TABLE agents ADD COLUMN IF NOT EXISTS episodic_memory JSONB;\r"
+send "ALTER TABLE agents ADD COLUMN IF NOT EXISTS procedural_memory JSONB;\r"
+send "ALTER TABLE agents ADD COLUMN IF NOT EXISTS semantic_memory JSONB;\r"
+send "EOF\r"
+
+expect "ALTER TABLE"
+
+# Set default values using array syntax
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"UPDATE agents SET short_term_memory = '\\[\\]'::jsonb WHERE short_term_memory IS NULL;\"\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"UPDATE agents SET long_term_memory = '\\[\\]'::jsonb WHERE long_term_memory IS NULL;\"\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"UPDATE agents SET communication_preferences = '\\[\\]'::jsonb WHERE communication_preferences IS NULL;\"\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"UPDATE agents SET episodic_memory = '\\[\\]'::jsonb WHERE episodic_memory IS NULL;\"\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"UPDATE agents SET procedural_memory = '\\[\\]'::jsonb WHERE procedural_memory IS NULL;\"\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"UPDATE agents SET semantic_memory = '\\[\\]'::jsonb WHERE semantic_memory IS NULL;\"\r"
+
+# Now run all chunks
+expect "root@*"
+send "echo 'Running all SQL chunks...'\r"
+
+# Chunk 1
+expect "root@*"
+send "echo '===== CHUNK 1 ====='\r"
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres < sql_chunks/chunk_001.sql\r"
+
+expect {
+    "COMMIT" {
+        puts "\nChunk 1 SUCCESS!"
+    }
+    "ROLLBACK" {
+        puts "\nChunk 1 FAILED"
+    }
+    timeout {
+        puts "\nChunk 1 timeout"
+    }
+}
+
+# Chunk 2
+expect "root@*"
+send "echo '===== CHUNK 2 ====='\r"
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres < sql_chunks/chunk_002.sql\r"
+
+expect {
+    "COMMIT" {
+        puts "\nChunk 2 SUCCESS!"
+    }
+    "ROLLBACK" {
+        puts "\nChunk 2 FAILED"
+    }
+    timeout {
+        puts "\nChunk 2 timeout"
+    }
+}
+
+# Chunk 3
+expect "root@*"
+send "echo '===== CHUNK 3 ====='\r"
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres < sql_chunks/chunk_003.sql\r"
+
+expect {
+    "COMMIT" {
+        puts "\nChunk 3 SUCCESS!"
+    }
+    "ROLLBACK" {
+        puts "\nChunk 3 FAILED"
+    }
+    timeout {
+        puts "\nChunk 3 timeout"
+    }
+}
+
+# Chunk 4
+expect "root@*"
+send "echo '===== CHUNK 4 ====='\r"
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres < sql_chunks/chunk_004.sql\r"
+
+expect {
+    "COMMIT" {
+        puts "\nChunk 4 SUCCESS!"
+    }
+    "ROLLBACK" {
+        puts "\nChunk 4 FAILED"
+    }
+    timeout {
+        puts "\nChunk 4 timeout"
+    }
+}
+
+# Final verification
+expect "root@*"
+send "echo '===== FINAL VERIFICATION ====='\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT COUNT(*) as agent_count FROM agents;\"\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT id, name, role, type FROM agents LIMIT 10;\"\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres << 'EOF'\r"
+send "SELECT \r"
+send "  'agents' as table_name, COUNT(*) as count FROM agents\r"
+send "UNION ALL SELECT 'agent_beliefs', COUNT(*) FROM agent_beliefs\r"
+send "UNION ALL SELECT 'agent_desires', COUNT(*) FROM agent_desires\r"
+send "UNION ALL SELECT 'agent_goals', COUNT(*) FROM agent_goals\r"
+send "UNION ALL SELECT 'agent_llm_config', COUNT(*) FROM agent_llm_config\r"
+send "ORDER BY table_name;\r"
+send "EOF\r"
+
+expect "root@*"
+send "exit\r"
+
+expect eof

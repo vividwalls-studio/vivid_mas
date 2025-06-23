@@ -1,0 +1,105 @@
+include:
+  - ./supabase/docker/docker-compose.yml
+
+volumes:
+  n8n_storage:
+  open-webui:
+  caddy-data:
+  caddy-config:
+
+x-n8n: &service-n8n
+  image: n8nio/n8n:latest
+  environment:
+    - DB_TYPE=postgresdb
+    - DB_POSTGRESDB_HOST=db
+    - DB_POSTGRESDB_USER=postgres
+    - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+    - DB_POSTGRESDB_DATABASE=postgres
+    - N8N_DIAGNOSTICS_ENABLED=false
+    - N8N_PERSONALIZATION_ENABLED=false
+    - N8N_ENCRYPTION_KEY
+    - N8N_USER_MANAGEMENT_JWT_SECRET
+    - WEBHOOK_URL=https://${N8N_HOSTNAME}
+
+services:
+  # OpenWebUI - AI Chat Interface
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    restart: unless-stopped
+    container_name: open-webui
+    ports:
+      - "3000:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - open-webui:/app/backend/data
+    deploy:
+      resources:
+        limits:
+          memory: 1.5G
+        reservations:
+          memory: 512M
+
+  # n8n Import Service (runs once)
+  n8n-import:
+    <<: *service-n8n
+    container_name: n8n-import
+    entrypoint: /bin/sh
+    command:
+      - "-c"
+      - "n8n import:credentials --separate --input=/backup/credentials && n8n import:workflow --separate --input=/backup/workflows"
+    volumes:
+      - ./n8n/backup:/backup  
+
+  # n8n Main Service
+  n8n:
+    <<: *service-n8n
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - 5678:5678
+    volumes:
+      - n8n_storage:/home/node/.n8n
+      - ./n8n/backup:/backup
+      - ./shared:/data/shared
+    depends_on:
+      n8n-import:
+        condition: service_completed_successfully
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Caddy Reverse Proxy with SSL
+  caddy:
+    container_name: caddy
+    image: docker.io/library/caddy:2-alpine
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data:rw
+      - caddy-config:/config:rw
+    environment:
+      - N8N_HOSTNAME=${N8N_HOSTNAME:-":8001"}
+      - WEBUI_HOSTNAME=${WEBUI_HOSTNAME:-":8002"}
+      - SUPABASE_HOSTNAME=${SUPABASE_HOSTNAME:-":8005"}
+      - WORDPRESS_HOSTNAME=${WORDPRESS_HOSTNAME:-":8080"}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL:-internal}
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M 

@@ -1,0 +1,54 @@
+#!/usr/bin/expect -f
+
+set timeout 600
+set passphrase "freedom"
+
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        send "cd /root/vivid_mas\r"
+    }
+}
+
+# First update the schema
+expect "root@*"
+send "echo 'Updating database schema...'\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres < scripts/update_schema.sql\r"
+
+expect "root@*"
+send "echo 'Schema updated. Now inserting data...'\r"
+
+# Now run the SQL chunks
+expect "root@*"
+send "for i in {1..4}; do echo \"Executing chunk_00\${i}.sql...\"; docker exec -i supabase-db psql -U postgres -d postgres < sql_chunks/chunk_00\${i}.sql; done\r"
+
+expect {
+    "COMMIT" {
+        puts "\nData insertion completed!"
+    }
+    timeout {
+        puts "\nTimeout reached during insertion"
+    }
+}
+
+# Run verification
+expect "root@*"
+send "echo 'Running verification...'\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT COUNT(*) FROM agents;\"\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT id, name, role FROM agents LIMIT 5;\"\r"
+
+expect "root@*"
+send "exit\r"
+
+expect eof

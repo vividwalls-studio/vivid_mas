@@ -1,0 +1,203 @@
+{
+  "main": {
+    "id": "39f363bdf1454216",
+    "type": "split",
+    "children": [
+      {
+        "id": "156ef398b0591be8",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b166bb5ae43e6ad5",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "New tab"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "d20e8a6d320942d2",
+    "type": "split",
+    "children": [
+      {
+        "id": "ae62cd2450414ade",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "473c727ba7661d63",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "11a52e2cde427d7a",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "c0cba9f11629831e",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "0af9edffb52f6dc7",
+    "type": "split",
+    "children": [
+      {
+        "id": "d5835eba7801419f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "a203fad7334f7b44",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "0c328cdc5d649dec",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "ca1690fb85b8c661",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "74d980d24ddfc02c",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false
+    }
+  },
+  "active": "b166bb5ae43e6ad5",
+  "lastOpenFiles": [
+    "services/mcp-servers/analytics/kpi-dashboard/TEST_README.md",
+    "services/mcp-servers/analytics/kpi-dashboard/src/tests/run-all-tests.ts",
+    "services/mcp-servers/analytics/kpi-dashboard/package.json",
+    "services/mcp-servers/analytics/kpi-dashboard/jest.config.js",
+    "services/mcp-servers/analytics/kpi-dashboard/src/tests/stakeholder-report.test.ts",
+    "services/mcp-servers/analytics/kpi-dashboard/src/tests/crisis-monitoring.test.ts",
+    "services/mcp-servers/analytics/kpi-dashboard/src/tests/mcp-server-integration.test.ts",
+    "services/mcp-servers/analytics/kpi-dashboard/src/tests/mocks/mock-database.ts",
+    "services/mcp-servers/analytics/kpi-dashboard/src/tests/mocks",
+    "services/mcp-servers/analytics/kpi-dashboard/src/tests/business-manager-kpis.test.ts",
+    "services/mcp-servers/analytics/kpi-dashboard/src/tests",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/typescript/SECURITY.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/typescript/README.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/@modelcontextprotocol/sdk/README.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/zod/README.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/resolve/SECURITY.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/ajv/README.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/zod-to-json-schema/SECURITY.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/zod-to-json-schema/README.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/zod-to-json-schema/contributing.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/zod-to-json-schema/changelog.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/http-errors/node_modules/statuses/README.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/http-errors/node_modules/statuses/HISTORY.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/ajv/lib/dotjs/README.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/send/README.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/send/HISTORY.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/statuses/README.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/statuses/HISTORY.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/@types/qs/README.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/@types/serve-static/README.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/@types/send/README.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/@types/node/README.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/@types/range-parser/README.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/@types/mime/README.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/@types/connect/README.md",
+    "services/mcp-servers/newsletter-agent-prompts/node_modules/@types/http-errors/README.md"
+  ]
+}

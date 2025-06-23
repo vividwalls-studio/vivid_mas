@@ -1,0 +1,413 @@
+{
+  "name": "VividWalls Sales Agent - Knowledge Enhanced",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [-20, 100],
+      "id": "aa1b2334-bc12-4d34-ef56-bc7e8e9f0a1b",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "d6OaJCsy6QryngZX",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionKey": "={{ $json.chatId || $json.session_id || 'sales_' + $now.toMillis() }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [120, 180],
+      "id": "bb2c3445-cd23-4e45-fg67-cd8f9f0g1b2c",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "cm4WrXg1MnK2sWUm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [-400, 100],
+      "id": "chat-trigger-sales",
+      "name": "When chat message received",
+      "webhookId": "sales-agent-chat"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [820, 100],
+      "id": "webhook-response-sales",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseMessage": "={{ $json.response }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [380, 100],
+      "id": "sales-agent-main",
+      "name": "Sales Agent"
+    },
+    {
+      "parameters": {
+        "systemPromptTemplate": "# VividWalls Sales Agent\n\nYou are a knowledgeable and friendly sales representative for VividWalls, specializing in modern wall art and decor. Your role is to help customers find the perfect pieces for their spaces while providing exceptional service.\n\n## Core Responsibilities\n- Guide customers through product selection\n- Provide personalized recommendations based on preferences and needs\n- Answer questions about products, pricing, and availability\n- Process orders and handle sales inquiries\n- Upsell and cross-sell complementary products\n- Build lasting customer relationships\n\n## Sales Approach\n- Use consultative selling techniques\n- Focus on understanding customer needs before recommending\n- Highlight value propositions and unique features\n- Create urgency through limited editions and special offers\n- Provide confidence through our satisfaction guarantee\n\n## Product Knowledge\n- Deep understanding of all VividWalls collections\n- Knowledge of art styles, color theory, and interior design\n- Awareness of trending designs and popular pieces\n- Understanding of sizing, materials, and installation\n\n## Knowledge Base Access\n\nYou have access to multiple knowledge sources:\n\n### Domain-Specific Knowledge Graph (sales_ontology)\nYour specialized knowledge graph containing:\n- Sales methodologies and best practices\n- Customer journey mapping\n- Objection handling strategies\n- Conversion optimization techniques\n- Pricing strategies and discount rules\n\n### Shared Knowledge Graph\nCommon business information including:\n- Complete product catalog with real-time inventory\n- Customer profiles and purchase history\n- Business policies and procedures\n- Brand guidelines and messaging\n\n### Vector Database\nSemantic search capabilities for:\n- Finding visually similar products\n- Matching customer style preferences\n- Discovering complementary pieces\n- Identifying trending patterns\n\n### Supabase Product Database\nDirect access to:\n- Real-time inventory levels\n- Product specifications and variants\n- Pricing and promotional information\n- Customer order history\n\nUse these knowledge sources to provide accurate, personalized, and data-driven recommendations.\n\n## Communication Style\n- Warm, professional, and approachable\n- Knowledgeable without being condescending\n- Enthusiastic about art and design\n- Patient with customer questions\n- Solution-oriented mindset\n\nWhen interacting with customers:\n1. Greet warmly and understand their needs\n2. Ask discovery questions about their space and preferences\n3. Use knowledge bases to find perfect matches\n4. Present options with compelling descriptions\n5. Address any concerns or objections\n6. Guide towards purchase decision\n7. Ensure customer satisfaction"
+      },
+      "type": "@n8n/n8n-nodes-langchain.systemMessage",
+      "typeVersion": 1.1,
+      "position": [180, 20],
+      "id": "system-message-sales",
+      "name": "System Message"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected Shopify tool') }}",
+        "toolParameters": "={{ $fromAI('Tool_Parameters', '', 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [640, 200],
+      "id": "shopify-mcp-tool",
+      "name": "Shopify MCP Client",
+      "credentials": {
+        "mcpShopify": {
+          "id": "shopify-mcp-creds",
+          "name": "Shopify MCP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Access sales-specific knowledge graph for methodologies, strategies, and best practices",
+        "name": "sales_domain_knowledge",
+        "description": "Query the sales domain knowledge graph",
+        "method": "POST",
+        "url": "http://neo4j-mcp-server:6338/tools/query_knowledge_graph",
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\": \"application/json\",\n  \"Authorization\": \"Bearer {{ $env.NEO4J_MCP_API_KEY }}\"\n}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "cypher_query",
+              "value": "={{ $fromAI('cypher_query', 'Cypher query for sales knowledge - e.g., MATCH (m:SalesMethod) RETURN m') }}"
+            },
+            {
+              "name": "graph_name",
+              "value": "sales_ontology"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCustomWebhook",
+      "typeVersion": 1,
+      "position": [640, 320],
+      "id": "sales-knowledge-graph-tool",
+      "name": "Sales Knowledge Graph"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Access shared business knowledge including products, customers, and policies",
+        "name": "shared_knowledge",
+        "description": "Query the shared knowledge graph",
+        "method": "POST",
+        "url": "http://neo4j-mcp-server:6338/tools/query_knowledge_graph",
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\": \"application/json\",\n  \"Authorization\": \"Bearer {{ $env.NEO4J_MCP_API_KEY }}\"\n}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "cypher_query",
+              "value": "={{ $fromAI('cypher_query', 'Cypher query for shared knowledge - e.g., MATCH (p:Product)-[:BELONGS_TO]->(c:Category) RETURN p, c') }}"
+            },
+            {
+              "name": "graph_name",
+              "value": "shared_knowledge"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCustomWebhook",
+      "typeVersion": 1,
+      "position": [640, 440],
+      "id": "shared-knowledge-tool",
+      "name": "Shared Knowledge Graph"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Find similar products using AI-powered semantic search",
+        "mode": "retrieve-as-tool",
+        "toolName": "find_similar_products",
+        "tableName": "product_vectors",
+        "columns": [
+          "embedding",
+          "product_id",
+          "metadata"
+        ],
+        "options": {
+          "queryName": "similarity_search",
+          "vectorDimensions": 1536,
+          "similarityFunction": "cosine",
+          "limit": 10
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.1,
+      "position": [640, 560],
+      "id": "vector-search-tool",
+      "name": "Product Similarity Search",
+      "credentials": {
+        "postgres": {
+          "id": "supabase-pgvector",
+          "name": "Supabase PGVector"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Query real-time product inventory and customer data from Supabase",
+        "name": "supabase_database",
+        "description": "Access product, inventory, and customer information",
+        "method": "POST",
+        "url": "http://supabase-mcp-server:6337/tools/query",
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\": \"application/json\",\n  \"Authorization\": \"Bearer {{ $env.SUPABASE_MCP_API_KEY }}\"\n}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "table",
+              "value": "={{ $fromAI('table', 'Table to query: products, product_variants, inventory_items, customers, orders') }}"
+            },
+            {
+              "name": "query",
+              "value": "={{ $fromAI('query', 'SQL query or filter conditions') }}"
+            },
+            {
+              "name": "select",
+              "value": "={{ $fromAI('select', 'Fields to select - e.g., id,title,price,inventory_quantity') }}"
+            },
+            {
+              "name": "limit",
+              "value": "={{ $fromAI('limit', 'Number of results (default: 10)') || 10 }}"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCustomWebhook",
+      "typeVersion": 1,
+      "position": [640, 680],
+      "id": "supabase-database-tool",
+      "name": "Supabase Product Database"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Update sales knowledge graph with new insights and learnings",
+        "name": "update_sales_knowledge",
+        "description": "Add or update sales domain knowledge",
+        "method": "POST",
+        "url": "http://neo4j-mcp-server:6338/tools/update_knowledge_graph",
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\": \"application/json\",\n  \"Authorization\": \"Bearer {{ $env.NEO4J_MCP_API_KEY }}\"\n}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "cypher_update",
+              "value": "={{ $fromAI('cypher_update', 'Cypher statement to update knowledge - e.g., CREATE (o:Objection {type: $type, response: $response})') }}"
+            },
+            {
+              "name": "graph_name",
+              "value": "sales_ontology"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCustomWebhook",
+      "typeVersion": 1,
+      "position": [640, 800],
+      "id": "update-knowledge-tool",
+      "name": "Update Sales Knowledge"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [800, 640],
+      "id": "embeddings-model",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "d6OaJCsy6QryngZX",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Sales Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Sales Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Sales Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "System Message": {
+      "ai_prompt": [
+        [
+          {
+            "node": "Sales Agent",
+            "type": "ai_prompt",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sales Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Knowledge Graph": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sales Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shared Knowledge Graph": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sales Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Product Similarity Search": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sales Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Product Database": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sales Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Sales Knowledge": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sales Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Product Similarity Search",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "vividwalls-sales-agent-knowledge-enhanced"
+  }
+}

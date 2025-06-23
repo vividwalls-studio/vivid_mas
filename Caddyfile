@@ -35,6 +35,11 @@
     reverse_proxy localhost:8000
 }
 
+# Crawl4AI
+{$CRAWL4AI_HOSTNAME} {
+    reverse_proxy localhost:11235
+}
+
 # SearXNG
 {$SEARXNG_HOSTNAME} {
     encode zstd gzip

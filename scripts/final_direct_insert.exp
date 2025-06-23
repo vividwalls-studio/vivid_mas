@@ -1,0 +1,75 @@
+#!/usr/bin/expect -f
+
+set timeout 300
+set passphrase "freedom"
+
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        send "cd /root/vivid_mas\r"
+    }
+}
+
+# Run SQL directly
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres << 'EOF'\r"
+send "TRUNCATE agents CASCADE;\r"
+send "INSERT INTO agents (id, name, role, type, capabilities, config) VALUES\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Marketing Director Agent', 'Strategic Marketing Leader', 'director', '\\[\\]', '{}'),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'Analytics Director Agent', 'Data Analytics Leader', 'director', '\\[\\]', '{}'),\r"
+send "('a9b8c7d6-5e4f-3a2b-1c9d-8e7f6a5b4c3d', 'Customer Experience Director', 'CX Strategy Leader', 'director', '\\[\\]', '{}'),\r"
+send "('b8d7e6f5-4c3a-2b1a-9c8d-7e6f5a4b3c2d', 'Product Director Agent', 'Product Strategy Leader', 'director', '\\[\\]', '{}'),\r"
+send "('c9e8f7g6-5d4b-3c2a-ad9e-8f7g6b5c4d3e', 'Finance Director Agent', 'Financial Strategy Leader', 'director', '\\[\\]', '{}');\r"
+send "SELECT COUNT(*) FROM agents;\r"
+send "EOF\r"
+
+expect {
+    "INSERT 0 5" {
+        puts "\n5 agents inserted successfully!"
+    }
+    "count" {
+        puts "\nChecking agent count..."
+    }
+}
+
+# Insert beliefs
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres << 'EOF'\r"
+send "INSERT INTO agent_beliefs (agent_id, belief) VALUES\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Data-driven marketing yields the best ROI'),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'Data quality determines insight accuracy');\r"
+send "EOF\r"
+
+# Insert goals
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres << 'EOF'\r"
+send "INSERT INTO agent_goals (agent_id, goal, priority) VALUES\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Increase brand awareness', 9),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'Implement analytics dashboard', 9);\r"
+send "EOF\r"
+
+# Insert LLM config
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres << 'EOF'\r"
+send "INSERT INTO agent_llm_config (agent_id, model, temperature, max_tokens) VALUES\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'gpt-4', 0.7, 2000),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'gpt-4', 0.3, 2000)\r"
+send "ON CONFLICT (agent_id) DO UPDATE SET model = EXCLUDED.model;\r"
+send "EOF\r"
+
+# Final verification
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT COUNT(*) FROM agents;\"\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT id, name, role FROM agents;\"\r"
+
+expect "root@*"
+send "exit\r"
+
+expect eof

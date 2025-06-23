@@ -1,0 +1,42 @@
+{
+  "name": "supabase-mcp-server",
+  "version": "2.0.0",
+  "description": "Enhanced Supabase MCP Server with SQL execution support",
+  "main": "build/index.js",
+  "type": "module",
+  "bin": {
+    "supabase-mcp-server": "./build/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc-watch --onSuccess \"node build/index.js\"",
+    "start": "node build/index.js",
+    "clean": "rm -rf build",
+    "rebuild": "npm run clean && npm run build",
+    "test": "jest",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "supabase",
+    "database",
+    "sql"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.4.1",
+    "@supabase/supabase-js": "^2.45.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.5",
+    "tsc-watch": "^6.2.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

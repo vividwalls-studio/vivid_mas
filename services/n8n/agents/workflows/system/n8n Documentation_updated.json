@@ -1,0 +1,179 @@
+{
+  "name": "n8n Documentation",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# n8n Multi-Agent System Documentation\n\n## Overview\nThis documentation workflow provides a comprehensive guide to the VividWalls Multi-Agent System implemented in n8n. It serves as:\n- Central reference for all agent workflows\n- System architecture documentation\n- Integration guidelines\n- Best practices repository\n- Troubleshooting guide\n\n## System Architecture\n\n### Core Components\n1. **Agent Workflows**: Individual autonomous agents\n2. **MCP Integrations**: External service connections\n3. **Memory Systems**: PostgreSQL and Neo4j storage\n4. **Communication Layer**: Webhooks and inter-workflow calls\n5. **Monitoring**: Performance and error tracking\n\n### Agent Hierarchy\n```\nBusiness Manager (CEO)\n├── Marketing Director\n│   ├── Content Strategy Agent\n│   ├── Social Media Director\n│   │   ├── Facebook Agent\n│   │   ├── Instagram Agent\n│   │   └── Pinterest Agent\n│   ├── Marketing Campaign Agent\n│   └── Copy Writer Agent\n├── Operations Director\n│   ├── Shopify Agent\n│   ├── Pictorem Agent\n│   └── Fulfillment Agents\n├── Finance Director\n│   └── Analytics Agents\n├── Technology Director\n│   └── Integration Agents\n└── Customer Experience Director\n    └── Service Agents\n```\n\n## Workflow Standards\n\n### Naming Conventions\n- Agents: `[Department] [Role] Agent`\n- Webhooks: `[agent-name]-webhook`\n- Tools: `[Agent] Tool`\n- Memory: `[agent]_memory_[timestamp]`\n\n### Required Components\n1. Trigger nodes (webhook/workflow)\n2. LLM with system prompt\n3. Memory management\n4. Tool integrations\n5. Response handling\n6. Error management\n\n### System Prompts Structure\n- Role definition\n- Core responsibilities\n- Trigger conditions\n- Processing logic\n- Success metrics\n- Response format\n\n## Integration Standards\n- MCP servers for external services\n- Standardized data formats\n- Error handling protocols\n- Rate limiting awareness\n- Security best practices",
+        "height": 720,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1600,
+        -200
+      ],
+      "typeVersion": 1,
+      "id": "system-overview-note",
+      "name": "System Overview"
+    },
+    {
+      "parameters": {
+        "content": "# Agent Development Guidelines\n\n## Creating New Agents\n\n### 1. Workflow Setup\n```javascript\n// Basic agent structure\n{\n  \"name\": \"[Agent Name]\",\n  \"nodes\": [\n    // Triggers\n    \"executeWorkflowTrigger\",\n    \"webhook\",\n    // Processing\n    \"agent\",\n    \"llm\",\n    \"memory\",\n    // Tools\n    \"mcpClient\",\n    \"toolWorkflow\",\n    // Response\n    \"respondToWebhook\"\n  ]\n}\n```\n\n### 2. System Prompt Template\n```markdown\n# [Agent Name] System Prompt\n\n## Role & Purpose\n[Define the agent's role and primary function]\n\n## Core Responsibilities\n1. [Responsibility 1]\n2. [Responsibility 2]\n3. [Responsibility 3]\n\n## Trigger Conditions\n\n### If trigger_conditions == '[condition]'\n- [Action steps]\n- [Expected outcomes]\n- Timeline: [Completion time]\n\n## Success Metrics\n- [Metric 1]: [Target]\n- [Metric 2]: [Target]\n\n## Response Format\n```json\n{\n  \"status\": \"success|error\",\n  \"data\": {},\n  \"next_steps\": []\n}\n```\n```\n\n### 3. Memory Configuration\n- Session key format: `agent_name_timestamp`\n- PostgreSQL for conversation history\n- Neo4j for relationship mapping\n- Cleanup policies\n\n### 4. Tool Integration\n- MCP client setup\n- Authentication handling\n- Rate limit management\n- Error recovery\n\n## Testing Protocol\n\n### Unit Testing\n1. Test each trigger condition\n2. Validate response formats\n3. Check error handling\n4. Verify tool integrations\n\n### Integration Testing\n1. Inter-agent communication\n2. Data flow validation\n3. Performance benchmarks\n4. Load testing\n\n### Deployment Checklist\n- [ ] System prompt reviewed\n- [ ] Error handling implemented\n- [ ] Memory cleanup configured\n- [ ] Monitoring enabled\n- [ ] Documentation updated",
+        "height": 700,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1000,
+        -200
+      ],
+      "typeVersion": 1,
+      "id": "development-guidelines-note",
+      "name": "Development Guidelines"
+    },
+    {
+      "parameters": {
+        "content": "# MCP Server Integrations\n\n## Available MCP Servers\n\n### E-commerce & Fulfillment\n- **shopify**: Product management, orders\n- **pictorem**: Print-on-demand services\n- **stripe**: Payment processing\n- **shipstation**: Shipping management\n\n### Marketing & Analytics\n- **facebook-ads**: Ad campaigns\n- **instagram-api**: Content posting\n- **pinterest-api**: Pin management\n- **google-analytics**: Web analytics\n- **mailchimp**: Email marketing\n\n### Data & Storage\n- **supabase**: Primary database\n- **neo4j**: Graph relationships\n- **cloudinary**: Media storage\n- **s3**: File storage\n\n### AI & Processing\n- **openai**: Language models\n- **anthropic**: Claude integration\n- **stability**: Image generation\n- **replicate**: Model hosting\n\n### Communication\n- **slack**: Team notifications\n- **email**: Customer communication\n- **sms**: Alerts and updates\n- **webhook**: External integrations\n\n## Integration Patterns\n\n### Authentication\n```javascript\n// MCP client credentials\n{\n  \"id\": \"unique-id\",\n  \"name\": \"Service Name\",\n  \"authType\": \"oauth2|apiKey\",\n  \"credentials\": {\n    // Service-specific auth\n  }\n}\n```\n\n### Error Handling\n```javascript\ntry {\n  // MCP operation\n} catch (error) {\n  if (error.code === 'RATE_LIMIT') {\n    // Implement backoff\n  } else if (error.code === 'AUTH_FAILED') {\n    // Refresh credentials\n  } else {\n    // Generic error handling\n  }\n}\n```\n\n### Data Transformation\n- Input validation\n- Format standardization\n- Output mapping\n- Type checking\n\n## Best Practices\n1. Cache frequently used data\n2. Batch operations when possible\n3. Implement retry logic\n4. Monitor API quotas\n5. Log all interactions",
+        "height": 700,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        -200
+      ],
+      "typeVersion": 1,
+      "id": "mcp-integrations-note",
+      "name": "MCP Integrations"
+    },
+    {
+      "parameters": {
+        "content": "# Inter-Agent Communication\n\n## Communication Patterns\n\n### 1. Direct Workflow Execution\n```javascript\n// Parent agent calling child\n{\n  \"node\": \"toolWorkflow\",\n  \"parameters\": {\n    \"workflowId\": \"childAgentId\",\n    \"workflowInputs\": {\n      \"trigger_conditions\": \"specific_task\",\n      \"data\": {}\n    }\n  }\n}\n```\n\n### 2. Webhook Communication\n```javascript\n// Async communication\n{\n  \"method\": \"POST\",\n  \"url\": \"{{baseUrl}}/webhook/agent-name\",\n  \"headers\": {\n    \"Content-Type\": \"application/json\"\n  },\n  \"body\": {\n    \"trigger_conditions\": \"task\",\n    \"priority\": \"high\",\n    \"callback_url\": \"{{responseUrl}}\"\n  }\n}\n```\n\n### 3. Event-Driven\n```javascript\n// Pub/sub pattern\n{\n  \"event\": \"order.created\",\n  \"subscribers\": [\n    \"fulfillment-agent\",\n    \"email-agent\",\n    \"analytics-agent\"\n  ]\n}\n```\n\n## Data Flow Standards\n\n### Request Format\n```json\n{\n  \"source_agent\": \"marketing_director\",\n  \"target_agent\": \"content_strategy\",\n  \"trigger_conditions\": \"create_campaign\",\n  \"priority\": \"high\",\n  \"data\": {\n    \"campaign_type\": \"seasonal\",\n    \"budget\": 5000,\n    \"timeline\": \"2_weeks\"\n  },\n  \"metadata\": {\n    \"request_id\": \"uuid\",\n    \"timestamp\": \"ISO8601\",\n    \"correlation_id\": \"uuid\"\n  }\n}\n```\n\n### Response Format\n```json\n{\n  \"status\": \"success\",\n  \"source_agent\": \"content_strategy\",\n  \"data\": {\n    \"campaign_id\": \"uuid\",\n    \"deliverables\": [],\n    \"timeline\": {}\n  },\n  \"metadata\": {\n    \"response_id\": \"uuid\",\n    \"request_id\": \"uuid\",\n    \"processing_time_ms\": 1234\n  }\n}\n```\n\n## Coordination Protocols\n\n### Sequential Processing\n- Ordered task execution\n- Dependency management\n- Result aggregation\n\n### Parallel Processing\n- Concurrent execution\n- Result merging\n- Conflict resolution\n\n### Hierarchical Delegation\n- Top-down task assignment\n- Bottom-up reporting\n- Escalation paths",
+        "height": 700,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        200,
+        -200
+      ],
+      "typeVersion": 1,
+      "id": "communication-patterns-note",
+      "name": "Communication Patterns"
+    },
+    {
+      "parameters": {
+        "content": "# Performance & Monitoring\n\n## Key Metrics\n\n### System Performance\n- **Response Time**: <5s for standard operations\n- **Throughput**: 100+ requests/minute\n- **Error Rate**: <1%\n- **Availability**: 99.9% uptime\n\n### Agent Metrics\n```javascript\n// Track per agent\n{\n  \"agent_name\": \"content_strategy\",\n  \"metrics\": {\n    \"total_requests\": 1234,\n    \"success_rate\": 98.5,\n    \"avg_response_time_ms\": 2500,\n    \"errors\": {\n      \"timeout\": 5,\n      \"validation\": 10,\n      \"system\": 2\n    }\n  }\n}\n```\n\n### Resource Usage\n- CPU utilization\n- Memory consumption\n- Database connections\n- API rate limits\n\n## Monitoring Setup\n\n### 1. Logging Configuration\n```javascript\n// Structured logging\n{\n  \"timestamp\": \"ISO8601\",\n  \"level\": \"info|warn|error\",\n  \"agent\": \"agent_name\",\n  \"event\": \"event_type\",\n  \"data\": {},\n  \"trace_id\": \"uuid\"\n}\n```\n\n### 2. Alert Rules\n- Error rate > 5%\n- Response time > 10s\n- Memory usage > 80%\n- API quota > 90%\n\n### 3. Dashboards\n- Real-time system status\n- Agent performance\n- Business metrics\n- Error analysis\n\n## Optimization Strategies\n\n### Caching\n- Redis for hot data\n- CDN for static assets\n- Query result caching\n- API response caching\n\n### Scaling\n- Horizontal scaling for agents\n- Load balancing\n- Queue management\n- Resource pooling\n\n### Performance Tuning\n- Query optimization\n- Batch processing\n- Async operations\n- Connection pooling\n\n## Troubleshooting Guide\n\n### Common Issues\n1. **Timeout Errors**\n   - Check API limits\n   - Verify network connectivity\n   - Review processing logic\n\n2. **Memory Leaks**\n   - Monitor long-running processes\n   - Implement cleanup routines\n   - Check circular references\n\n3. **Data Inconsistencies**\n   - Verify data transformations\n   - Check concurrent access\n   - Review transaction handling",
+        "height": 700,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        800,
+        -200
+      ],
+      "typeVersion": 1,
+      "id": "monitoring-performance-note",
+      "name": "Performance & Monitoring"
+    },
+    {
+      "parameters": {
+        "content": "# Security & Compliance\n\n## Security Standards\n\n### Authentication\n- OAuth 2.0 for external services\n- API key rotation every 90 days\n- Service account principles\n- Multi-factor authentication\n\n### Authorization\n```javascript\n// Role-based access control\n{\n  \"agent\": \"marketing_director\",\n  \"permissions\": [\n    \"read:all_marketing_data\",\n    \"write:campaigns\",\n    \"execute:subordinate_agents\",\n    \"approve:budgets\"\n  ],\n  \"restrictions\": [\n    \"no:financial_transactions\",\n    \"no:customer_pii_access\"\n  ]\n}\n```\n\n### Data Protection\n- Encryption at rest (AES-256)\n- TLS 1.3 for transit\n- PII handling protocols\n- Data retention policies\n\n## Compliance Requirements\n\n### GDPR Compliance\n- Data minimization\n- Right to erasure\n- Consent management\n- Data portability\n\n### PCI DSS (if applicable)\n- No credit card storage\n- Tokenization only\n- Secure transmission\n- Access logging\n\n### Industry Standards\n- ISO 27001 alignment\n- SOC 2 principles\n- OWASP guidelines\n- API security best practices\n\n## Security Checklist\n\n### Development\n- [ ] Input validation\n- [ ] Output encoding\n- [ ] Error handling (no data leaks)\n- [ ] Secure dependencies\n- [ ] Code review\n\n### Deployment\n- [ ] Environment isolation\n- [ ] Secrets management\n- [ ] Network segmentation\n- [ ] Access controls\n- [ ] Audit logging\n\n### Operations\n- [ ] Regular updates\n- [ ] Vulnerability scanning\n- [ ] Incident response plan\n- [ ] Backup procedures\n- [ ] Disaster recovery\n\n## Incident Response\n\n### Severity Levels\n1. **Critical**: Data breach, system compromise\n2. **High**: Service disruption, auth failure\n3. **Medium**: Performance degradation\n4. **Low**: Minor errors, warnings\n\n### Response Protocol\n1. Detect and assess\n2. Contain and isolate\n3. Investigate root cause\n4. Remediate and recover\n5. Document and review",
+        "height": 700,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1600,
+        600
+      ],
+      "typeVersion": 1,
+      "id": "security-compliance-note",
+      "name": "Security & Compliance"
+    },
+    {
+      "parameters": {
+        "content": "# Deployment & Operations\n\n## Environment Setup\n\n### Development\n```yaml\n# docker-compose.dev.yml\nservices:\n  n8n:\n    image: n8nio/n8n:latest\n    environment:\n      - N8N_BASIC_AUTH_ACTIVE=true\n      - N8N_LOG_LEVEL=debug\n      - DB_TYPE=postgresdb\n    volumes:\n      - ./workflows:/home/node/.n8n/workflows\n  \n  postgres:\n    image: postgres:15\n    environment:\n      - POSTGRES_DB=n8n_dev\n  \n  redis:\n    image: redis:7-alpine\n```\n\n### Production\n```yaml\n# docker-compose.prod.yml\nservices:\n  n8n:\n    image: n8nio/n8n:latest\n    deploy:\n      replicas: 3\n      resources:\n        limits:\n          cpus: '2'\n          memory: 4G\n    environment:\n      - N8N_ENCRYPTION_KEY=${ENCRYPTION_KEY}\n      - N8N_LOG_LEVEL=info\n      - EXECUTIONS_MODE=queue\n```\n\n## Deployment Process\n\n### 1. Pre-deployment\n- Run test suite\n- Validate workflows\n- Check dependencies\n- Review changes\n\n### 2. Deployment Steps\n```bash\n# Export workflows\nn8n export:workflow --all --output=./backup\n\n# Deploy new version\ndocker-compose down\ndocker-compose pull\ndocker-compose up -d\n\n# Import workflows\nn8n import:workflow --input=./workflows\n```\n\n### 3. Post-deployment\n- Verify services\n- Test critical paths\n- Monitor metrics\n- Update documentation\n\n## Backup & Recovery\n\n### Backup Strategy\n- Daily workflow exports\n- Database snapshots\n- Configuration backups\n- Media file sync\n\n### Recovery Procedures\n1. Assess damage scope\n2. Restore from latest backup\n3. Verify data integrity\n4. Test functionality\n5. Document incident\n\n## Maintenance Tasks\n\n### Daily\n- Monitor error logs\n- Check queue status\n- Verify integrations\n- Review alerts\n\n### Weekly\n- Performance analysis\n- Security updates\n- Backup verification\n- Capacity planning\n\n### Monthly\n- Full system audit\n- Dependency updates\n- Documentation review\n- Training updates",
+        "height": 700,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1000,
+        600
+      ],
+      "typeVersion": 1,
+      "id": "deployment-operations-note",
+      "name": "Deployment & Operations"
+    },
+    {
+      "parameters": {
+        "content": "# Agent Workflow Examples\n\n## Marketing Director Agent\n```json\n{\n  \"trigger_conditions\": \"quarterly_planning\",\n  \"data\": {\n    \"quarter\": \"Q2_2024\",\n    \"budget\": 50000,\n    \"goals\": {\n      \"revenue_target\": 500000,\n      \"new_customers\": 1000,\n      \"brand_awareness\": \"+20%\"\n    }\n  }\n}\n\n// Expected Response\n{\n  \"status\": \"success\",\n  \"plan\": {\n    \"campaigns\": [\n      {\n        \"name\": \"Spring Art Collection\",\n        \"budget\": 20000,\n        \"channels\": [\"social\", \"email\", \"paid\"]\n      }\n    ],\n    \"resource_allocation\": {\n      \"content_team\": \"40%\",\n      \"paid_media\": \"35%\",\n      \"social_media\": \"25%\"\n    }\n  }\n}\n```\n\n## Content Strategy Agent\n```json\n{\n  \"trigger_conditions\": \"content_calendar\",\n  \"data\": {\n    \"period\": \"march_2024\",\n    \"themes\": [\"spring_refresh\", \"artist_spotlight\"],\n    \"content_types\": [\"blog\", \"social\", \"email\"]\n  }\n}\n\n// Expected Response\n{\n  \"status\": \"success\",\n  \"calendar\": {\n    \"week_1\": [\n      {\n        \"date\": \"2024-03-01\",\n        \"type\": \"blog\",\n        \"title\": \"5 Ways to Refresh Your Space\",\n        \"platforms\": [\"website\", \"email\"]\n      }\n    ]\n  }\n}\n```\n\n## Social Media Director\n```json\n{\n  \"trigger_conditions\": \"campaign_social\",\n  \"data\": {\n    \"campaign_id\": \"spring_2024\",\n    \"platforms\": [\"instagram\", \"facebook\", \"pinterest\"],\n    \"content_count\": 30,\n    \"timeline\": \"4_weeks\"\n  }\n}\n\n// Expected Response\n{\n  \"status\": \"success\",\n  \"social_plan\": {\n    \"instagram\": {\n      \"posts\": 10,\n      \"stories\": 20,\n      \"reels\": 5\n    },\n    \"facebook\": {\n      \"posts\": 8,\n      \"ads\": 5\n    },\n    \"pinterest\": {\n      \"pins\": 15,\n      \"boards\": 2\n    }\n  }\n}\n```\n\n## Common Patterns\n\n### Error Response\n```json\n{\n  \"status\": \"error\",\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Missing required field: campaign_id\",\n    \"details\": {\n      \"field\": \"campaign_id\",\n      \"requirement\": \"string, required\"\n    }\n  },\n  \"timestamp\": \"2024-03-15T10:30:00Z\"\n}\n```\n\n### Async Processing\n```json\n{\n  \"status\": \"accepted\",\n  \"job_id\": \"job_123456\",\n  \"estimated_completion\": \"2024-03-15T11:00:00Z\",\n  \"status_url\": \"/status/job_123456\"\n}\n```",
+        "height": 700,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        600
+      ],
+      "typeVersion": 1,
+      "id": "workflow-examples-note",
+      "name": "Workflow Examples"
+    },
+    {
+      "parameters": {
+        "content": "# Troubleshooting Guide\n\n## Common Issues\n\n### 1. Agent Not Responding\n**Symptoms**: No response from webhook/trigger\n\n**Diagnostic Steps**:\n```bash\n# Check workflow status\nn8n workflows:list --active\n\n# Check execution history\nn8n executions:list --workflow-id=<id>\n\n# View logs\ndocker logs n8n_container -f\n```\n\n**Solutions**:\n- Verify workflow is active\n- Check webhook URL configuration\n- Validate credentials\n- Review error logs\n\n### 2. Memory Issues\n**Symptoms**: Slow performance, crashes\n\n**Diagnostic**:\n```sql\n-- Check PostgreSQL connections\nSELECT count(*) FROM pg_stat_activity;\n\n-- Check memory usage\nSELECT pg_database_size('n8n');\n```\n\n**Solutions**:\n- Implement connection pooling\n- Add memory cleanup nodes\n- Increase container resources\n- Archive old executions\n\n### 3. Integration Failures\n**Symptoms**: MCP errors, API failures\n\n**Diagnostic**:\n- Check API credentials\n- Verify rate limits\n- Test endpoints manually\n- Review error responses\n\n**Solutions**:\n- Rotate API keys\n- Implement retry logic\n- Add rate limiting\n- Update MCP versions\n\n### 4. Data Flow Issues\n**Symptoms**: Missing or incorrect data\n\n**Diagnostic**:\n```javascript\n// Add debug nodes\n{\n  \"node\": \"code\",\n  \"code\": `\n    console.log('Input:', $input.all());\n    console.log('Data:', JSON.stringify($json));\n    return $input.all();\n  `\n}\n```\n\n**Solutions**:\n- Validate data schemas\n- Add transformation nodes\n- Check field mappings\n- Review data types\n\n## Debug Mode\n\n### Enable Debugging\n```bash\n# Set environment variable\nexport N8N_LOG_LEVEL=debug\n\n# Or in workflow\n${JSON.stringify($all(), null, 2)}\n```\n\n### Useful Debug Nodes\n1. **Set Node**: Inspect data structure\n2. **Code Node**: Custom logging\n3. **HTTP Request**: Test endpoints\n4. **Function Node**: Data validation\n\n## Support Resources\n- Internal wiki\n- Agent documentation\n- n8n community forum\n- MCP server docs\n- Team Slack channel",
+        "height": 700,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        200,
+        600
+      ],
+      "typeVersion": 1,
+      "id": "troubleshooting-guide-note",
+      "name": "Troubleshooting Guide"
+    },
+    {
+      "parameters": {
+        "content": "# Future Enhancements\n\n## Planned Features\n\n### Q2 2024\n1. **Advanced Analytics Dashboard**\n   - Real-time agent performance\n   - Business metric tracking\n   - Predictive analytics\n   - Custom reporting\n\n2. **Voice Integration**\n   - Voice-activated agents\n   - Speech-to-text commands\n   - Audio content creation\n   - Podcast automation\n\n3. **Mobile App Support**\n   - Agent management app\n   - Push notifications\n   - Mobile-optimized workflows\n   - Offline capabilities\n\n### Q3 2024\n1. **AI Model Upgrades**\n   - GPT-5 integration\n   - Custom fine-tuned models\n   - Multi-modal processing\n   - Local LLM options\n\n2. **Enhanced Automation**\n   - Predictive task scheduling\n   - Autonomous decision making\n   - Self-healing workflows\n   - Auto-scaling agents\n\n3. **Blockchain Integration**\n   - NFT marketplace\n   - Smart contracts\n   - Provenance tracking\n   - Decentralized storage\n\n### Q4 2024\n1. **Global Expansion**\n   - Multi-language support\n   - Regional customization\n   - Local payment methods\n   - Cultural adaptation\n\n2. **Enterprise Features**\n   - White-label options\n   - Custom integrations\n   - SLA guarantees\n   - Dedicated support\n\n## Research Areas\n\n### Agent Intelligence\n- Reinforcement learning\n- Transfer learning\n- Federated learning\n- Explainable AI\n\n### System Architecture\n- Microservices migration\n- Event sourcing\n- CQRS implementation\n- GraphQL APIs\n\n### Performance\n- Edge computing\n- Quantum optimization\n- Neural acceleration\n- Distributed processing\n\n## Community Contributions\n- Open source components\n- Plugin marketplace\n- Template library\n- Best practices hub\n\n## Training & Certification\n- Agent development course\n- System architecture cert\n- Best practices training\n- Advanced optimization",
+        "height": 700,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        800,
+        600
+      ],
+      "typeVersion": 1,
+      "id": "future-enhancements-note",
+      "name": "Future Enhancements"
+    }
+  ],
+  "connections": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "n8n-docs-v2",
+  "meta": {
+    "instanceId": "80621a4270e0ac393edfe0b84576ab8588a37d1db0f23bca7018517bcf39d930"
+  },
+  "id": "n8nDocumentation",
+  "tags": [
+    {
+      "id": "documentation",
+      "name": "Documentation"
+    },
+    {
+      "id": "multi-agent-system",
+      "name": "Multi-Agent System"
+    },
+    {
+      "id": "vividwalls",
+      "name": "VividWalls"
+    }
+  ]
+}

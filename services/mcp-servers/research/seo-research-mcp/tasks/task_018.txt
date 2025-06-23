@@ -1,0 +1,11 @@
+# Task ID: 18
+# Title: Docker Containerization and Deployment
+# Status: pending
+# Dependencies: 16, 17
+# Priority: medium
+# Description: Create Docker containers and deployment configuration for production readiness
+# Details:
+Create Dockerfile, docker-compose configuration, and deployment scripts. Include health checks, environment configuration, and integration with existing Neo-MCP infrastructure.
+
+# Test Strategy:
+Test containerized deployment, health checks, and integration with Neo-MCP ecosystem

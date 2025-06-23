@@ -1,0 +1,11 @@
+# Task ID: 13
+# Title: Long-tail Keyword Generator MCP Tool
+# Status: pending
+# Dependencies: 4, 9
+# Priority: medium
+# Description: Implement long_tail_generator MCP tool for generating targeted long-tail keywords
+# Details:
+Create MCP tool that generates high-potential long-tail keywords for specific domains using multiple data sources and LLM processing. Include semantic analysis and search intent alignment.
+
+# Test Strategy:
+Test keyword generation quality, relevance, and search potential accuracy

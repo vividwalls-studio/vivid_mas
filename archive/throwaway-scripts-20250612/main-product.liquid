@@ -1,0 +1,299 @@
+{%- comment -%}
+  VividWalls Product Page Template
+  Clean structure with separated CSS and JavaScript
+{%- endcomment -%}
+
+{{ 'vividwalls-product.css' | asset_url | stylesheet_tag }}
+
+<script>
+  window.vividwallsProductHandle = "{{ product.handle }}";
+</script>
+
+<div class="vividwalls-product-section page-width">
+  <div class="vividwalls-main-container">
+    
+    <!-- Section 01 - Main Product Display -->
+    <div class="vividwalls-section-01">
+      
+      <!-- Artwork Container -->
+      <div class="vividwalls-artwork-container">
+        
+        <!-- Main Artwork Image -->
+        <div class="vividwalls-main-image">
+          <div class="vividwalls-image-wrapper">
+            {% if product.featured_media %}
+              {{ product.featured_media | image_url: width: 800 | image_tag: 
+                 alt: product.featured_media.alt | default: product.title,
+                 class: 'vividwalls-main-img' }}
+            {% endif %}
+          </div>
+        </div>
+        
+        <!-- Thumbnails Container -->
+        <div class="vividwalls-thumbnails-container">
+          
+          <div class="vividwalls-thumbnails">
+            {% for variant in product.variants %}
+              {% if variant.featured_media %}
+                <div class="vividwalls-thumbnail-item" data-variant-id="{{ variant.id }}">
+                  <div class="vividwalls-thumbnail-wrapper">
+                    {% if forloop.first %}
+                      <div class="vividwalls-selected-indicator"></div>
+                    {% endif %}
+                    {{ variant.featured_media | image_url: width: 220 | image_tag: 
+                       alt: variant.featured_media.alt | default: variant.title,
+                       class: 'vividwalls-thumbnail',
+                       data-variant-id: variant.id }}
+                  </div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+          
+          <!-- Social Share Icon -->
+          <div class="vividwalls-social-share">
+            <div class="vividwalls-share-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Product Info -->
+      <div class="vividwalls-product-info">
+        
+        <!-- Product Info Container -->
+        <div class="vividwalls-info-container">
+          
+          <div class="vividwalls-product-header">
+            <!-- Product Title -->
+            <div class="vividwalls-product-name">{{ product.title }}</div>
+            
+            <!-- Collection & Artist Info -->
+            {% if product.metafields.custom.collection_name %}
+              <div class="vividwalls-collection-name">
+                Collection → {{ product.metafields.custom.collection_name }}
+              </div>
+            {% endif %}
+            
+            {% if product.metafields.custom.artist_name %}
+              <div class="vividwalls-artist-info">
+                <span class="vividwalls-artist-label">Original Art Illustrations by </span>
+                <span class="vividwalls-artist-name">{{ product.metafields.custom.artist_name }}</span>
+              </div>
+            {% endif %}
+            
+            <!-- Limited Edition Tag -->
+            {% if product.tags contains 'limited-edition' %}
+              <div class="vividwalls-tag-container">
+                <div class="vividwalls-tag">Limited Edition Print</div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <!-- Shopping Cart Component -->
+        <form action="/cart/add" method="post" enctype="multipart/form-data" id="vividwalls-product-form">
+          <div class="vividwalls-shopping-cart">
+            
+            <!-- Total Selected Price -->
+            <div class="vividwalls-total-price-display">
+              <div class="vividwalls-dimensions">
+                <span class="vividwalls-width">24</span>
+                <span class="vividwalls-separator">X</span>
+                <span class="vividwalls-height">36</span>
+              </div>
+              <div class="vividwalls-total-price">
+                {{ product.selected_or_first_available_variant.price | money }}
+              </div>
+            </div>
+            
+            <!-- Variant Picker -->
+            <div class="vividwalls-variant-picker">
+              <div class="vividwalls-variant-options">
+                
+                {% for variant in product.variants %}
+                  {% assign size_parts = variant.title | split: ' / ' | first | split: 'x' %}
+                  {% if size_parts.size == 2 %}
+                    {% assign width = size_parts[0] | strip %}
+                    {% assign height = size_parts[1] | strip %}
+                    {% assign is_default = false %}
+                    {% if width == '24' and height == '36' %}
+                      {% assign is_default = true %}
+                    {% endif %}
+                    
+                    <div class="vividwalls-variant-option{% if is_default %} selected{% endif %}" 
+                         data-variant-id="{{ variant.id }}"
+                         data-variant-price="{{ variant.price }}"
+                         data-variant-size="{{ width }}x{{ height }}"
+                         data-variant-available="{{ variant.available }}"
+                         data-variant-inventory="{{ variant.inventory_quantity }}"
+                         {% if variant.featured_media %}
+                         data-variant-image="{{ variant.featured_media | image_url: width: 800 }}"
+                         {% endif %}>
+                      
+                      <div class="vividwalls-variant-info">
+                        <div class="vividwalls-variant-dimensions">
+                          <span class="vividwalls-variant-width">{{ width }}</span>
+                          <span class="vividwalls-variant-separator">X</span>
+                          <span class="vividwalls-variant-height">{{ height }}</span>
+                        </div>
+                        <div class="vividwalls-variant-price">{{ variant.price | money }}</div>
+                      </div>
+                      
+                      <div class="vividwalls-variant-stock">
+                        <div class="vividwalls-stock-info">
+                          {% if variant.inventory_management %}
+                            {% if variant.inventory_quantity > 0 %}
+                              {{ variant.inventory_quantity }} remaining
+                            {% else %}
+                              Sold out
+                            {% endif %}
+                          {% else %}
+                            In stock
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+            
+            <!-- Canvas Finish Options -->
+            <div class="vividwalls-canvas-finish-label">
+              <span>Canvas Finish Options</span>
+            </div>
+            
+            <div class="vividwalls-gallery-wrap-container">
+              <div class="vividwalls-gallery-wrap-option">
+                <label class="vividwalls-gallery-wrap-checkbox">
+                  <div class="vividwalls-checkbox-visual">
+                    <div class="vividwalls-check-icon">
+                      <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+                        <path d="M1 4.5L4.5 8L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <input type="checkbox" name="properties[Gallery Wrap]" value="yes">
+                  <div class="vividwalls-gallery-wrap-label">Gallery Wrapped Canvas</div>
+                </label>
+                
+                <div class="vividwalls-gallery-wrap-prices">
+                  <span>24X36 + $75</span>
+                  <div class="vividwalls-price-separator"></div>
+                  <span>36X48 + $75</span>
+                  <div class="vividwalls-price-separator"></div>
+                  <span>53X72 + $125</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Buy Button Section -->
+            <div class="vividwalls-buy-section">
+              
+              <div class="vividwalls-sku">SKU: {{ product.selected_or_first_available_variant.sku | default: 'N/A' }}</div>
+              
+              <div class="vividwalls-quantity-and-buy">
+                
+                <!-- Quantity Selector -->
+                <div class="vividwalls-quantity-selector">
+                  <button type="button" class="vividwalls-quantity-button vividwalls-quantity-minus">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                  
+                  <div class="vividwalls-quantity-value">
+                    <input type="number" name="quantity" value="1" min="1" class="vividwalls-quantity-input">
+                  </div>
+                  
+                  <button type="button" class="vividwalls-quantity-button vividwalls-quantity-plus">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                </div>
+                
+                <!-- Add to Cart Button -->
+                <button type="submit" name="add" class="vividwalls-add-to-cart">
+                  <span>ADD TO CART</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Hidden Form Fields -->
+          <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+          <input type="hidden" name="properties[_gallery_wrap_price]" value="0">
+        </form>
+        
+        <!-- Purchase Options -->
+        <div class="vividwalls-purchase-options">
+          
+          <!-- Shop Pay Button -->
+          <button class="vividwalls-shop-pay-button">Buy with Shop Pay</button>
+          
+          <!-- Shipping Info -->
+          <div class="vividwalls-shipping-info">
+            <div class="vividwalls-shipping-label">
+              <span class="underline">Shipping</span>
+              <span class="regular"> calculated at checkout.</span>
+            </div>
+            
+            <div class="vividwalls-installment-info">
+              <div class="vividwalls-installment-text">
+                4 interest-free installments, or from 
+                <span class="vividwalls-installment-price">$100.00</span>/mo with Shop Pay
+              </div>
+            </div>
+            
+            <div class="vividwalls-power-info">
+              <div class="vividwalls-power-text">Check your purchasing power</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Section 02 - Description & Additional Image -->
+    <div class="vividwalls-section-02">
+      <div class="vividwalls-section-02-content">
+        
+        <!-- Description -->
+        <div class="vividwalls-description-container">
+          <div class="vividwalls-description-wrapper">
+            <div class="vividwalls-description-text">
+              {% if product.description != blank %}
+                {{ product.description | strip_html | truncate: 300 }}
+              {% else %}
+                Experience the subtle elegance of this sophisticated abstract composition that brings nature-inspired tones to modern interiors. This limited edition print features an intricate interplay of colors and textures, creating a calming yet dynamic visual that complements any space.
+              {% endif %}
+            </div>
+          </div>
+          
+          <div class="vividwalls-read-more-container">
+            <button class="vividwalls-read-more">read more</button>
+          </div>
+        </div>
+        
+        <!-- Additional Artwork Image -->
+        <div class="vividwalls-additional-image">
+          <div class="vividwalls-additional-image-wrapper">
+            {% if product.media[1] %}
+              {{ product.media[1] | image_url: width: 600 | image_tag: 
+                 alt: product.media[1].alt | default: product.title }}
+            {% elsif product.featured_media %}
+              {{ product.featured_media | image_url: width: 600 | image_tag: 
+                 alt: product.featured_media.alt | default: product.title }}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ 'vividwalls-product.js' | asset_url }}" defer></script>

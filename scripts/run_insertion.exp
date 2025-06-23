@@ -1,0 +1,44 @@
+#!/usr/bin/expect -f
+
+set timeout 300
+set passphrase "freedom"
+set anon_key "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzQ5NjA0MDkxLCJleHAiOjIwNjQ5NjQwOTF9.I-ofdpcJwdSKKZ5rRN_DSnfp98iBH862UruU6XsNkcI"
+
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        send "cd /root/vivid_mas\r"
+    }
+}
+
+expect "root@*"
+send "export SUPABASE_URL='https://supabase.vividwalls.blog'\r"
+
+expect "root@*"
+send "export SUPABASE_ANON_KEY='$anon_key'\r"
+
+expect "root@*"
+send "bash scripts/postgrest_direct_insert.sh\r"
+
+expect {
+    "Do you want to proceed with insertion*" {
+        send "y\r"
+        exp_continue
+    }
+    "Insertion complete!" {
+        puts "\nInsertion completed successfully!"
+    }
+    timeout {
+        puts "\nTimeout reached during insertion"
+    }
+}
+
+expect "root@*"
+send "exit\r"
+
+expect eof

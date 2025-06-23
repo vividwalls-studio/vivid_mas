@@ -1,0 +1,181 @@
+{
+  "name": "AI Agent with MCP Tools Example",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "webhook_trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [250, 300],
+      "webhookId": "ai-agent-mcp-example"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Load MCP client functions\nconst mcpClient = require('/opt/mcp-servers/mcp-client-functions.js');\n\n// Example: List all workflows\ntry {\n  const workflows = await mcpClient.listWorkflows();\n  return [{\n    json: {\n      success: true,\n      workflowCount: workflows.length,\n      workflows: workflows\n    }\n  }];\n} catch (error) {\n  return [{\n    json: {\n      success: false,\n      error: error.message\n    }\n  }];\n}"
+      },
+      "id": "list_workflows",
+      "name": "List Workflows",
+      "type": "n8n-nodes-base.function",
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "systemMessage": "You are an AI assistant helping with e-commerce automation. You have access to MCP tools for n8n, Shopify, and WordPress.",
+        "options": {
+          "temperature": 0.7
+        },
+        "tools": {
+          "tools": [
+            {
+              "name": "list_n8n_workflows",
+              "description": "List all n8n workflows",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "activeOnly": {
+                    "type": "boolean",
+                    "description": "Only list active workflows"
+                  }
+                },
+                "required": []
+              },
+              "function": "const mcpClient = require('/opt/mcp-servers/mcp-client-functions.js');\nconst { activeOnly = false } = args;\nreturn await mcpClient.listWorkflows(activeOnly);"
+            },
+            {
+              "name": "execute_workflow",
+              "description": "Execute an n8n workflow with data",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "workflowId": {
+                    "type": "string",
+                    "description": "ID of the workflow to execute"
+                  },
+                  "data": {
+                    "type": "object",
+                    "description": "Data to pass to the workflow"
+                  }
+                },
+                "required": ["workflowId"]
+              },
+              "function": "const mcpClient = require('/opt/mcp-servers/mcp-client-functions.js');\nconst { workflowId, data = {} } = args;\nreturn await mcpClient.executeWorkflow(workflowId, data);"
+            },
+            {
+              "name": "get_shopify_products",
+              "description": "Get products from Shopify store",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "limit": {
+                    "type": "number",
+                    "description": "Number of products to retrieve"
+                  }
+                },
+                "required": []
+              },
+              "function": "const mcpClient = require('/opt/mcp-servers/mcp-client-functions.js');\nconst { limit = 50 } = args;\nreturn await mcpClient.getShopifyProducts(limit);"
+            },
+            {
+              "name": "create_wordpress_post",
+              "description": "Create a new WordPress post",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "Post title"
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "Post content (HTML)"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "Post status (draft, publish)",
+                    "enum": ["draft", "publish"]
+                  }
+                },
+                "required": ["title", "content"]
+              },
+              "function": "const mcpClient = require('/opt/mcp-servers/mcp-client-functions.js');\nconst { title, content, status = 'draft' } = args;\nreturn await mcpClient.createWordPressPost(title, content, status);"
+            },
+            {
+              "name": "call_any_mcp_tool",
+              "description": "Call any MCP server tool directly",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "server": {
+                    "type": "string",
+                    "description": "MCP server name (n8n, shopify, wordpress, etc.)"
+                  },
+                  "tool": {
+                    "type": "string",
+                    "description": "Tool name to call"
+                  },
+                  "args": {
+                    "type": "object",
+                    "description": "Arguments for the tool"
+                  }
+                },
+                "required": ["server", "tool"]
+              },
+              "function": "const mcpClient = require('/opt/mcp-servers/mcp-client-functions.js');\nconst { server, tool, args = {} } = args;\nreturn await mcpClient.callMCPTool(server, tool, args);"
+            }
+          ]
+        }
+      },
+      "id": "ai_agent",
+      "name": "AI Agent with MCP Tools",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "response",
+              "value": "={{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format_response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.set",
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "respond_to_webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [1050, 300]
+    }
+  ],
+  "connections": {
+    "webhook_trigger": {
+      "main": [[{"node": "list_workflows", "type": "main", "index": 0}]]
+    },
+    "list_workflows": {
+      "main": [[{"node": "ai_agent", "type": "main", "index": 0}]]
+    },
+    "ai_agent": {
+      "main": [[{"node": "format_response", "type": "main", "index": 0}]]
+    },
+    "format_response": {
+      "main": [[{"node": "respond_to_webhook", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {}
+} 

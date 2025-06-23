@@ -1,0 +1,950 @@
+{% comment %}
+  VividWalls Product Page - Gallery Wrap Options
+  Canvas roll is default, gallery wrap adds price based on size
+{% endcomment %}
+
+{%- assign product_form_id = 'product-form-' | append: section.id -%}
+{%- assign selected_variant = product.selected_or_first_available_variant -%}
+
+<style>
+  #shopify-section-{{ section.id }} {
+    /* Typography Settings */
+    --vw-heading-font-family: {{ section.settings.heading_font.family }}, {{ section.settings.heading_font.fallback_families }};
+    --vw-heading-font-weight: {{ section.settings.heading_font.weight }};
+    --vw-heading-font-style: {{ section.settings.heading_font.style }};
+    
+    --vw-body-font-family: {{ section.settings.body_font.family }}, {{ section.settings.body_font.fallback_families }};
+    --vw-body-font-weight: {{ section.settings.body_font_weight }};
+    
+    --vw-body-semibold-font-family: {{ section.settings.body_font_semibold.family }}, {{ section.settings.body_font_semibold.fallback_families }};
+    --vw-body-semibold-font-weight: {{ section.settings.body_font_semibold.weight | default: 600 }};
+    
+    /* Font Sizes */
+    --vw-h1-size: {{ section.settings.h1_size }}px;
+    --vw-body-size: {{ section.settings.body_size }}px;
+    --vw-small-size: {{ section.settings.small_size }}px;
+    --vw-price-size: {{ section.settings.price_size }}px;
+    
+    /* Colors */
+    --vw-color-primary: {{ section.settings.primary_color }};
+    --vw-color-secondary: {{ section.settings.secondary_color }};
+    --vw-color-accent: {{ section.settings.accent_color }};
+    --vw-color-background: {{ section.settings.background_color }};
+    --vw-color-surface: {{ section.settings.surface_color }};
+    --vw-color-border: {{ section.settings.border_color }};
+    
+    /* Gradient Colors */
+    --vw-gradient-start: {{ section.settings.gradient_start_color }};
+    --vw-gradient-end: {{ section.settings.gradient_end_color }};
+    --vw-gradient-angle: {{ section.settings.gradient_angle }}deg;
+    
+    /* Spacing */
+    --vw-section-padding-top: {{ section.settings.section_padding_top }}px;
+    --vw-section-padding-bottom: {{ section.settings.section_padding_bottom }}px;
+    --vw-section-gap: {{ section.settings.section_gap }}px;
+    --vw-element-gap: {{ section.settings.element_gap }}px;
+    --vw-variant-gap: {{ section.settings.variant_gap }}px;
+    
+    /* Border Settings */
+    --vw-border-width: {{ section.settings.border_width }}px;
+    --vw-border-radius: {{ section.settings.border_radius }}px;
+    --vw-variant-border-radius: {{ section.settings.variant_border_radius }}px;
+  }
+
+  /* Apply gradient background if enabled */
+  {%- if section.settings.enable_gradient_background -%}
+  #shopify-section-{{ section.id }} .MainProductSection {
+    background: linear-gradient(var(--vw-gradient-angle), var(--vw-gradient-start), var(--vw-gradient-end)) !important;
+  }
+  {%- endif -%}
+  
+  /* Gallery Wrap Pricing Map */
+  .gallery-wrap-prices {
+    display: none;
+  }
+</style>
+
+<!-- Gallery Wrap Price Data -->
+<div class="gallery-wrap-prices" data-prices='{
+  "24x36": 75,
+  "36x48": 75,
+  "53x72": 125
+}'></div>
+
+<div data-layer="main-product-section" class="MainProductSection page-width" style="max-width: {{ section.settings.max_width }}px; width: 100%; padding-top: var(--vw-section-padding-top); padding-bottom: var(--vw-section-padding-bottom); background: var(--vw-color-background); flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: var(--vw-section-gap); display: flex; margin: 0 auto;">
+  <div data-layer="Section-01" class="Section01" style="width: 100%; justify-content: flex-start; align-items: flex-start; gap: {{ section.settings.content_gap }}px; display: flex">
+    <div data-layer="Artwork Container" class="ArtworkContainer" style="width: 800px; max-width: 66.67%; align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: center; gap: var(--vw-element-gap); display: flex">
+      <div data-layer="Main Artwork Image" class="MainArtworkImage" style="width: 100%; height: {{ section.settings.main_image_height }}px; justify-content: flex-start; align-items: flex-start; display: flex">
+        <div data-layer="Artwork Image/{{ product.handle }}" class="ArtworkImage{{ product.handle | capitalize | replace: '-', '' }}" style="flex: 1 1 0; align-self: stretch; background: var(--vw-color-surface); overflow: hidden; border-radius: var(--vw-border-radius); justify-content: center; align-items: center; gap: 10px; display: flex">
+          <img data-layer="img" class="Img" style="flex: 1 1 0; align-self: stretch; object-fit: cover;" src="{{ product.featured_media | image_url: width: 800 }}" />
+        </div>
+      </div>
+      <div data-layer="Thumbnails Container" class="ThumbnailsContainer" style="align-self: stretch; position: relative; overflow: hidden; justify-content: flex-start; align-items: center; gap: var(--vw-element-gap); display: flex">
+        <div data-layer="Thumbnails" class="Thumbnails" style="flex: 1 1 0; justify-content: flex-start; align-items: center; gap: var(--vw-element-gap); display: flex; overflow-x: auto;">
+          {%- for media in product.media limit: 4 -%}
+            <div data-layer="Thumbnail-Image" class="ThumbnailImage" style="width: {{ section.settings.thumbnail_width }}px; min-width: {{ section.settings.thumbnail_width }}px; height: {{ section.settings.thumbnail_height }}px; flex-direction: column; justify-content: flex-start; align-items: flex-start; display: flex">
+              <div data-layer="Thumbnail-Image / {% if forloop.first %}Full{% elsif forloop.index == 2 %}Large{% elsif forloop.index == 3 %}Medium{% else %}Small{% endif %}" data-state="{% if forloop.index == 2 %}Selected{% else %}Default{% endif %}" class="ThumbnailImage{% if forloop.first %}Full{% elsif forloop.index == 2 %}Large{% elsif forloop.index == 3 %}Medium{% else %}Small{% endif %}" style="align-self: stretch; flex: 1 1 0; flex-direction: column; justify-content: flex-start; align-items: center; display: flex; cursor: pointer;">
+                {%- if forloop.index == 2 -%}
+                  <div data-layer="Seleted" class="Seleted" style="width: {{ section.settings.thumbnail_indicator_width }}px; height: {{ section.settings.thumbnail_indicator_height }}px; position: relative; background: var(--vw-color-primary); border-radius: var(--vw-border-radius);"></div>
+                {%- endif -%}
+                <img data-layer="Screenshot {{ forloop.index }}" class="Screenshot{{ forloop.index }}" style="width: {{ section.settings.thumbnail_width }}px; height: {{ section.settings.thumbnail_height }}px; border-radius: var(--vw-border-radius); object-fit: cover;" src="{{ media | image_url: width: section.settings.thumbnail_width }}" />
+              </div>
+            </div>
+          {%- endfor -%}
+        </div>
+        <div data-layer="Social Share Container" class="SocialShareContainer" style="width: calc(100% - 8px); left: 5px; top: 50%; transform: translateY(-50%); position: absolute; justify-content: flex-end; align-items: center; display: flex">
+          <div data-layer="Social Share Icon" class="SocialShareIcon" style="width: 35px; height: 35px; opacity: 0.70; background: white; border-radius: 100px; justify-content: center; align-items: center; gap: 10px; display: flex; cursor: pointer;">
+            <div data-layer="Icons black/Chevron Right" class="IconsBlackChevronRight" style="width: 24px; height: 24px; position: relative">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div data-layer="Product Info" class="ProductInfo" style="flex: 1 1 0; min-width: 0; background: var(--vw-color-background); flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: {{ section.settings.info_gap }}px; display: flex">
+      <div data-layer="Product Info Container" class="ProductInfoContainer" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: {{ section.settings.info_inner_gap }}px; display: flex">
+        <div data-layer="Product Info" class="ProductInfo" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: var(--vw-element-gap); display: flex">
+          <div data-layer="Product Name" class="ProductName" style="align-self: stretch; color: var(--vw-color-primary); font-size: var(--vw-h1-size); font-family: var(--vw-heading-font-family); font-weight: var(--vw-heading-font-weight); font-style: var(--vw-heading-font-style); line-height: {{ section.settings.h1_line_height }}; word-wrap: break-word">{{ product.title }}</div>
+          <div data-layer="Artist Name" class="ArtistName" style="color: var(--vw-color-secondary); font-size: var(--vw-body-size); font-family: var(--vw-body-font-family); font-weight: var(--vw-body-font-weight); word-wrap: break-word">Collection →  {{ product.collections.first.title | default: "Vivid Layers" }}</div>
+          <div data-layer="Artist Info Container" class="ArtistInfoContainer" style="justify-content: flex-start; align-items: center; gap: 4px; display: inline-flex">
+            <div data-layer="Label" class="Label" style="color: var(--vw-color-secondary); font-size: var(--vw-body-size); font-family: var(--vw-body-font-family); font-style: italic; font-weight: var(--vw-body-font-weight); word-wrap: break-word">Original Art Illustrations by </div>
+            <div data-layer="Artist Name" class="ArtistName" style="color: var(--vw-color-secondary); font-size: var(--vw-body-size); font-family: var(--vw-body-font-family); font-weight: var(--vw-body-font-weight); word-wrap: break-word">{{ product.vendor | default: "Kingler Bercy" }}</div>
+          </div>
+          <div data-layer="Tag Container" class="TagContainer" style="padding: {{ section.settings.tag_padding }}px; background: var(--vw-color-primary); border-radius: var(--vw-border-radius); justify-content: center; align-items: center; gap: 10px; display: inline-flex">
+            <div data-layer="Tag" class="Tag" style="color: var(--vw-color-background); font-size: var(--vw-body-size); font-family: var(--vw-body-font-family); font-weight: var(--vw-body-font-weight); word-wrap: break-word">Limited Edition Print</div>
+          </div>
+        </div>
+      </div>
+      
+      <form action="{{ routes.cart_add_url }}" method="post" enctype="multipart/form-data" id="{{ product_form_id }}">
+        <div data-layer="Shopping Cart Component" class="ShoppingCartComponent" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 20px; display: flex">
+          <div data-layer="Total Selected Price" class="TotalSelectedPrice" style="align-self: stretch; padding-left: 4px; padding-right: 4px; justify-content: space-between; align-items: center; display: inline-flex">
+            <div data-layer="Dimensions" class="Dimensions" style="justify-content: flex-start; align-items: center; gap: 3px; display: flex">
+              {%- assign clean_selected_title = selected_variant.title | replace: 'Canvas Roll', '' | replace: 'canvas roll', '' | replace: 'Gallery Wrapped Stretched Canvas', '' | replace: 'gallery wrapped stretched canvas', '' | strip -%}
+              {%- assign dimensions = clean_selected_title | split: 'x' -%}
+              <div data-layer="Width" class="Width" style="color: #262626; font-size: 18px; font-family: var(--vw-body-font-family); font-weight: var(--vw-body-font-weight); word-wrap: break-word">{{ dimensions[0] | strip }}</div>
+              <div data-layer="Separator" class="Separator" style="color: #262626; font-size: 18px; font-family: var(--vw-body-font-family); font-weight: var(--vw-body-font-weight); word-wrap: break-word">X</div>
+              <div data-layer="Height" class="Height" style="color: #262626; font-size: 18px; font-family: var(--vw-body-font-family); font-weight: var(--vw-body-font-weight); word-wrap: break-word">{{ dimensions[1] | strip }}</div>
+            </div>
+            <div data-layer="Total Price" class="TotalPrice total-price-display" data-base-price="{{ selected_variant.price }}" style="color: #262626; font-size: 18px; font-family: var(--vw-body-semibold-font-family); font-weight: var(--vw-body-semibold-font-weight); word-wrap: break-word">{{ selected_variant.price | money }} USD</div>
+          </div>
+          <div data-layer="Variant_Picker" class="VariantPicker" style="width: 100%; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: var(--vw-variant-gap); display: flex">
+            <div data-layer="Availablity" data-showoptions="True" class="Availablity" style="width: 100%; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: var(--vw-variant-gap); display: flex">
+              {%- for variant in product.variants -%}
+                {%- unless variant.title contains 'Gallery Wrapped' or variant.title contains 'gallery wrapped' -%}
+                {%- assign clean_title = variant.title | replace: 'Canvas Roll', '' | replace: 'canvas roll', '' | strip -%}
+                {%- assign variant_dimensions = clean_title | split: 'x' -%}
+                <div data-layer="Options & Availabity" data-isdefault="{% if forloop.first %}True{% else %}False{% endif %}" data-isselected="{% if variant == selected_variant %}True{% else %}False{% endif %}" data-issoldout="{% unless variant.available %}True{% else %}False{% endunless %}" class="OptionsAvailabity variant-option" data-variant-id="{{ variant.id }}" data-variant-price="{{ variant.price }}" data-variant-size="{{ clean_title | downcase | replace: ' ', '' }}" style="align-self: stretch; padding: 10px; {% if variant == selected_variant %}background: #262626;{% else %}opacity: 0.70; background: #FAFAFA;{% endif %} border-radius: 5px; outline: 1px {% if variant == selected_variant %}#262626{% else %}#FAFAFA{% endif %} solid; outline-offset: -1px; flex-direction: column; justify-content: flex-end; align-items: flex-end; gap: 10px; display: flex; cursor: pointer;">
+                  <div data-layer="Product Info" class="ProductInfo" style="align-self: stretch; justify-content: space-between; align-items: center; display: inline-flex">
+                    <div data-layer="Dimensions" class="Dimensions" style="justify-content: flex-start; align-items: center; gap: 3px; display: flex">
+                      <div data-layer="Width" class="Width" style="color: {% if variant == selected_variant %}#F5F5F5{% else %}#525252{% endif %}; font-size: 16px; font-family: {% if variant == selected_variant %}var(--vw-body-semibold-font-family){% else %}var(--vw-body-font-family){% endif %}; font-weight: {% if variant == selected_variant %}var(--vw-body-semibold-font-weight){% else %}var(--vw-body-font-weight){% endif %}; word-wrap: break-word">{{ variant_dimensions[0] | strip }}</div>
+                      <div data-layer="Separator" class="Separator" style="color: {% if variant == selected_variant %}#F5F5F5{% else %}#525252{% endif %}; font-size: 16px; font-family: {% if variant == selected_variant %}var(--vw-body-semibold-font-family){% else %}var(--vw-body-font-family){% endif %}; font-weight: {% if variant == selected_variant %}var(--vw-body-semibold-font-weight){% else %}var(--vw-body-font-weight){% endif %}; word-wrap: break-word">X</div>
+                      <div data-layer="Height" class="Height" style="color: {% if variant == selected_variant %}#F5F5F5{% else %}#525252{% endif %}; font-size: 16px; font-family: {% if variant == selected_variant %}var(--vw-body-semibold-font-family){% else %}var(--vw-body-font-family){% endif %}; font-weight: {% if variant == selected_variant %}var(--vw-body-semibold-font-weight){% else %}var(--vw-body-font-weight){% endif %}; word-wrap: break-word">{{ variant_dimensions[1] | strip }}</div>
+                    </div>
+                    <div data-layer="Price" class="Price variant-price" style="color: {% if variant == selected_variant %}#F5F5F5{% else %}#525252{% endif %}; font-size: 16px; font-family: var(--vw-body-semibold-font-family); font-weight: var(--vw-body-semibold-font-weight); word-wrap: break-word">{{ variant.price | money }}</div>
+                  </div>
+                  <div data-layer="Frame 20" class="Frame20" style="align-self: stretch; justify-content: flex-end; align-items: center; display: inline-flex">
+                    <div data-layer="Stock Info" class="StockInfo" style="color: {% if variant == selected_variant %}#E5E5E5{% else %}#525252{% endif %}; font-size: 14px; font-family: var(--vw-body-font-family); font-weight: var(--vw-body-font-weight); word-wrap: break-word">
+                      {%- assign sold = variant.metafields.custom.units_sold | default: 0 -%}
+                      {%- assign remaining = variant.inventory_quantity -%}
+                      {{ sold }} sold - {{ remaining }} remaining
+                    </div>
+                  </div>
+                </div>
+                {%- endunless -%}
+              {%- endfor -%}
+            </div>
+            <div data-layer="Canvas Finish Label" class="CanvasFinishLabel" style="align-self: stretch; padding-left: 4px; margin-bottom: -5px;">
+              <div style="color: #737373; font-size: 14px; font-family: var(--vw-body-font-family); font-weight: 500; word-wrap: break-word">Canvas Finish Options</div>
+            </div>
+            <div data-layer="Container" class="Container" style="align-self: stretch; justify-content: flex-start; align-items: center; gap: 10px; display: inline-flex">
+              <div data-layer="Options/True/False" class="OptionsTrueFalse" style="flex: 1 1 0; height: 54px; padding-left: 20px; padding-right: 20px; padding-top: 10px; padding-bottom: 10px; background: #FAFAFA; border-radius: 5px; flex-direction: column; justify-content: center; align-items: flex-start; gap: 8px; display: inline-flex">
+                <div data-layer="Gallery Wrapped Canvas - Checkbox" data-state="Unchecked" class="GalleryWrappedCanvasCheckbox" style="position: relative; justify-content: flex-start; align-items: center; gap: 8px; display: inline-flex">
+                  <div data-layer="Rectangle 2" class="Rectangle2 checkbox-visual" style="width: 16px; height: 16px; background: #FAFAFA; border-radius: 4px; position: relative;">
+                    <div data-layer="Check" class="Check check-icon" style="width: 15px; height: 15px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none;">
+                      <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+                        <path d="M1 4.5L4.5 8L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="gallery-wrap-option" name="properties[Gallery Wrap]" value="yes" style="position: absolute; opacity: 0; width: 16px; height: 16px; left: 0; cursor: pointer;">
+                  <div data-layer="Accept terms and conditions" class="AcceptTermsAndConditions" style="color: #262626; font-size: 14px; font-family: var(--vw-body-font-family); font-weight: 500; word-wrap: break-word">Gallery Wrapped Canvas</div>
+                </div>
+                <div data-layer="Container" class="Container" style="justify-content: flex-start; align-items: center; gap: 10px; display: inline-flex">
+                  <div data-layer="Size - Small" class="SizeSmall" style="justify-content: center; align-items: center; display: flex">
+                    <div data-layer="24X36" class="X36" style="color: #737373; font-size: 12px; font-family: var(--vw-body-font-family); font-weight: 500; word-wrap: break-word">24X36</div>
+                    <div data-layer="+ $75" class="gallery-price-24x36" style="color: #737373; font-size: 12px; font-family: var(--vw-body-font-family); font-weight: 500; word-wrap: break-word"> + $75</div>
+                  </div>
+                  <div data-layer="Line" class="Line" style="width: 10px; height: 0px; transform: rotate(90deg); transform-origin: top left; outline: 1px #D4D4D4 solid; outline-offset: -0.50px"></div>
+                  <div data-layer="Size - Medium" class="SizeMedium" style="justify-content: center; align-items: center; display: flex">
+                    <div data-layer="36X48" class="X48" style="color: #737373; font-size: 12px; font-family: var(--vw-body-font-family); font-weight: 500; word-wrap: break-word">36X48</div>
+                    <div data-layer="+ $75" class="gallery-price-36x48" style="color: #737373; font-size: 12px; font-family: var(--vw-body-font-family); font-weight: 500; word-wrap: break-word"> + $75</div>
+                  </div>
+                  <div data-layer="Line" class="Line" style="width: 10px; height: 0px; transform: rotate(90deg); transform-origin: top left; outline: 1px #D4D4D4 solid; outline-offset: -0.50px"></div>
+                  <div data-layer="Size - Large" class="SizeLarge" style="justify-content: center; align-items: center; display: flex">
+                    <div data-layer="53X72" class="X72" style="color: #737373; font-size: 12px; font-family: var(--vw-body-font-family); font-weight: 500; word-wrap: break-word">53X72</div>
+                    <div data-layer="+ $125" class="gallery-price-53x72" style="color: #737373; font-size: 12px; font-family: var(--vw-body-font-family); font-weight: 500; word-wrap: break-word"> + $125</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div data-layer="Buy Button" class="BuyButton" style="width: 100%; overflow: hidden; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex">
+            <div data-layer="SKU" class="Sku" style="color: var(--vw-color-secondary); font-size: var(--vw-small-size); font-family: var(--vw-body-font-family); font-weight: var(--vw-body-font-weight); word-wrap: break-word">SKU: {{ selected_variant.sku | default: product.handle | upcase }}-{{ selected_variant.title | replace: ' x ', 'X' | replace: ' ', '' }}</div>
+            <div data-layer="Quantity Selector" class="QuantitySelector" style="width: 100%; height: {{ section.settings.button_height }}px; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex">
+              <div data-layer="Quantity Selector" class="QuantitySelector" style="width: 152px; height: 100%; padding-left: 20px; padding-right: 20px; padding-top: 10px; padding-bottom: 10px; overflow: hidden; border: var(--vw-border-width) solid var(--vw-color-border); border-radius: var(--vw-border-radius); justify-content: center; align-items: center; gap: 10px; display: flex">
+                <button type="button" data-layer="Quantity Icon" class="QuantityIcon quantity-minus" style="width: 24px; height: 24px; justify-content: center; align-items: center; gap: 10px; display: flex; background: none; border: none; cursor: pointer;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12H19" stroke="var(--vw-color-primary)" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </button>
+                <div data-layer="Quantity Value" class="QuantityValue" style="flex: 1 1 0; justify-content: center; align-items: center; gap: 10px; display: flex">
+                  <input type="number" name="quantity" value="1" min="1" data-layer="Quantity Text" class="QuantityText" style="color: var(--vw-color-primary); font-size: var(--vw-price-size); font-family: var(--vw-body-semibold-font-family); font-weight: var(--vw-body-semibold-font-weight); word-wrap: break-word; border: none; background: transparent; text-align: center; width: 40px;">
+                </div>
+                <button type="button" data-layer="Quantity Icon" class="QuantityIcon quantity-plus" style="width: 24px; height: 24px; justify-content: center; align-items: center; gap: 10px; display: flex; background: none; border: none; cursor: pointer;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 5V19M5 12H19" stroke="var(--vw-color-primary)" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+              <button type="submit" name="add" data-layer="Button Button" data-property-1="Primary" class="ButtonButton" style="flex: 1 1 0; height: 100%; padding-left: 16px; padding-right: 16px; padding-top: 12px; padding-bottom: 12px; background: var(--vw-color-primary); border-radius: var(--vw-border-radius); justify-content: center; align-items: center; gap: 10px; display: flex; border: none; cursor: pointer;">
+                <div data-layer="Button" class="Button" style="color: var(--vw-color-background); font-size: var(--vw-body-size); font-family: var(--vw-body-semibold-font-family); font-weight: var(--vw-body-semibold-font-weight); text-transform: {{ section.settings.button_text_transform }}; letter-spacing: {{ section.settings.button_letter_spacing }}px; word-wrap: break-word">ADD TO CART</div>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <input type="hidden" name="id" value="{{ selected_variant.id }}">
+        <input type="hidden" id="gallery-wrap-price" name="properties[_gallery_wrap_price]" value="0">
+      </form>
+      
+      <div data-layer="Purchase Button Container" class="PurchaseButtonContainer" style="width: 100%; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: var(--vw-element-gap); display: flex">
+        <div data-layer="Buy button" class="BuyButton" style="width: 100%; height: {{ section.settings.button_height }}px; position: relative; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex">
+          {{ form | payment_button }}
+        </div>
+        <div data-layer="Shipping Info" class="ShippingInfo" style="width: 100%; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex">
+          <div data-layer="Artist Info Container" class="ArtistInfoContainer" style="justify-content: flex-start; align-items: center; gap: 4px; display: inline-flex">
+            <div data-layer="Artist Label" class="ArtistLabel"><span style="color: var(--vw-color-primary); font-size: var(--vw-body-size); font-family: var(--vw-body-font-family); font-style: italic; font-weight: var(--vw-body-font-weight); text-decoration: underline; word-wrap: break-word">Shipping</span><span style="color: var(--vw-color-secondary); font-size: var(--vw-body-size); font-family: var(--vw-body-font-family); font-style: italic; font-weight: var(--vw-body-font-weight); word-wrap: break-word"> calculated at checkout.</span></div>
+          </div>
+          <div data-layer="Installment Info" class="InstallmentInfo" style="width: 100%; position: relative; justify-content: flex-start; align-items: center; display: flex">
+            <div data-layer="Installment Text" class="InstallmentText" style="flex: 1 1 0"><span style="color: var(--vw-color-secondary); font-size: var(--vw-body-size); font-family: var(--vw-body-font-family); font-weight: var(--vw-body-font-weight); word-wrap: break-word">4 interest-free installments, or from </span><span style="color: var(--vw-color-secondary); font-size: var(--vw-body-size); font-family: var(--vw-body-semibold-font-family); font-weight: var(--vw-body-semibold-font-weight); word-wrap: break-word">${{ selected_variant.price | divided_by: 4.0 | money_without_currency }}</span><span style="color: var(--vw-color-secondary); font-size: var(--vw-body-size); font-family: var(--vw-body-font-family); font-weight: var(--vw-body-font-weight); word-wrap: break-word">/mo with Shop Pay</span></div>
+          </div>
+          <div data-layer="Power Info" class="PowerInfo" style="width: 100%; justify-content: center; align-items: center; gap: 10px; display: flex">
+            <div data-layer="Power Text" class="PowerText" style="flex: 1 1 0"><span style="color: var(--vw-color-secondary); font-size: var(--vw-body-size); font-family: var(--vw-body-font-family); font-weight: var(--vw-body-font-weight); text-decoration: underline; word-wrap: break-word">Check your purchasing power</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  {%- if section.settings.show_description -%}
+  <div data-layer="Section-02" data-property-1="Variant2" class="Section02" style="width: 100%; max-width: {{ section.settings.max_width }}px; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 20px; display: flex">
+    <div data-layer="Frame 33" class="Frame33" style="align-self: stretch; min-height: 400px; justify-content: flex-start; align-items: center; gap: {{ section.settings.content_gap }}px; display: flex; flex-wrap: wrap;">
+      <div data-layer="Description" class="Description" style="width: 322px; min-width: 280px; flex: 0 0 auto; position: relative; overflow: hidden; flex-direction: column; justify-content: flex-start; align-items: center; gap: 10px; display: flex">
+        <div data-layer="Product Description Container" class="ProductDescriptionContainer" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: center; gap: 10px; display: flex">
+          <div data-layer="Product Description" class="ProductDescription" style="align-self: stretch; color: var(--vw-color-secondary); font-size: var(--vw-body-size); font-family: var(--vw-body-font-family); font-weight: var(--vw-body-font-weight); line-height: {{ section.settings.body_line_height }}; word-wrap: break-word">{{ product.description }}</div>
+        </div>
+        <div data-layer="Read More Container" class="ReadMoreContainer" style="width: 119px; padding-left: 10px; justify-content: flex-start; align-items: flex-end; gap: 10px; display: inline-flex">
+          <button data-layer="Read More Text" class="ReadMoreText" style="color: var(--vw-color-primary); font-size: var(--vw-body-size); font-family: var(--vw-body-font-family); font-weight: var(--vw-body-font-weight); text-decoration: underline; line-height: 24px; word-wrap: break-word; background: none; border: none; cursor: pointer;">read more</button>
+        </div>
+      </div>
+      {%- if product.media[1] -%}
+      <div data-layer="Additional Artwork Image" class="AdditionalArtworkImage" style="flex: 1 1 0; min-width: 300px; align-self: stretch; justify-content: flex-start; align-items: flex-start; display: flex">
+        <div data-layer="Artwork Image/{{ product.handle }}" class="ArtworkImage{{ product.handle | capitalize | replace: '-', '' }}" style="flex: 1 1 0; align-self: stretch; background: white; overflow: hidden; border-radius: var(--vw-border-radius); justify-content: center; align-items: center; gap: 10px; display: flex">
+          <img data-layer="img" class="Img" style="width: 100%; height: auto; object-fit: cover;" src="{{ product.media[1] | image_url: width: 828 }}" />
+        </div>
+      </div>
+      {%- endif -%}
+    </div>
+  </div>
+  {%- endif -%}
+</div>
+
+<script>
+  // Gallery wrap pricing map
+  const galleryWrapPrices = {
+    '24x36': 75,
+    '36x48': 75,
+    '53x72': 125
+  };
+  
+  // Get current selected variant size
+  function getSelectedVariantSize() {
+    const selectedVariant = document.querySelector('.variant-option[data-isselected="True"]');
+    if (selectedVariant) {
+      return selectedVariant.dataset.variantSize;
+    }
+    return null;
+  }
+  
+  // Update total price based on selections
+  function updateTotalPrice() {
+    const selectedVariant = document.querySelector('.variant-option[data-isselected="True"]');
+    const totalPriceDisplay = document.querySelector('.total-price-display');
+    const galleryWrapCheckbox = document.getElementById('gallery-wrap-option');
+    const galleryWrapPriceInput = document.getElementById('gallery-wrap-price');
+    
+    if (!selectedVariant || !totalPriceDisplay) return;
+    
+    const basePrice = parseFloat(selectedVariant.dataset.variantPrice);
+    const variantSize = selectedVariant.dataset.variantSize;
+    let additionalPrice = 0;
+    
+    if (galleryWrapCheckbox && galleryWrapCheckbox.checked && variantSize) {
+      additionalPrice = galleryWrapPrices[variantSize] || 0;
+      if (galleryWrapPriceInput) {
+        galleryWrapPriceInput.value = additionalPrice;
+      }
+    } else {
+      if (galleryWrapPriceInput) {
+        galleryWrapPriceInput.value = 0;
+      }
+    }
+    
+    const totalPrice = basePrice + (additionalPrice * 100); // Convert to cents
+    const formatter = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    
+    totalPriceDisplay.textContent = formatter.format(totalPrice / 100) + ' USD';
+  }
+  
+  // Gallery wrap checkbox handler
+  const galleryWrapCheckbox = document.getElementById('gallery-wrap-option');
+  const checkboxVisual = document.querySelector('.checkbox-visual');
+  const checkIcon = document.querySelector('.check-icon');
+  
+  if (galleryWrapCheckbox) {
+    galleryWrapCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        checkboxVisual.style.background = '#262626';
+        checkboxVisual.style.border = 'none';
+        checkIcon.style.display = 'flex';
+        checkIcon.style.justifyContent = 'center';
+        checkIcon.style.alignItems = 'center';
+        document.querySelector('.GalleryWrappedCanvasCheckbox').dataset.state = 'Checked';
+      } else {
+        checkboxVisual.style.background = '#FAFAFA';
+        checkboxVisual.style.border = '1px solid #D4D4D4';
+        checkIcon.style.display = 'none';
+        document.querySelector('.GalleryWrappedCanvasCheckbox').dataset.state = 'Unchecked';
+      }
+      updateTotalPrice();
+    });
+    
+    // Set initial state
+    if (!galleryWrapCheckbox.checked) {
+      checkboxVisual.style.border = '1px solid #D4D4D4';
+    }
+  }
+  
+  // Variant selection
+  document.querySelectorAll('.variant-option').forEach(option => {
+    option.addEventListener('click', function() {
+      const variantId = this.dataset.variantId;
+      document.querySelector('input[name="id"]').value = variantId;
+      
+      // Update styles for all variant options
+      document.querySelectorAll('.variant-option').forEach(opt => {
+        const isSelected = opt === this;
+        const unselectedOpacity = {{ section.settings.unselected_opacity | divided_by: 100.0 }};
+        
+        opt.style.background = isSelected ? 'var(--vw-color-primary)' : 'var(--vw-color-surface)';
+        opt.style.opacity = isSelected ? '1' : unselectedOpacity;
+        opt.style.border = `var(--vw-border-width) solid ${isSelected ? 'var(--vw-color-primary)' : 'var(--vw-color-border)'}`;
+        opt.dataset.isselected = isSelected ? 'True' : 'False';
+        
+        // Update text colors and fonts
+        opt.querySelectorAll('.Width, .Height, .Separator').forEach(el => {
+          el.style.color = isSelected ? 'var(--vw-color-background)' : 'var(--vw-color-secondary)';
+          el.style.fontFamily = isSelected ? 'var(--vw-body-semibold-font-family)' : 'var(--vw-body-font-family)';
+          el.style.fontWeight = isSelected ? 'var(--vw-body-semibold-font-weight)' : 'var(--vw-body-font-weight)';
+        });
+        opt.querySelector('.Price').style.color = isSelected ? 'var(--vw-color-background)' : 'var(--vw-color-secondary)';
+        opt.querySelector('.StockInfo').style.color = isSelected ? 'var(--vw-color-background)' : 'var(--vw-color-secondary)';
+        
+        // Update frame justification (no chevrons)
+        const frame20 = opt.querySelector('.Frame20');
+        frame20.style.justifyContent = 'flex-end';
+      });
+      
+      // Update main display
+      const selectedDimensions = this.querySelector('.Dimensions').cloneNode(true);
+      const selectedPrice = this.querySelector('.Price').cloneNode(true);
+      
+      document.querySelector('.TotalSelectedPrice .Dimensions').replaceWith(selectedDimensions);
+      document.querySelector('.TotalSelectedPrice .Dimensions').style.fontSize = 'var(--vw-price-size)';
+      document.querySelector('.TotalSelectedPrice .Dimensions').style.fontFamily = 'var(--vw-body-semibold-font-family)';
+      document.querySelector('.TotalSelectedPrice .Dimensions').style.fontWeight = 'var(--vw-body-semibold-font-weight)';
+      document.querySelector('.TotalSelectedPrice .Dimensions .Width').style.color = 'var(--vw-color-primary)';
+      document.querySelector('.TotalSelectedPrice .Dimensions .Height').style.color = 'var(--vw-color-primary)';
+      document.querySelector('.TotalSelectedPrice .Dimensions .Separator').style.color = 'var(--vw-color-primary)';
+      
+      // Update selected dimensions in main display
+      document.querySelector('.TotalSelectedPrice .Width').textContent = this.querySelector('.Width').textContent;
+      document.querySelector('.TotalSelectedPrice .Height').textContent = this.querySelector('.Height').textContent;
+      
+      // Update SKU
+      const sku = '{{ product.handle | upcase }}-' + this.querySelector('.Width').textContent + 'X' + this.querySelector('.Height').textContent;
+      document.querySelector('.Sku').textContent = 'SKU: ' + sku;
+      
+      // Update total price
+      updateTotalPrice();
+    });
+  });
+  
+  // Initialize total price on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    updateTotalPrice();
+  });
+
+  // Thumbnail click handling
+  document.querySelectorAll('[data-layer*="Thumbnail-Image"]').forEach((thumb, index) => {
+    thumb.addEventListener('click', function() {
+      const img = this.querySelector('img');
+      const mainImg = document.querySelector('.MainArtworkImage img');
+      mainImg.src = img.src.replace('_{{ section.settings.thumbnail_width }}x', '_800x');
+      
+      // Update selected state
+      document.querySelectorAll('[data-layer*="Thumbnail-Image"]').forEach(t => {
+        t.dataset.state = 'Default';
+        const selected = t.querySelector('.Seleted');
+        if (selected) selected.remove();
+      });
+      
+      this.dataset.state = 'Selected';
+      if (!this.querySelector('.Seleted')) {
+        const selectedDiv = document.createElement('div');
+        selectedDiv.setAttribute('data-layer', 'Seleted');
+        selectedDiv.className = 'Seleted';
+        selectedDiv.style = `width: {{ section.settings.thumbnail_indicator_width }}px; height: {{ section.settings.thumbnail_indicator_height }}px; position: relative; background: var(--vw-color-primary); border-radius: var(--vw-border-radius)`;
+        this.querySelector('[data-layer*="Thumbnail-Image /"]').insertBefore(selectedDiv, this.querySelector('img'));
+      }
+    });
+  });
+
+  // Quantity selector
+  const quantityInput = document.querySelector('.QuantityText');
+  document.querySelector('.quantity-minus').addEventListener('click', function() {
+    const currentValue = parseInt(quantityInput.value) || 1;
+    if (currentValue > 1) {
+      quantityInput.value = currentValue - 1;
+    }
+  });
+  
+  document.querySelector('.quantity-plus').addEventListener('click', function() {
+    const currentValue = parseInt(quantityInput.value) || 1;
+    quantityInput.value = currentValue + 1;
+  });
+
+  // Read more functionality
+  const readMoreBtn = document.querySelector('.ReadMoreText');
+  if (readMoreBtn) {
+    readMoreBtn.addEventListener('click', function() {
+      const description = document.querySelector('.ProductDescription');
+      const isExpanded = this.textContent === 'read less';
+      
+      if (isExpanded) {
+        description.style.maxHeight = '200px';
+        description.style.overflow = 'hidden';
+        this.textContent = 'read more';
+      } else {
+        description.style.maxHeight = 'none';
+        description.style.overflow = 'visible';
+        this.textContent = 'read less';
+      }
+    });
+  }
+</script>
+
+{% schema %}
+{
+  "name": "VividWalls Product",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout Settings"
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "min": 1000,
+      "max": 1600,
+      "step": 100,
+      "unit": "px",
+      "label": "Maximum width",
+      "default": 1200
+    },
+    {
+      "type": "header",
+      "content": "Typography - Fonts"
+    },
+    {
+      "type": "font_picker",
+      "id": "heading_font",
+      "label": "Heading font (H1)",
+      "default": "assistant_n4"
+    },
+    {
+      "type": "font_picker",
+      "id": "body_font",
+      "label": "Body font (Regular)",
+      "default": "assistant_n4"
+    },
+    {
+      "type": "select",
+      "id": "body_font_weight",
+      "label": "Body font weight",
+      "options": [
+        {
+          "value": "300",
+          "label": "Light (300)"
+        },
+        {
+          "value": "400",
+          "label": "Regular (400)"
+        },
+        {
+          "value": "500",
+          "label": "Medium (500)"
+        }
+      ],
+      "default": "400"
+    },
+    {
+      "type": "font_picker",
+      "id": "body_font_semibold",
+      "label": "Body font (Semibold)",
+      "default": "assistant_n6"
+    },
+    {
+      "type": "header",
+      "content": "Typography - Sizes"
+    },
+    {
+      "type": "range",
+      "id": "h1_size",
+      "min": 24,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "label": "H1 size",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "body_size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Body text size",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "small_size",
+      "min": 10,
+      "max": 16,
+      "step": 1,
+      "unit": "px",
+      "label": "Small text size",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "price_size",
+      "min": 14,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Price text size",
+      "default": 18
+    },
+    {
+      "type": "header",
+      "content": "Typography - Line Height"
+    },
+    {
+      "type": "range",
+      "id": "h1_line_height",
+      "min": 1.0,
+      "max": 2.0,
+      "step": 0.1,
+      "label": "H1 line height",
+      "default": 1.2
+    },
+    {
+      "type": "range",
+      "id": "body_line_height",
+      "min": 1.0,
+      "max": 2.0,
+      "step": 0.1,
+      "label": "Body line height",
+      "default": 1.5
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "primary_color",
+      "label": "Primary color",
+      "default": "#171717"
+    },
+    {
+      "type": "color",
+      "id": "secondary_color",
+      "label": "Secondary color",
+      "default": "#737373"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#262626"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "surface_color",
+      "label": "Surface color",
+      "default": "#FAFAFA"
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "Border color",
+      "default": "#D4D4D4"
+    },
+    {
+      "type": "header",
+      "content": "Gradient Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_gradient_background",
+      "label": "Enable gradient background",
+      "default": false
+    },
+    {
+      "type": "color",
+      "id": "gradient_start_color",
+      "label": "Gradient start color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "gradient_end_color",
+      "label": "Gradient end color",
+      "default": "#F5F5F5"
+    },
+    {
+      "type": "range",
+      "id": "gradient_angle",
+      "min": 0,
+      "max": 360,
+      "step": 15,
+      "unit": "deg",
+      "label": "Gradient angle",
+      "default": 180
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "section_padding_top",
+      "min": 0,
+      "max": 200,
+      "step": 10,
+      "unit": "px",
+      "label": "Section padding top",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "section_padding_bottom",
+      "min": 0,
+      "max": 200,
+      "step": 10,
+      "unit": "px",
+      "label": "Section padding bottom",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "section_gap",
+      "min": 50,
+      "max": 200,
+      "step": 5,
+      "unit": "px",
+      "label": "Section gap",
+      "default": 145
+    },
+    {
+      "type": "range",
+      "id": "content_gap",
+      "min": 20,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Content gap",
+      "default": 50
+    },
+    {
+      "type": "range",
+      "id": "element_gap",
+      "min": 10,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "label": "Element gap",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "info_gap",
+      "min": 10,
+      "max": 50,
+      "step": 5,
+      "unit": "px",
+      "label": "Product info gap",
+      "default": 30
+    },
+    {
+      "type": "range",
+      "id": "info_inner_gap",
+      "min": 10,
+      "max": 30,
+      "step": 2,
+      "unit": "px",
+      "label": "Product info inner gap",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "variant_gap",
+      "min": 5,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Variant gap",
+      "default": 10
+    },
+    {
+      "type": "header",
+      "content": "Borders & Radius"
+    },
+    {
+      "type": "range",
+      "id": "border_width",
+      "min": 0,
+      "max": 5,
+      "step": 1,
+      "unit": "px",
+      "label": "Border width",
+      "default": 1
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Border radius",
+      "default": 5
+    },
+    {
+      "type": "range",
+      "id": "variant_border_radius",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Variant border radius",
+      "default": 5
+    },
+    {
+      "type": "header",
+      "content": "Element Sizes"
+    },
+    {
+      "type": "range",
+      "id": "main_image_height",
+      "min": 400,
+      "max": 900,
+      "step": 10,
+      "unit": "px",
+      "label": "Main image height",
+      "default": 690
+    },
+    {
+      "type": "range",
+      "id": "thumbnail_width",
+      "min": 150,
+      "max": 300,
+      "step": 10,
+      "unit": "px",
+      "label": "Thumbnail width",
+      "default": 220
+    },
+    {
+      "type": "range",
+      "id": "thumbnail_height",
+      "min": 200,
+      "max": 400,
+      "step": 10,
+      "unit": "px",
+      "label": "Thumbnail height",
+      "default": 290
+    },
+    {
+      "type": "range",
+      "id": "thumbnail_indicator_width",
+      "min": 50,
+      "max": 200,
+      "step": 10,
+      "unit": "px",
+      "label": "Thumbnail indicator width",
+      "default": 150
+    },
+    {
+      "type": "range",
+      "id": "thumbnail_indicator_height",
+      "min": 2,
+      "max": 10,
+      "step": 1,
+      "unit": "px",
+      "label": "Thumbnail indicator height",
+      "default": 5
+    },
+    {
+      "type": "range",
+      "id": "button_height",
+      "min": 40,
+      "max": 80,
+      "step": 5,
+      "unit": "px",
+      "label": "Button height",
+      "default": 60
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "tag_padding",
+      "min": 5,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Tag padding",
+      "default": 10
+    },
+    {
+      "type": "range",
+      "id": "variant_padding",
+      "min": 5,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Variant padding",
+      "default": 10
+    },
+    {
+      "type": "range",
+      "id": "option_padding",
+      "min": 10,
+      "max": 30,
+      "step": 2,
+      "unit": "px",
+      "label": "Option padding",
+      "default": 20
+    },
+    {
+      "type": "header",
+      "content": "Button Styling"
+    },
+    {
+      "type": "select",
+      "id": "button_text_transform",
+      "label": "Button text transform",
+      "options": [
+        {
+          "value": "none",
+          "label": "None"
+        },
+        {
+          "value": "uppercase",
+          "label": "Uppercase"
+        },
+        {
+          "value": "lowercase",
+          "label": "Lowercase"
+        },
+        {
+          "value": "capitalize",
+          "label": "Capitalize"
+        }
+      ],
+      "default": "uppercase"
+    },
+    {
+      "type": "range",
+      "id": "button_letter_spacing",
+      "min": 0,
+      "max": 5,
+      "step": 0.5,
+      "unit": "px",
+      "label": "Button letter spacing",
+      "default": 0
+    },
+    {
+      "type": "header",
+      "content": "Visual Effects"
+    },
+    {
+      "type": "range",
+      "id": "unselected_opacity",
+      "min": 30,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "label": "Unselected variant opacity",
+      "default": 70
+    },
+    {
+      "type": "header",
+      "content": "Content Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "Show product description section",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "VividWalls Product"
+    }
+  ]
+}
+{% endschema %}

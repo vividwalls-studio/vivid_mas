@@ -1,0 +1,286 @@
+{
+  "name": "VividWalls Shopify Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [-20, 100],
+      "id": "sh1a2b3c-4d5e-6f7g-8h9i-0j1k2l3m4n5o",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "d6OaJCsy6QryngZX",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionKey": "={{ $json.chatId || $json.session_id || 'shopify_agent_' + $now.toMillis() }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [120, 180],
+      "id": "sh2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "cm4WrXg1MnK2sWUm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Shopify Agent Workflow Documentation\n\n## Overview\nThis workflow manages all Shopify e-commerce operations for VividWalls, serving as the central hub for:\n- Product catalog management\n- Inventory tracking and updates\n- Order processing and fulfillment\n- Customer data synchronization\n- Pricing and discount management\n- Collections and categorization\n- SEO optimization\n- Multi-channel integration\n\n## Workflow Triggers\n1. **Product Management**: Create, update, or archive products\n2. **Inventory Updates**: Stock level adjustments and alerts\n3. **Order Processing**: New order handling and status updates\n4. **Price Changes**: Bulk pricing and sale management\n5. **Collection Management**: Organize and curate product groups\n6. **Customer Sync**: Update customer records and segments\n7. **Analytics Requests**: Sales and performance data\n8. **Integration Sync**: Cross-platform product updates\n\n## Key Components\n\n### 1. Shopify MCP Client\n- Full API access to Shopify store\n- Product CRUD operations\n- Order management\n- Customer data handling\n- Analytics retrieval\n\n### 2. Email Marketing Integration\n- Abandoned cart recovery\n- Order confirmations\n- Product announcements\n- Customer segmentation\n\n### 3. Inventory Manager\n- Real-time stock tracking\n- Low stock alerts\n- Reorder suggestions\n- Multi-location support\n\n### 4. Analytics Tool\n- Sales performance metrics\n- Product popularity tracking\n- Customer behavior analysis\n- Revenue forecasting\n\n## Integration Points\n\n### MCP Servers Used:\n- `shopify`: Core e-commerce operations\n- `email-marketing`: Customer communications\n- `supabase`: Data warehousing\n- `neo4j-memory`: Customer journey mapping\n- `analytics`: Performance tracking\n\n### Connected Systems:\n- Social media platforms (product sync)\n- Fulfillment centers\n- Accounting software\n- Customer service tools\n- Marketing platforms\n\n## Features\n- Bulk operations support\n- Automated workflows\n- Real-time synchronization\n- Multi-currency handling\n- Tax calculation\n- Shipping integration",
+        "height": 760,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -800,
+        -200
+      ],
+      "typeVersion": 1,
+      "id": "workflow-doc-note",
+      "name": "Workflow Documentation"
+    },
+    {
+      "parameters": {
+        "content": "# Shopify Agent System Prompt\n\nYou are the Shopify Agent for VividWalls, responsible for managing all e-commerce operations through the Shopify platform. You ensure smooth product management, accurate inventory tracking, efficient order processing, and seamless integration with other business systems.\n\n## Primary Responsibilities\n\n### 1. Product Management\n- Create and update product listings\n- Manage variants (sizes, frames)\n- Set pricing and compare prices\n- Handle product images and SEO\n- Organize collections\n\n### 2. Inventory Control\n- Track stock levels\n- Set reorder points\n- Manage multiple locations\n- Handle pre-orders\n- Monitor bestsellers\n\n### 3. Order Processing\n- Process new orders\n- Update order status\n- Handle cancellations\n- Manage refunds\n- Track fulfillment\n\n### 4. Customer Management\n- Sync customer data\n- Create segments\n- Track purchase history\n- Manage accounts\n- Handle preferences\n\n### 5. Pricing & Promotions\n- Create discount codes\n- Manage sales campaigns\n- Set automatic discounts\n- Bundle pricing\n- Wholesale tiers\n\n## Operational Guidelines\n\n### Product Standards\n- Complete product information\n- High-quality images (min 2000x2000)\n- SEO-optimized descriptions\n- Accurate categorization\n- Proper variant setup\n\n### Inventory Best Practices\n- Maintain 30-day buffer stock\n- Alert at 20% remaining\n- Track fast-movers daily\n- Seasonal adjustment\n- Supplier lead times\n\n### Order Fulfillment\n- Same-day processing\n- Accurate tracking info\n- Quality checks\n- Packaging standards\n- Damage prevention\n\n## Response Format\n```json\n{\n  \"operation\": \"type\",\n  \"status\": \"success|pending|error\",\n  \"details\": {\n    \"affected_items\": [],\n    \"changes_made\": {},\n    \"notifications_sent\": []\n  },\n  \"metrics\": {\n    \"processing_time\": \"ms\",\n    \"items_processed\": 0\n  },\n  \"next_actions\": []\n}\n```",
+        "height": 600,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -200,
+        -200
+      ],
+      "typeVersion": 1,
+      "id": "system-prompt-note",
+      "name": "System Prompt"
+    },
+    {
+      "parameters": {
+        "content": "# Trigger: Product Management\n\n## Source\n- Product Director Agent\n- Content team uploads\n- Supplier integrations\n\n## Input Structure\n```json\n{\n  \"trigger\": \"product_management\",\n  \"action\": \"create|update|archive\",\n  \"product_data\": {\n    \"title\": \"Ethereal Horizons Abstract Canvas\",\n    \"vendor\": \"VividWalls\",\n    \"product_type\": \"Canvas Print\",\n    \"tags\": [\"abstract\", \"blue\", \"modern\", \"living-room\"],\n    \"status\": \"active\",\n    \"description\": \"<p>Transform your space with this stunning abstract piece...</p>\",\n    \"seo\": {\n      \"title\": \"Ethereal Horizons Abstract Canvas Art | VividWalls\",\n      \"description\": \"Museum-quality abstract canvas print...\"\n    },\n    \"images\": [\n      {\n        \"src\": \"https://cdn.vividwalls.com/products/ethereal-main.jpg\",\n        \"alt\": \"Ethereal Horizons abstract art on wall\",\n        \"position\": 1\n      }\n    ],\n    \"variants\": [\n      {\n        \"title\": \"16x20 inches\",\n        \"price\": \"189.99\",\n        \"compare_at_price\": \"239.99\",\n        \"sku\": \"EH-1620-CNV\",\n        \"barcode\": \"123456789\",\n        \"inventory_quantity\": 50,\n        \"weight\": 2.5,\n        \"weight_unit\": \"lb\"\n      },\n      {\n        \"title\": \"24x36 inches\",\n        \"price\": \"289.99\",\n        \"compare_at_price\": \"359.99\",\n        \"sku\": \"EH-2436-CNV\",\n        \"inventory_quantity\": 30\n      }\n    ],\n    \"options\": [\n      {\n        \"name\": \"Size\",\n        \"values\": [\"16x20 inches\", \"24x36 inches\", \"30x40 inches\"]\n      }\n    ]\n  },\n  \"collections\": [\"abstract-art\", \"best-sellers\", \"new-arrivals\"],\n  \"metafields\": {\n    \"artist_name\": \"Elena Rodriguez\",\n    \"creation_year\": \"2024\",\n    \"limited_edition\": \"true\",\n    \"edition_size\": \"500\"\n  }\n}\n```\n\n## Processing Steps\n1. Validate product data\n2. Create/update in Shopify\n3. Upload and optimize images\n4. Set up variants\n5. Assign to collections\n6. Add metafields\n7. Enable for channels\n8. Sync to other platforms\n\n## Success Metrics\n- Product live in <5 minutes\n- All images optimized\n- SEO fields complete\n- Inventory accurate\n- Collections updated",
+        "height": 820,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        400,
+        -200
+      ],
+      "typeVersion": 1,
+      "id": "trigger-1-note",
+      "name": "Trigger: Product Management"
+    },
+    {
+      "parameters": {
+        "content": "# Trigger: Inventory Updates\n\n## Source\n- Warehouse systems\n- Manual adjustments\n- Order fulfillment\n- Returns processing\n\n## Input Structure\n```json\n{\n  \"trigger\": \"inventory_update\",\n  \"update_type\": \"adjustment|restock|transfer|count\",\n  \"updates\": [\n    {\n      \"sku\": \"EH-1620-CNV\",\n      \"location_id\": \"primary_warehouse\",\n      \"adjustment\": -5,\n      \"new_quantity\": 45,\n      \"reason\": \"order_fulfillment\",\n      \"order_id\": \"#1234\"\n    },\n    {\n      \"sku\": \"EH-2436-CNV\",\n      \"location_id\": \"primary_warehouse\",\n      \"adjustment\": 20,\n      \"new_quantity\": 50,\n      \"reason\": \"restock\",\n      \"purchase_order\": \"PO-2024-089\"\n    }\n  ],\n  \"alerts\": {\n    \"low_stock_threshold\": 10,\n    \"out_of_stock_notification\": true,\n    \"reorder_point\": 15\n  },\n  \"bulk_operation\": {\n    \"type\": \"seasonal_adjustment\",\n    \"products_affected\": [\"collection:spring-2024\"],\n    \"multiplier\": 1.5,\n    \"reason\": \"Preparing for spring sales surge\"\n  }\n}\n```\n\n## Processing Steps\n1. Validate SKUs exist\n2. Check current levels\n3. Apply adjustments\n4. Update Shopify inventory\n5. Check reorder points\n6. Send low stock alerts\n7. Update forecasting\n8. Log all changes\n\n## Inventory Rules\n- Never oversell\n- Reserve for pending orders\n- Account for returns\n- Multi-location sync\n- Safety stock maintenance\n\n## Alert Conditions\n```json\n{\n  \"low_stock\": {\n    \"threshold\": \"<20% of reorder point\",\n    \"action\": \"email_purchasing\"\n  },\n  \"out_of_stock\": {\n    \"action\": \"disable_variant\",\n    \"notify\": \"customers_waiting\"\n  },\n  \"overstock\": {\n    \"threshold\": \">3x monthly_average\",\n    \"action\": \"suggest_promotion\"\n  }\n}\n```",
+        "height": 820,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1000,
+        -200
+      ],
+      "typeVersion": 1,
+      "id": "trigger-2-note",
+      "name": "Trigger: Inventory Updates"
+    },
+    {
+      "parameters": {
+        "content": "# Trigger: Order Processing\n\n## Source\n- Shopify webhooks\n- Customer service\n- Bulk operations\n- Returns/exchanges\n\n## Input Structure\n```json\n{\n  \"trigger\": \"order_processing\",\n  \"order_action\": \"fulfill|cancel|refund|exchange\",\n  \"order_details\": {\n    \"order_id\": \"#1234\",\n    \"order_number\": \"1234\",\n    \"status\": \"pending_fulfillment\",\n    \"customer\": {\n      \"id\": \"cust_98765\",\n      \"email\": \"customer@example.com\",\n      \"name\": \"Jane Smith\"\n    },\n    \"line_items\": [\n      {\n        \"variant_id\": \"var_123456\",\n        \"quantity\": 1,\n        \"price\": \"289.99\",\n        \"name\": \"Ethereal Horizons - 24x36\"\n      }\n    ],\n    \"shipping_address\": {\n      \"name\": \"Jane Smith\",\n      \"address1\": \"123 Art Street\",\n      \"city\": \"New York\",\n      \"province\": \"NY\",\n      \"zip\": \"10001\",\n      \"country\": \"US\"\n    },\n    \"shipping_method\": {\n      \"id\": \"ship_fedex_ground\",\n      \"title\": \"FedEx Ground\",\n      \"price\": \"15.00\"\n    }\n  },\n  \"fulfillment_data\": {\n    \"location_id\": \"primary_warehouse\",\n    \"tracking_number\": \"1234567890\",\n    \"tracking_company\": \"FedEx\",\n    \"notify_customer\": true,\n    \"line_items_to_fulfill\": [\"all\"]\n  },\n  \"special_instructions\": {\n    \"gift_message\": \"Happy Birthday!\",\n    \"fragile_handling\": true,\n    \"insurance_required\": true\n  }\n}\n```\n\n## Processing Workflow\n1. Validate order exists\n2. Check inventory availability\n3. Reserve inventory\n4. Create fulfillment\n5. Generate shipping label\n6. Update tracking info\n7. Send notifications\n8. Update order status\n\n## Order Status Flow\n```\npending → payment_received → processing → \npartially_fulfilled → fulfilled → delivered\n\nOR\n\npending → cancelled\npending → refunded\nfulfilled → returned → refunded\n```\n\n## Automation Rules\n- Auto-fulfill digital products\n- Priority handling for VIP\n- Fraud check on high-value\n- Gift wrap detection\n- International customs",
+        "height": 820,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -800,
+        600
+      ],
+      "typeVersion": 1,
+      "id": "trigger-3-note",
+      "name": "Trigger: Order Processing"
+    },
+    {
+      "parameters": {
+        "content": "# Trigger: Price & Discount Management\n\n## Source\n- Marketing campaigns\n- Seasonal sales\n- Clearance events\n- VIP programs\n\n## Input Structure\n```json\n{\n  \"trigger\": \"price_management\",\n  \"operation\": \"create_sale|update_prices|discount_code\",\n  \"price_changes\": {\n    \"scope\": \"collection|products|variants\",\n    \"target_ids\": [\"coll_123\", \"prod_456\"],\n    \"pricing_rule\": {\n      \"type\": \"percentage|fixed_amount\",\n      \"value\": 20,\n      \"compare_at_price_update\": true\n    },\n    \"schedule\": {\n      \"start\": \"2024-03-20T00:00:00Z\",\n      \"end\": \"2024-03-27T23:59:59Z\"\n    }\n  },\n  \"discount_code\": {\n    \"code\": \"SPRING20\",\n    \"type\": \"percentage\",\n    \"value\": 20,\n    \"applies_to\": {\n      \"target_type\": \"line_item\",\n      \"target_selection\": \"entitled\",\n      \"entitled_collection_ids\": [\"spring-collection\"]\n    },\n    \"usage_limit\": 1000,\n    \"once_per_customer\": true,\n    \"minimum_requirements\": {\n      \"subtotal\": 100.00,\n      \"quantity\": 1\n    },\n    \"customer_eligibility\": {\n      \"segments\": [\"vip\", \"email_subscribers\"]\n    },\n    \"active_dates\": {\n      \"starts_at\": \"2024-03-20T00:00:00Z\",\n      \"ends_at\": \"2024-03-27T23:59:59Z\"\n    }\n  },\n  \"automatic_discount\": {\n    \"title\": \"Buy 2 Get 1 Free - Canvas Prints\",\n    \"target_type\": \"line_item\",\n    \"allocation_method\": \"across\",\n    \"value_type\": \"percentage\",\n    \"value\": 33.33,\n    \"prerequisite_quantity\": 3\n  }\n}\n```\n\n## Pricing Strategy Rules\n1. Maintain minimum margins\n2. Check competitor pricing\n3. Preserve brand value\n4. Clear old inventory\n5. Reward loyalty\n\n## Discount Types\n- Percentage off\n- Fixed amount off\n- Buy X Get Y\n- Free shipping\n- Tiered discounts\n- Bundle deals\n\n## Validation Checks\n- No negative margins\n- Code uniqueness\n- Date conflicts\n- Customer eligibility\n- Inventory availability",
+        "height": 820,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -200,
+        600
+      ],
+      "typeVersion": 1,
+      "id": "trigger-4-note",
+      "name": "Trigger: Pricing & Discounts"
+    },
+    {
+      "parameters": {
+        "content": "# Trigger: Analytics & Reporting\n\n## Source\n- Analytics Director\n- Finance team\n- Marketing department\n- Executive dashboards\n\n## Input Structure\n```json\n{\n  \"trigger\": \"analytics_request\",\n  \"report_type\": \"sales|inventory|customer|product_performance\",\n  \"parameters\": {\n    \"date_range\": {\n      \"start\": \"2024-02-01\",\n      \"end\": \"2024-02-29\"\n    },\n    \"metrics\": [\n      \"total_sales\",\n      \"order_count\",\n      \"average_order_value\",\n      \"conversion_rate\",\n      \"top_products\",\n      \"customer_lifetime_value\"\n    ],\n    \"grouping\": \"day|week|month\",\n    \"filters\": {\n      \"collections\": [\"abstract-art\"],\n      \"customer_tags\": [\"vip\"],\n      \"sales_channels\": [\"online_store\"]\n    }\n  },\n  \"comparison\": {\n    \"enable\": true,\n    \"period\": \"previous_period|last_year\"\n  }\n}\n```\n\n## Available Reports\n\n### Sales Analytics\n```json\n{\n  \"total_revenue\": 125678.90,\n  \"order_count\": 234,\n  \"aov\": 537.09,\n  \"conversion_rate\": 2.3,\n  \"repeat_rate\": 18.5,\n  \"top_products\": [\n    {\n      \"title\": \"Ethereal Horizons\",\n      \"revenue\": 15678.90,\n      \"units\": 54\n    }\n  ],\n  \"sales_by_day\": [\n    {\"date\": \"2024-02-01\", \"revenue\": 4567.89}\n  ],\n  \"customer_segments\": {\n    \"new\": 145,\n    \"returning\": 89,\n    \"vip\": 23\n  }\n}\n```\n\n### Inventory Analytics\n```json\n{\n  \"total_value\": 456789.00,\n  \"sku_count\": 234,\n  \"turnover_rate\": 4.5,\n  \"dead_stock\": [\n    {\"sku\": \"OLD-123\", \"quantity\": 45, \"age_days\": 180}\n  ],\n  \"fast_movers\": [\n    {\"sku\": \"EH-2436\", \"velocity\": 12.5}\n  ]\n}\n```\n\n## Key Metrics\n- Revenue growth\n- Customer acquisition cost\n- Product margins\n- Inventory turnover\n- Cart abandonment rate\n- Return rate",
+        "height": 820,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        400,
+        600
+      ],
+      "typeVersion": 1,
+      "id": "trigger-5-note",
+      "name": "Trigger: Analytics"
+    },
+    {
+      "parameters": {
+        "content": "# Shopify MCP Integration\n\n## Available Operations\n\n### Products\n- `get_products`: List all products\n- `get_product`: Single product details\n- `create_product`: Add new product\n- `update_product`: Modify existing\n- `delete_product`: Remove product\n- `add_product_images`: Upload media\n- `update_inventory`: Stock levels\n\n### Orders\n- `get_orders`: List orders\n- `get_order`: Order details\n- `create_order`: Manual order\n- `update_order`: Change status\n- `fulfill_order`: Ship items\n- `cancel_order`: Cancel order\n- `refund_order`: Process refund\n\n### Customers\n- `get_customers`: List customers\n- `get_customer`: Customer details\n- `create_customer`: Add customer\n- `update_customer`: Edit info\n- `get_customer_orders`: Order history\n- `add_customer_tags`: Segmentation\n\n### Collections\n- `get_collections`: List all\n- `create_collection`: New group\n- `add_products_to_collection`: Assign\n- `update_collection_order`: Sort\n\n### Discounts\n- `create_discount_code`: New code\n- `get_discount_codes`: List active\n- `update_discount`: Modify rules\n- `disable_discount`: Deactivate\n\n## API Limits\n- Rate limit: 2/second\n- Bulk operations: 10K items\n- Webhook limit: 20/second\n- GraphQL cost: 1000 points\n\n## Error Handling\n```javascript\ntry {\n  // Shopify operation\n} catch (error) {\n  if (error.code === 'RATE_LIMITED') {\n    // Wait and retry\n  } else if (error.code === 'PRODUCT_NOT_FOUND') {\n    // Handle missing product\n  }\n}\n```\n\n## Webhook Events\n- orders/create\n- orders/updated\n- products/create\n- products/update\n- inventory_levels/update\n- customers/create",
+        "height": 820,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1000,
+        600
+      ],
+      "typeVersion": 1,
+      "id": "mcp-integration-note",
+      "name": "Shopify MCP Details"
+    }
+  ],
+  "connections": {
+    "Shopify MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Shopify Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Shopify Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Marketing MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Shopify Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Marketing MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Shopify Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analytics MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Shopify Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analytics MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Shopify Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Shopify Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Shopify Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Shopify Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Shopify Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "shopify-agent-v2",
+  "meta": {
+    "instanceId": "80621a4270e0ac393edfe0b84576ab8588a37d1db0f23bca7018517bcf39d930"
+  },
+  "id": "ShopifyAgent123",
+  "tags": []
+}

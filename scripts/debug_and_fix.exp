@@ -1,0 +1,90 @@
+#!/usr/bin/expect -f
+
+set timeout 300
+set passphrase "freedom"
+
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        send "cd /root/vivid_mas\r"
+    }
+}
+
+# First add the missing columns without defaults
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres << 'EOF'\r"
+send "ALTER TABLE agents ADD COLUMN IF NOT EXISTS short_term_memory JSONB;\r"
+send "ALTER TABLE agents ADD COLUMN IF NOT EXISTS long_term_memory JSONB;\r"
+send "ALTER TABLE agents ADD COLUMN IF NOT EXISTS communication_preferences JSONB;\r"
+send "EOF\r"
+
+expect "ALTER TABLE"
+
+# Now set defaults on existing rows
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres << 'EOF'\r"
+send "UPDATE agents SET short_term_memory = '[]'::jsonb WHERE short_term_memory IS NULL;\r"
+send "UPDATE agents SET long_term_memory = '[]'::jsonb WHERE long_term_memory IS NULL;\r"
+send "UPDATE agents SET communication_preferences = '[]'::jsonb WHERE communication_preferences IS NULL;\r"
+send "EOF\r"
+
+# Check what's the first error in chunk 1
+expect "root@*"
+send "echo 'Checking first error in chunk_001.sql...'\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres < sql_chunks/chunk_001.sql 2>&1 | grep -A2 -B2 'ERROR' | head -10\r"
+
+# Let's try a simpler approach - insert agents without the JSONB columns first
+expect "root@*"
+send "echo 'Creating simplified agent insert...'\r"
+
+expect "root@*"
+send "cat > /tmp/simple_agents.sql << 'EOF'\r"
+send "BEGIN;\r"
+send "-- Clear existing data\r"
+send "DELETE FROM agent_voice_config;\r"
+send "DELETE FROM agent_llm_config;\r"
+send "DELETE FROM agent_goals;\r"
+send "DELETE FROM agent_personalities;\r"
+send "DELETE FROM agent_domain_knowledge;\r"
+send "DELETE FROM agent_heuristic_imperatives;\r"
+send "DELETE FROM agent_intentions;\r"
+send "DELETE FROM agent_desires;\r"
+send "DELETE FROM agent_beliefs;\r"
+send "DELETE FROM agents;\r"
+send "\r"
+send "-- Insert agents with minimal data\r"
+send "INSERT INTO agents (id, name, role, backstory, type, capabilities, config, short_term_memory, long_term_memory, communication_preferences) VALUES\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Marketing Director Agent', 'Strategic Marketing Leader', 'Experienced CMO', 'director', '[]'::jsonb, '{}'::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'Analytics Director Agent', 'Data Analytics Leader', 'Chief Analytics Officer', 'director', '[]'::jsonb, '{}'::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb),\r"
+send "('a9b8c7d6-5e4f-3a2b-1c9d-8e7f6a5b4c3d', 'Customer Experience Director', 'CX Strategy Leader', 'VP of Customer Experience', 'director', '[]'::jsonb, '{}'::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb);\r"
+send "\r"
+send "COMMIT;\r"
+send "EOF\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres < /tmp/simple_agents.sql\r"
+
+expect {
+    "COMMIT" {
+        puts "\nSimple agents inserted successfully!"
+    }
+    "ERROR" {
+        puts "\nError during insertion"
+    }
+}
+
+# Check if agents were inserted
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT id, name, role FROM agents;\"\r"
+
+expect "root@*"
+send "exit\r"
+
+expect eof

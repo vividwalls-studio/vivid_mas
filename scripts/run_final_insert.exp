@@ -1,0 +1,67 @@
+#!/usr/bin/expect -f
+
+set timeout 600
+set passphrase "freedom"
+
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        send "cd /root/vivid_mas\r"
+    }
+}
+
+# Upload the script
+expect "root@*"
+send "cat > final_insert.sh << 'EOFSCRIPT'\r"
+expect ">"
+send "#!/bin/bash\r"
+expect ">"
+send "echo 'Running SQL chunks...'\r"
+expect ">"
+send "for i in 1 2 3 4; do\r"
+expect ">"
+send "  echo \"===== CHUNK \$i =====\"\r"
+expect ">"
+send "  docker exec -i supabase-db psql -U postgres -d postgres < sql_chunks/chunk_00\$i.sql\r"
+expect ">"
+send "done\r"
+expect ">"
+send "echo '===== VERIFICATION ====='\r"
+expect ">"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT COUNT(*) FROM agents;\"\r"
+expect ">"
+send "EOFSCRIPT\r"
+
+expect "root@*"
+send "chmod +x final_insert.sh\r"
+
+expect "root@*"
+send "bash final_insert.sh\r"
+
+# Wait for all chunks to complete
+set timeout 600
+expect {
+    "VERIFICATION" {
+        puts "\nInsertion process completed"
+    }
+    timeout {
+        puts "\nTimeout during insertion"
+    }
+}
+
+# Get final count
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT COUNT(*) as total FROM agents;\"\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT id, name, role FROM agents LIMIT 5;\"\r"
+
+expect "root@*"
+send "exit\r"
+
+expect eof

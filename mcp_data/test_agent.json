@@ -1,0 +1,9 @@
+{
+  "id": "test-agent-001",
+  "name": "TestAgent",
+  "role": "Test Agent for MCP Verification",
+  "backstory": "A simple test agent to verify MCP insertion works",
+  "short_term_memory": "Test short term memory",
+  "long_term_memory": "Test long term memory",
+  "episodic_memory": "Test episodic memory"
+}

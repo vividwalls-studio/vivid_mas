@@ -55,6 +55,26 @@ x-init-ollama: &init-ollama
     # Change the name of the LLM and num_ctx as you see fit.
 
 services:
+  crawl4ai:
+    image: unclecode/crawl4ai:latest
+    container_name: crawl4ai
+    restart: unless-stopped
+    ports:
+      - "11235:11235"
+    shm_size: 1g
+    environment:
+      - INSTALL_TYPE=default
+      - ENABLE_GPU=false
+    volumes:
+      - ./shared:/data/shared
+      - ./.llm.env:/app/.llm.env:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11235/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   flowise:
     image: flowiseai/flowise
     restart: unless-stopped
@@ -132,6 +152,7 @@ services:
       - SUPABASE_HOSTNAME=${SUPABASE_HOSTNAME:-":8005"}
       - SEARXNG_HOSTNAME=${SEARXNG_HOSTNAME:-":8006"}
       - LANGFUSE_HOSTNAME=${LANGFUSE_HOSTNAME:-":8007"}
+      - CRAWL4AI_HOSTNAME=${CRAWL4AI_HOSTNAME:-":8008"}
       - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL:-internal}
     cap_drop:
       - ALL

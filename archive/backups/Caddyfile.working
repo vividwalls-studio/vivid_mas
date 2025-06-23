@@ -1,0 +1,19 @@
+{
+    email kingler@vividwalls.co
+}
+
+# WordPress Main Site (DNS configured)
+vividwalls.blog {
+    reverse_proxy wordpress-multisite:80 {
+        header_up X-Forwarded-Proto https
+        header_up X-Forwarded-For {remote_host}
+    }
+}
+
+# n8n Automation Platform (DNS configured)
+n8n.vividwalls.blog {
+    reverse_proxy n8n:5678 {
+        header_up X-Forwarded-Proto https
+        header_up X-Forwarded-For {remote_host}
+    }
+} 

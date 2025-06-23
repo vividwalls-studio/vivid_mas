@@ -1,0 +1,11 @@
+# Task ID: 9
+# Title: Content Extraction MCP Tool
+# Status: pending
+# Dependencies: 6, 7
+# Priority: medium
+# Description: Implement content_extraction MCP tool for scraping and extracting content from URLs
+# Details:
+Create MCP tool that can scrape and extract content from arbitrary URLs using Crawl4AI integration and Tavily's extraction capabilities. Support both LLM-based and selector-based extraction.
+
+# Test Strategy:
+Test content extraction from various website types and validate extraction quality

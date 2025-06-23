@@ -1,0 +1,43 @@
+#!/usr/bin/expect -f
+
+set timeout 600
+set passphrase "freedom"
+
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        send "cd /root/vivid_mas\r"
+    }
+}
+
+expect "root@*"
+send "echo 'Running SQL insertion directly...'\r"
+
+expect "root@*"
+send "for i in {1..4}; do echo \"Executing chunk_00\${i}.sql...\"; docker exec -i supabase-db psql -U postgres -d postgres < sql_chunks/chunk_00\${i}.sql; done\r"
+
+expect {
+    "root@*" {
+        puts "\nSQL insertion completed!"
+    }
+    timeout {
+        puts "\nTimeout reached during SQL insertion"
+    }
+}
+
+# Run verification
+expect "root@*"
+send "echo 'Running verification...'\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres < scripts/verify_schema.sql\r"
+
+expect "root@*"
+send "exit\r"
+
+expect eof

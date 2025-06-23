@@ -1,0 +1,21 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+set passphrase "freedom"
+set command [lindex $argv 0]
+
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13 $command
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "Are you sure you want to continue connecting*" {
+        send "yes\r"
+        exp_continue
+    }
+    eof
+}
+
+wait

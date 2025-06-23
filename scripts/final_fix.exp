@@ -1,0 +1,84 @@
+#!/usr/bin/expect -f
+
+set timeout 300
+set passphrase "freedom"
+
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        send "cd /root/vivid_mas\r"
+    }
+}
+
+# First, let's check what columns already exist
+expect "root@*"
+send "echo 'Checking current schema...'\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"\\d agents\" | grep -E '(role|backstory|short_term|long_term|communication|avatar)'\r"
+
+# Create a comprehensive schema fix
+expect "root@*"
+send "cat > /tmp/complete_fix.sql << 'EOF'\r"
+send "-- Add missing columns to agents table\r"
+send "ALTER TABLE agents ADD COLUMN IF NOT EXISTS role VARCHAR(255);\r"
+send "ALTER TABLE agents ADD COLUMN IF NOT EXISTS backstory TEXT;\r"
+send "ALTER TABLE agents ADD COLUMN IF NOT EXISTS short_term_memory JSONB;\r"
+send "ALTER TABLE agents ADD COLUMN IF NOT EXISTS long_term_memory JSONB;\r"
+send "ALTER TABLE agents ADD COLUMN IF NOT EXISTS communication_preferences JSONB;\r"
+send "ALTER TABLE agents ADD COLUMN IF NOT EXISTS avatar_url TEXT;\r"
+send "\r"
+send "-- Set defaults for JSONB columns\r"
+send "UPDATE agents SET short_term_memory = '[]'::jsonb WHERE short_term_memory IS NULL;\r"
+send "UPDATE agents SET long_term_memory = '[]'::jsonb WHERE long_term_memory IS NULL;\r"
+send "UPDATE agents SET communication_preferences = '[]'::jsonb WHERE communication_preferences IS NULL;\r"
+send "\r"
+send "-- Add missing columns to agent_voice_config\r"
+send "ALTER TABLE agent_voice_config ADD COLUMN IF NOT EXISTS description TEXT;\r"
+send "ALTER TABLE agent_voice_config ADD COLUMN IF NOT EXISTS volume VARCHAR(255);\r"
+send "EOF\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres < /tmp/complete_fix.sql\r"
+
+# Wait for schema fix
+sleep 2
+
+# Now insert data without transactions to see individual errors
+expect "root@*"
+send "echo 'Testing agent insertion...'\r"
+
+# Try inserting just one agent first
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres << 'EOF'\r"
+send "INSERT INTO agents (id, name, role, backstory, short_term_memory, long_term_memory, communication_preferences, avatar_url, type, capabilities, config) VALUES\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Marketing Director Agent', 'Strategic Marketing Leader', 'Experienced CMO focused on data-driven marketing strategies', '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, NULL, 'director', '[]'::jsonb, '{}'::jsonb)\r"
+send "ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, role = EXCLUDED.role;\r"
+send "EOF\r"
+
+expect "INSERT"
+
+# Check if it worked
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT id, name, role FROM agents WHERE id = 'e18f66d5-ef52-4a6e-aea6-7e693148552b';\"\r"
+
+# If successful, run all chunks
+expect "root@*"
+send "echo 'Running full insertion...'\r"
+
+expect "root@*"
+send "for i in 1 2 3 4; do echo \"Chunk \$i:\"; docker exec -i supabase-db psql -U postgres -d postgres < sql_chunks/chunk_00\$i.sql 2>&1 | tail -3; done\r"
+
+# Final verification
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT COUNT(*) FROM agents;\"\r"
+
+expect "root@*"
+send "exit\r"
+
+expect eof

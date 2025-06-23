@@ -1,0 +1,124 @@
+#!/usr/bin/expect -f
+
+set timeout 600
+set passphrase "freedom"
+
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        send "cd /root/vivid_mas\r"
+    }
+}
+
+# Create a simple insertion script using the JSON files
+expect "root@*"
+send "echo 'Creating direct insertion script...'\r"
+
+# First, insert agents with minimal data to avoid JSON issues
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres << 'EOF'\r"
+send "-- Clear existing data\r"
+send "TRUNCATE agents CASCADE;\r"
+send "\r"
+send "-- Insert agents with minimal data\r"
+send "INSERT INTO agents (id, name, role, type, capabilities, config) VALUES\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Marketing Director Agent', 'Strategic Marketing Leader', 'director', '[]'::jsonb, '{}'::jsonb),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'Analytics Director Agent', 'Data Analytics Leader', 'director', '[]'::jsonb, '{}'::jsonb),\r"
+send "('a9b8c7d6-5e4f-3a2b-1c9d-8e7f6a5b4c3d', 'Customer Experience Director', 'CX Strategy Leader', 'director', '[]'::jsonb, '{}'::jsonb),\r"
+send "('b8d7e6f5-4c3a-2b1a-9c8d-7e6f5a4b3c2d', 'Product Director Agent', 'Product Strategy Leader', 'director', '[]'::jsonb, '{}'::jsonb),\r"
+send "('c9e8f7g6-5d4b-3c2a-ad9e-8f7g6b5c4d3e', 'Finance Director Agent', 'Financial Strategy Leader', 'director', '[]'::jsonb, '{}'::jsonb),\r"
+send "('d0f9g8h7-6e5c-4d3b-be0f-9g8h7c6d5e4f', 'Operations Director Agent', 'Operations Leader', 'director', '[]'::jsonb, '{}'::jsonb),\r"
+send "('e1g0h9i8-7f6d-5e4c-cf1g-0h9i8d7e6f5g', 'Technology Director Agent', 'Technology Leader', 'director', '[]'::jsonb, '{}'::jsonb);\r"
+send "\r"
+send "-- Add task agents\r"
+send "INSERT INTO agents (id, name, role, type, capabilities, config) VALUES\r"
+send "('a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Creative Content Task Agent', 'Content Creation Specialist', 'task', '[]'::jsonb, '{}'::jsonb),\r"
+send "('b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e', 'Campaign Analytics Task Agent', 'Campaign Analysis Specialist', 'task', '[]'::jsonb, '{}'::jsonb),\r"
+send "('c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f', 'Audience Intelligence Task Agent', 'Audience Analysis Specialist', 'task', '[]'::jsonb, '{}'::jsonb);\r"
+send "EOF\r"
+
+expect "INSERT"
+
+# Verify agents were inserted
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT COUNT(*) as count FROM agents;\"\r"
+
+# Now insert related data
+expect "root@*"
+send "echo 'Inserting agent beliefs...'\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres << 'EOF'\r"
+send "INSERT INTO agent_beliefs (agent_id, belief) VALUES\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Data-driven marketing yields the best ROI'),\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Customer experience is the key differentiator'),\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Brand consistency builds trust'),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'Data quality determines insight accuracy'),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'Real-time analytics enable agile decisions'),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'Predictive models reduce business risk');\r"
+send "EOF\r"
+
+expect "INSERT"
+
+# Insert goals
+expect "root@*"
+send "echo 'Inserting agent goals...'\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres << 'EOF'\r"
+send "INSERT INTO agent_goals (agent_id, goal, priority) VALUES\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Increase brand awareness by 30%', 9),\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Improve customer acquisition cost', 8),\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Launch omnichannel marketing strategy', 7),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'Implement real-time analytics dashboard', 9),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'Reduce data processing time by 50%', 8),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'Establish data governance framework', 7);\r"
+send "EOF\r"
+
+expect "INSERT"
+
+# Insert LLM configs
+expect "root@*"
+send "echo 'Inserting LLM configurations...'\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres << 'EOF'\r"
+send "INSERT INTO agent_llm_config (agent_id, provider, model, temperature, max_tokens) VALUES\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'openai', 'gpt-4', 0.7, 2000),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'openai', 'gpt-4', 0.3, 2000),\r"
+send "('a9b8c7d6-5e4f-3a2b-1c9d-8e7f6a5b4c3d', 'openai', 'gpt-4', 0.8, 2000),\r"
+send "('b8d7e6f5-4c3a-2b1a-9c8d-7e6f5a4b3c2d', 'openai', 'gpt-4', 0.5, 2000),\r"
+send "('c9e8f7g6-5d4b-3c2a-ad9e-8f7g6b5c4d3e', 'openai', 'gpt-4', 0.2, 2000),\r"
+send "('d0f9g8h7-6e5c-4d3b-be0f-9g8h7c6d5e4f', 'openai', 'gpt-4', 0.4, 2000),\r"
+send "('e1g0h9i8-7f6d-5e4c-cf1g-0h9i8d7e6f5g', 'openai', 'gpt-4', 0.3, 2000),\r"
+send "('a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'openai', 'gpt-4', 0.9, 2000),\r"
+send "('b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e', 'openai', 'gpt-4', 0.3, 2000),\r"
+send "('c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f', 'openai', 'gpt-4', 0.5, 2000)\r"
+send "ON CONFLICT (agent_id) DO UPDATE SET model = EXCLUDED.model;\r"
+send "EOF\r"
+
+expect "INSERT"
+
+# Final verification
+expect "root@*"
+send "echo '===== FINAL VERIFICATION ====='\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres << 'EOF'\r"
+send "SELECT 'Total Agents:' as metric, COUNT(*) as count FROM agents\r"
+send "UNION ALL SELECT 'With Beliefs:', COUNT(DISTINCT agent_id) FROM agent_beliefs\r"
+send "UNION ALL SELECT 'With Goals:', COUNT(DISTINCT agent_id) FROM agent_goals\r"
+send "UNION ALL SELECT 'With LLM Config:', COUNT(DISTINCT agent_id) FROM agent_llm_config;\r"
+send "\r"
+send "SELECT id, name, role, type FROM agents LIMIT 10;\r"
+send "EOF\r"
+
+expect "root@*"
+send "exit\r"
+
+expect eof

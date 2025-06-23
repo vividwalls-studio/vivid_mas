@@ -1,0 +1,44 @@
+#!/usr/bin/expect -f
+
+set timeout 300
+set passphrase "freedom"
+
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        send "cd /root/vivid_mas\r"
+    }
+}
+
+# Copy and run the script
+expect "root@*"
+send "cp scripts/direct_sql_insert.sh . && chmod +x direct_sql_insert.sh\r"
+
+expect "root@*"
+send "bash direct_sql_insert.sh\r"
+
+expect {
+    "VERIFICATION" {
+        puts "\nInsertion completed!"
+    }
+    "agents_count" {
+        puts "\nVerifying results..."
+    }
+    timeout {
+        puts "\nTimeout during execution"
+    }
+}
+
+# Extra check
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT 'Success! Total agents:' as status, COUNT(*) as count FROM agents;\"\r"
+
+expect "root@*"
+send "exit\r"
+
+expect eof

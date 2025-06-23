@@ -1,0 +1,460 @@
+{% comment %}
+  VividWalls Product Page - Clean Figma Design Implementation
+  Uses theme's header and respects theme settings
+{% endcomment %}
+
+{{ 'vividwalls-product-figma.css' | asset_url | stylesheet_tag }}
+
+<style>
+  /* Use theme's font and color variables */
+  .vwp-product-name {
+    font-family: var(--font-heading-family);
+  }
+  
+  .vwp-artist-name,
+  .vwp-artist-label,
+  .vwp-sku,
+  .vwp-stock-info,
+  .vwp-certificate-text {
+    font-family: var(--font-body-family);
+  }
+</style>
+
+<!-- Main Content -->
+<div class="vwp-main-content" style="width: 1200px; justify-content: flex-start; align-items: flex-start; gap: 50px; display: inline-flex; max-width: 100%; margin: 0 auto; padding: 40px 20px;">
+  
+  <!-- Artwork Container -->
+  <div class="vwp-artwork-container" style="width: 800px; align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: center; gap: 20px; display: inline-flex;">
+    <!-- Main Artwork Image -->
+    <div class="vwp-main-artwork-image" style="width: 800px; height: 693px; justify-content: flex-start; align-items: flex-start; display: inline-flex;">
+      <div class="vwp-artwork-image-wrapper" style="width: 100%; height: 100%; background: white; overflow: hidden; border-radius: 5px; justify-content: center; align-items: center; display: flex;">
+        <img 
+          class="vwp-img" 
+          style="width: 100%; height: 100%; object-fit: cover;"
+          src="{{ product.featured_image | image_url: width: 800, height: 693 }}" 
+          alt="{{ product.title }}"
+        >
+      </div>
+    </div>
+    
+    <!-- Thumbnails Container -->
+    <div class="vwp-thumbnails-container" style="align-self: stretch; position: relative; overflow: hidden; justify-content: flex-start; align-items: center; gap: 20px; display: inline-flex;">
+      <div class="vwp-thumbnails" style="flex: 1 1 0; justify-content: flex-start; align-items: center; gap: 20px; display: flex;">
+        {% for variant in product.variants limit: 3 %}
+          {% if variant.featured_image %}
+            <div class="vwp-thumbnail-image" style="width: 220px; height: 289px; flex-direction: column; justify-content: flex-start; align-items: flex-start; display: inline-flex;" 
+                 data-image="{{ variant.featured_image | image_url: width: 1000 }}"
+                 data-variant-id="{{ variant.id }}">
+              <div class="vwp-thumbnail-image-inner {% if forloop.first %}vwp-selected{% endif %}" style="align-self: stretch; flex: 1 1 0; flex-direction: column; justify-content: flex-start; align-items: center; display: flex;">
+                {% if forloop.first %}
+                  <div class="vwp-selected-indicator" style="width: 150px; height: 5px; position: relative; background: #09090B; border-radius: 5px;"></div>
+                {% endif %}
+                <img style="width: 220px; height: 289px; border-radius: 5px;" src="{{ variant.featured_image | image_url: width: 440 }}" alt="{{ product.title }} - {{ variant.title }}">
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+      
+      <!-- Navigation Arrow -->
+      <div class="vwp-social-share-container" style="width: 792px; left: 5px; top: 127px; position: absolute; justify-content: flex-end; align-items: center; display: flex;">
+        <button class="vwp-carousel-arrow" style="width: 35px; height: 35px; opacity: 0.70; background: white; border-radius: 100px; justify-content: center; align-items: center; gap: 10px; display: flex; border: none; cursor: pointer;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Info -->
+  <div class="vwp-product-info" style="flex: 1 1 0; background: white; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 30px; display: inline-flex;">
+    
+    <!-- Product Info Container -->
+    <div class="vwp-product-info-container" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 16px; display: flex;">
+      <div class="vwp-product-info-inner" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex;">
+        <h1 class="vwp-product-name" style="align-self: stretch; color: black; font-size: 40px; font-weight: 400; word-wrap: break-word; margin: 0;">{{ product.title }}</h1>
+        
+        <div class="vwp-artist-name" style="color: #71717A; font-size: 16px; font-weight: 400; word-wrap: break-word;">Collection → {{ collections[product.metafields.custom.collection_handle].title | default: 'Vivid Layers' }}</div>
+        
+        <div class="vwp-artist-info-container" style="justify-content: flex-start; align-items: center; gap: 4px; display: inline-flex;">
+          <div class="vwp-artist-label" style="color: #71717A; font-size: 16px; font-style: italic; font-weight: 400; word-wrap: break-word;">Original Art Illustrations by </div>
+          <div class="vwp-artist-name" style="color: #71717A; font-size: 16px; font-weight: 400; word-wrap: break-word;">{{ product.metafields.custom.artist_name | default: 'Kingler Bercy' }}</div>
+        </div>
+        
+        <div class="vwp-tag-container" style="padding: 10px; background: #09090B; border-radius: 5px; justify-content: center; align-items: center; gap: 10px; display: inline-flex;">
+          <div class="vwp-tag" style="color: #E4E4E7; font-size: 20px; font-weight: 400; word-wrap: break-word;">Limited Edition Print</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Purchase Options -->
+    <div class="vwp-purchase-options" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 20px; display: flex;">
+      
+      <!-- Product Info Bar -->
+      <div class="vwp-product-info-bar" style="align-self: stretch; justify-content: space-between; align-items: center; display: inline-flex;">
+        <div class="vwp-dimensions" style="justify-content: flex-start; align-items: center; gap: 3px; display: flex;">
+          <span class="vwp-width" id="selectedWidth" style="color: #262626; font-size: 24px; font-weight: 500; word-wrap: break-word;">24</span>
+          <span class="vwp-separator" style="color: #262626; font-size: 24px; font-weight: 500; word-wrap: break-word;">X</span>
+          <span class="vwp-height" id="selectedHeight" style="color: #262626; font-size: 24px; font-weight: 500; word-wrap: break-word;">36</span>
+        </div>
+        <div class="vwp-price" id="vwpPrice" style="color: #262626; font-size: 24px; font-weight: 600; word-wrap: break-word;">${{ product.selected_or_first_available_variant.price | money_without_currency }} USD</div>
+      </div>
+
+      <!-- Container for Availability -->
+      <div class="vwp-container" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex;">
+        <div class="vwp-availability" data-showoptions="true" style="width: 335px; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex;">
+          
+          {% comment %} Show only 3 size options with inventory {% endcomment %}
+          {% for variant in product.variants limit: 3 %}
+            {% assign dimensions = variant.title | split: ' x ' %}
+            {% if dimensions.size < 2 %}
+              {% assign dimensions = variant.title | split: 'x' %}
+            {% endif %}
+            {% assign width = dimensions[0] | strip | remove: '"' %}
+            {% assign height = dimensions[1] | strip | remove: '"' %}
+            {% assign sold = 50 %}
+            {% assign remaining = variant.inventory_quantity | default: 150 %}
+            
+            <div class="vwp-options-availability {% if forloop.first %}vwp-option-selected{% else %}vwp-option-default{% endif %}" 
+                 data-isdefault="{% if forloop.first %}false{% else %}true{% endif %}" 
+                 data-isselected="{% if forloop.first %}true{% else %}false{% endif %}" 
+                 data-issoldout="{% unless variant.available %}true{% else %}false{% endunless %}"
+                 data-variant-id="{{ variant.id }}"
+                 data-price="{{ variant.price | money_without_currency }}"
+                 style="align-self: stretch; padding: 10px; {% if forloop.first %}background: #262626;{% else %}opacity: 0.70; background: #FAFAFA;{% endif %} border-radius: 5px; outline: 1px {% if forloop.first %}#262626{% else %}#FAFAFA{% endif %} solid; outline-offset: -1px; flex-direction: column; justify-content: flex-end; align-items: flex-end; gap: 10px; display: flex; cursor: pointer;">
+              
+              <!-- Size and Price -->
+              <div class="vwp-product-info" style="align-self: stretch; justify-content: space-between; align-items: center; display: inline-flex;">
+                <div class="vwp-dimensions" style="justify-content: flex-start; align-items: center; gap: 3px; display: flex;">
+                  <div class="vwp-width" style="color: {% if forloop.first %}#F5F5F5{% else %}#525252{% endif %}; font-size: 16px; font-weight: {% if forloop.first %}600{% else %}500{% endif %}; word-wrap: break-word;">{{ width }}</div>
+                  <div class="vwp-separator" style="color: {% if forloop.first %}#F5F5F5{% else %}#525252{% endif %}; font-size: 16px; font-weight: {% if forloop.first %}600{% else %}500{% endif %}; word-wrap: break-word;">X</div>
+                  <div class="vwp-height" style="color: {% if forloop.first %}#F5F5F5{% else %}#525252{% endif %}; font-size: 16px; font-weight: {% if forloop.first %}600{% else %}500{% endif %}; word-wrap: break-word;">{{ height }}</div>
+                </div>
+                <div class="vwp-price" style="color: {% if forloop.first %}#F5F5F5{% else %}#525252{% endif %}; font-size: 16px; font-weight: 600; word-wrap: break-word;">${{ variant.price | money_without_currency }}</div>
+              </div>
+              
+              <!-- Stock Info -->
+              <div class="vwp-frame-20" style="align-self: stretch; justify-content: {% if forloop.first %}space-between{% else %}flex-end{% endif %}; align-items: center; display: inline-flex;">
+                {% if forloop.first %}
+                  <div class="vwp-icon-instance" style="width: 24px; height: 24px; justify-content: center; align-items: center; gap: 10px; display: flex;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M6 9L12 15L18 9" stroke="#E5E5E5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </div>
+                {% endif %}
+                <div class="vwp-stock-info" style="color: {% if forloop.first %}#E5E5E5{% else %}#525252{% endif %}; font-size: 16px; font-weight: 400; word-wrap: break-word;">{{ sold }} sold - {{ remaining }} remaining</div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Gallery Wrap Option -->
+      <div class="vwp-container" style="align-self: stretch; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex;">
+        <div class="vwp-options-true-false" style="flex: 1 1 0; height: 54px; padding-left: 20px; padding-right: 20px; padding-top: 10px; padding-bottom: 10px; background: #FAFAFA; border-radius: 5px; flex-direction: column; justify-content: center; align-items: flex-start; gap: 8px; display: inline-flex;">
+          <div class="vwp-checkbox" data-state="unchecked" style="position: relative; justify-content: flex-start; align-items: center; gap: 8px; display: inline-flex;">
+            <input type="checkbox" id="galleryWrap" name="properties[Gallery Wrapped]" value="Yes" style="display: none;">
+            <label for="galleryWrap" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <div class="vwp-rectangle-2" style="width: 16px; height: 16px; background: #18181B; border-radius: 4px; position: relative;">
+                <svg class="vwp-check" style="width: 15px; height: 15px; position: absolute; left: 0.5px; top: 0.5px; display: none;" viewBox="0 0 15 15" fill="none">
+                  <path d="M2 7L6 11L13 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span style="color: #18181B; font-size: 14px; font-weight: 500; word-wrap: break-word;">Gallery Wrapped Canvas</span>
+            </label>
+          </div>
+          <div class="vwp-frame-31" style="justify-content: flex-start; align-items: center; gap: 4px; display: inline-flex;">
+            <div class="vwp-frame-30" style="justify-content: center; align-items: center; display: flex;">
+              <span style="color: #71717A; font-size: 12px; font-weight: 500; word-wrap: break-word;">24X36</span>
+              <span style="color: #71717A; font-size: 12px; font-weight: 500; word-wrap: break-word;"> + $75</span>
+            </div>
+            <div class="vwp-line-1" style="width: 10px; height: 0px; transform: rotate(90deg); transform-origin: top left; outline: 1px #D4D4D4 solid; outline-offset: -0.50px;"></div>
+            <div class="vwp-frame-31" style="justify-content: center; align-items: center; display: flex;">
+              <span style="color: #71717A; font-size: 12px; font-weight: 500; word-wrap: break-word;">36X48</span>
+              <span style="color: #71717A; font-size: 12px; font-weight: 500; word-wrap: break-word;"> + $75</span>
+            </div>
+            <div class="vwp-line-3" style="width: 10px; height: 0px; transform: rotate(90deg); transform-origin: top left; outline: 1px #D4D4D4 solid; outline-offset: -0.50px;"></div>
+            <div class="vwp-frame-32" style="justify-content: center; align-items: center; display: flex;">
+              <span style="color: #71717A; font-size: 12px; font-weight: 500; word-wrap: break-word;">53X72</span>
+              <span style="color: #71717A; font-size: 12px; font-weight: 500; word-wrap: break-word;"> + $125</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product Details -->
+    <form action="/cart/add" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="id" id="vwpVariantId" value="{{ product.selected_or_first_available_variant.id }}">
+      
+      <div class="vwp-product-details" style="align-self: stretch; overflow: hidden; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex;">
+        <div class="vwp-sku" style="color: #737373; font-size: 14px; font-weight: 400; word-wrap: break-word;">SKU: {{ product.selected_or_first_available_variant.sku | default: product.variants.first.sku }}</div>
+        
+        <div class="vwp-quantity-selector" style="align-self: stretch; height: 60px; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex;">
+          <div class="vwp-quantity-controls" style="width: 152px; align-self: stretch; padding-left: 20px; padding-right: 20px; padding-top: 10px; padding-bottom: 10px; overflow: hidden; outline: 1px #D4D4D4 solid; outline-offset: -1px; justify-content: center; align-items: center; gap: 10px; display: flex;">
+            <div class="vwp-quantity-icon vwp-qty-minus" style="width: 24px; height: 24px; justify-content: center; align-items: center; gap: 10px; display: flex; cursor: pointer;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="vwp-quantity-value" style="flex: 1 1 0; justify-content: center; align-items: center; gap: 10px; display: flex;">
+              <div class="vwp-quantity-text" style="color: black; font-size: 20px; font-weight: 700; word-wrap: break-word;">1</div>
+              <input type="hidden" name="quantity" id="vwpQuantity" value="1" min="1">
+            </div>
+            <div class="vwp-quantity-icon vwp-qty-plus" style="width: 24px; height: 24px; justify-content: center; align-items: center; gap: 10px; display: flex; cursor: pointer;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+          <button type="submit" class="vwp-button-dark" style="flex: 1 1 0; align-self: stretch; padding-left: 16px; padding-right: 16px; padding-top: 12px; padding-bottom: 12px; background: #09090B; border-radius: 4px; justify-content: center; align-items: center; gap: 10px; display: flex; border: none; cursor: pointer;">
+            <span class="vwp-button" style="color: #F5F5F5; font-size: 20px; font-weight: 500; word-wrap: break-word;">ADD TO CART</span>
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Purchase Button Container -->
+    <div class="vwp-purchase-button-container" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 20px; display: flex;">
+      {{ form | payment_button }}
+      
+      <div class="vwp-shipping-info" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex;">
+        <div class="vwp-artist-info-container" style="justify-content: flex-start; align-items: center; gap: 4px; display: inline-flex;">
+          <div class="vwp-artist-label">
+            <span style="color: #171717; font-size: 16px; font-style: italic; font-weight: 400; text-decoration: underline; word-wrap: break-word;">Shipping</span>
+            <span style="color: #71717A; font-size: 16px; font-style: italic; font-weight: 400; word-wrap: break-word;"> calculated at checkout.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Certificate Frame -->
+    <div class="vwp-frame" style="align-self: stretch; padding-left: 20px; padding-right: 20px; padding-top: 10px; padding-bottom: 10px; background: #FAFAFA; border-radius: 5px; justify-content: flex-start; align-items: center; gap: 20px; display: inline-flex;">
+      <div class="vwp-icon-instance" style="width: 24px; height: 24px; justify-content: center; align-items: center; gap: 10px; display: flex;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M21 12V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V5C3 3.9 3.9 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="vwp-tag" style="flex: 1 1 0; color: #404040; font-size: 14px; font-weight: 400; word-wrap: break-word;">Each purchased limited print receives a numbered Certificate of Authenticity. Your print will be the next available edition number in the selected size.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const vwp = {
+    // Cache DOM elements
+    elements: {
+      mainImage: document.querySelector('.vwp-img'),
+      thumbnails: document.querySelectorAll('.vwp-thumbnail-image'),
+      availabilityOptions: document.querySelectorAll('.vwp-options-availability'),
+      widthDisplay: document.getElementById('selectedWidth'),
+      heightDisplay: document.getElementById('selectedHeight'),
+      priceDisplay: document.getElementById('vwpPrice'),
+      variantIdInput: document.getElementById('vwpVariantId'),
+      galleryWrapCheckbox: document.getElementById('galleryWrap'),
+      quantityInput: document.getElementById('vwpQuantity'),
+      quantityText: document.querySelector('.vwp-quantity-text'),
+      qtyMinus: document.querySelector('.vwp-qty-minus'),
+      qtyPlus: document.querySelector('.vwp-qty-plus'),
+      skuElement: document.querySelector('.vwp-sku')
+    },
+
+    // State
+    state: {
+      basePrice: 0,
+      galleryWrapPrices: { '24': 75, '36': 75, '53': 125 },
+      currentWidth: '24',
+      currentVariantId: null
+    },
+
+    init() {
+      this.bindEvents();
+      // Initialize with first variant
+      const firstOption = document.querySelector('.vwp-options-availability');
+      if (firstOption) {
+        this.handleAvailabilitySelection(firstOption);
+      }
+    },
+
+    bindEvents() {
+      // Thumbnail clicks
+      this.elements.thumbnails.forEach(thumb => {
+        thumb.addEventListener('click', () => this.handleThumbnailClick(thumb));
+      });
+
+      // Availability options
+      this.elements.availabilityOptions.forEach(option => {
+        option.addEventListener('click', () => this.handleAvailabilitySelection(option));
+      });
+
+      // Gallery wrap checkbox
+      if (this.elements.galleryWrapCheckbox) {
+        this.elements.galleryWrapCheckbox.addEventListener('change', () => {
+          const checkmark = this.elements.galleryWrapCheckbox.parentElement.querySelector('.vwp-check');
+          if (checkmark) {
+            checkmark.style.display = this.elements.galleryWrapCheckbox.checked ? 'block' : 'none';
+          }
+          this.updatePrice();
+        });
+      }
+
+      // Quantity controls
+      if (this.elements.qtyMinus) {
+        this.elements.qtyMinus.addEventListener('click', () => this.updateQuantity(-1));
+      }
+      if (this.elements.qtyPlus) {
+        this.elements.qtyPlus.addEventListener('click', () => this.updateQuantity(1));
+      }
+    },
+
+    handleThumbnailClick(thumb) {
+      // Update main image
+      const imageUrl = thumb.dataset.image;
+      if (imageUrl && this.elements.mainImage) {
+        this.elements.mainImage.src = imageUrl;
+      }
+      
+      // Update selected state
+      this.elements.thumbnails.forEach(t => {
+        const inner = t.querySelector('.vwp-thumbnail-image-inner');
+        if (inner) {
+          inner.classList.remove('vwp-selected');
+          // Remove existing indicator
+          const indicator = inner.querySelector('.vwp-selected-indicator');
+          if (indicator) indicator.remove();
+        }
+      });
+      
+      // Add selected state
+      const inner = thumb.querySelector('.vwp-thumbnail-image-inner');
+      if (inner) {
+        inner.classList.add('vwp-selected');
+        // Add indicator
+        const indicator = document.createElement('div');
+        indicator.className = 'vwp-selected-indicator';
+        indicator.style = 'width: 150px; height: 5px; position: relative; background: #09090B; border-radius: 5px;';
+        inner.insertBefore(indicator, inner.firstChild);
+      }
+    },
+
+    handleAvailabilitySelection(option) {
+      if (option.dataset.issoldout === 'true') return;
+      
+      // Update all options styling
+      this.elements.availabilityOptions.forEach(opt => {
+        // Reset styles
+        opt.classList.remove('vwp-option-selected');
+        opt.classList.add('vwp-option-default');
+        opt.style.background = '#FAFAFA';
+        opt.style.opacity = '0.70';
+        opt.style.outline = '1px #FAFAFA solid';
+        
+        // Update text colors
+        opt.querySelectorAll('.vwp-width, .vwp-height, .vwp-separator, .vwp-price, .vwp-stock-info').forEach(el => {
+          el.style.color = '#525252';
+        });
+        opt.querySelectorAll('.vwp-width, .vwp-height, .vwp-separator').forEach(el => {
+          el.style.fontWeight = '500';
+        });
+        
+        // Hide chevron icon
+        const icon = opt.querySelector('.vwp-icon-instance');
+        if (icon) icon.style.display = 'none';
+        
+        // Update data attributes
+        opt.dataset.isselected = 'false';
+        opt.dataset.isdefault = 'true';
+      });
+      
+      // Apply selected styles
+      option.classList.add('vwp-option-selected');
+      option.classList.remove('vwp-option-default');
+      option.style.background = '#262626';
+      option.style.opacity = '1';
+      option.style.outline = '1px #262626 solid';
+      
+      // Update text colors for selected
+      option.querySelectorAll('.vwp-width, .vwp-height, .vwp-separator, .vwp-price, .vwp-stock-info').forEach(el => {
+        el.style.color = '#F5F5F5';
+      });
+      option.querySelectorAll('.vwp-width, .vwp-height, .vwp-separator').forEach(el => {
+        el.style.fontWeight = '600';
+      });
+      
+      // Show chevron icon
+      const icon = option.querySelector('.vwp-icon-instance');
+      if (icon) icon.style.display = 'flex';
+      
+      // Update data attributes
+      option.dataset.isselected = 'true';
+      option.dataset.isdefault = 'false';
+      
+      // Update variant data
+      this.state.currentVariantId = option.dataset.variantId;
+      this.elements.variantIdInput.value = this.state.currentVariantId;
+      
+      // Update displays
+      const widthEl = option.querySelector('.vwp-width');
+      const heightEl = option.querySelector('.vwp-height');
+      if (widthEl && heightEl) {
+        const width = widthEl.textContent;
+        const height = heightEl.textContent;
+        this.elements.widthDisplay.textContent = width;
+        this.elements.heightDisplay.textContent = height;
+        this.state.currentWidth = width;
+      }
+      
+      // Update price
+      this.state.basePrice = parseFloat(option.dataset.price);
+      this.updatePrice();
+      
+      // Update SKU if available
+      const sku = option.dataset.sku;
+      if (sku && this.elements.skuElement) {
+        this.elements.skuElement.textContent = `SKU: ${sku}`;
+      }
+      
+      // Update thumbnail if variant has image
+      const thumbnail = document.querySelector(`[data-variant-id="${this.state.currentVariantId}"]`);
+      if (thumbnail && thumbnail.classList.contains('vwp-thumbnail-image')) {
+        this.handleThumbnailClick(thumbnail);
+      }
+    },
+
+    updatePrice() {
+      let totalPrice = this.state.basePrice;
+      
+      // Add gallery wrap price if checked
+      if (this.elements.galleryWrapCheckbox && this.elements.galleryWrapCheckbox.checked) {
+        const wrapPrice = this.state.galleryWrapPrices[this.state.currentWidth] || 75;
+        totalPrice += wrapPrice;
+      }
+      
+      // Update price display
+      this.elements.priceDisplay.textContent = `$${totalPrice.toFixed(2)} USD`;
+    },
+
+    updateQuantity(change) {
+      const current = parseInt(this.elements.quantityInput.value);
+      const newValue = Math.max(1, current + change);
+      this.elements.quantityInput.value = newValue;
+      if (this.elements.quantityText) {
+        this.elements.quantityText.textContent = newValue;
+      }
+    }
+  };
+
+  // Initialize
+  vwp.init();
+});
+</script>
+
+{% schema %}
+{
+  "name": "Product Figma Clean",
+  "settings": []
+}
+{% endschema %}

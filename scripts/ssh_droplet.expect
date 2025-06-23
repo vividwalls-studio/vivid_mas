@@ -1,0 +1,56 @@
+#!/usr/bin/expect -f
+
+# SSH into Digital Ocean droplet
+set timeout 30
+set host "157.230.13.13"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# Start SSH connection
+spawn ssh -i $key_file root@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase for key" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "Are you sure you want to continue connecting" {
+        send "yes\r"
+        exp_continue
+    }
+    "root@*" {
+        # Successfully connected
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}
+
+# Now we're connected, let's find Neo4j password
+send "cd /root\r"
+expect "root@*"
+
+# Check for docker-compose files
+send "find . -name 'docker-compose*.yml' -o -name '.env*' | grep -E '(docker-compose|\.env)'\r"
+expect "root@*"
+
+# Let's check the main docker-compose file
+send "cat docker-compose.yml | grep -A5 -B5 NEO4J\r"
+expect "root@*"
+
+# Check for environment files
+send "ls -la | grep -E '\.env'\r"
+expect "root@*"
+
+# Check .env file if it exists
+send "if [ -f .env ]; then cat .env | grep NEO4J; fi\r"
+expect "root@*"
+
+# Check for any Neo4j specific env files
+send "find . -name '*neo4j*' -type f | head -20\r"
+expect "root@*"
+
+# Keep the session open for manual inspection
+interact

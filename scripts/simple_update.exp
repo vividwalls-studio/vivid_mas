@@ -1,0 +1,59 @@
+#!/usr/bin/expect -f
+
+set timeout 600
+set passphrase "freedom"
+
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        send "cd /root/vivid_mas\r"
+    }
+}
+
+# Create schema update script directly
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres << 'EOSQL'\r"
+send "ALTER TABLE agents ADD COLUMN IF NOT EXISTS role VARCHAR(255);\r"
+send "ALTER TABLE agents ADD COLUMN IF NOT EXISTS backstory TEXT;\r"
+send "ALTER TABLE agents ADD COLUMN IF NOT EXISTS short_term_memory JSONB DEFAULT '[]'::jsonb;\r"
+send "ALTER TABLE agents ADD COLUMN IF NOT EXISTS long_term_memory JSONB DEFAULT '[]'::jsonb;\r"
+send "ALTER TABLE agents ADD COLUMN IF NOT EXISTS communication_preferences JSONB DEFAULT '[]'::jsonb;\r"
+send "ALTER TABLE agents ADD COLUMN IF NOT EXISTS avatar_url TEXT;\r"
+send "ALTER TABLE agent_voice_config ADD COLUMN IF NOT EXISTS pace VARCHAR(255);\r"
+send "ALTER TABLE agent_voice_config ADD COLUMN IF NOT EXISTS provider VARCHAR(255);\r"
+send "ALTER TABLE agent_voice_config ADD COLUMN IF NOT EXISTS special_instructions TEXT;\r"
+send "EOSQL\r"
+
+expect "ALTER TABLE"
+puts "\nSchema updated successfully"
+
+# Now run the SQL chunks
+expect "root@*"
+send "for i in 1 2 3 4; do echo \"=== Executing chunk \$i ===\"; docker exec -i supabase-db psql -U postgres -d postgres < sql_chunks/chunk_00\$i.sql 2>&1 | grep -E '(INSERT|ERROR|COMMIT|ROLLBACK)' | head -20; done\r"
+
+expect {
+    "COMMIT" {
+        puts "\nData insertion completed"
+        exp_continue
+    }
+    "root@*" {
+        puts "\nProcess finished"
+    }
+    timeout {
+        puts "\nTimeout reached"
+    }
+}
+
+# Verify
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT COUNT(*) FROM agents;\"\r"
+
+expect "root@*"
+send "exit\r"
+
+expect eof

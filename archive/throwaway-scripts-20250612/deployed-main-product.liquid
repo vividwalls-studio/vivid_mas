@@ -1,0 +1,386 @@
+{% comment %}
+  VividWalls Product Page - Simplified Version
+  Based on local-theme-test example with variant image switching
+{% endcomment %}
+
+{{ 'main-product-simple.css' | asset_url | stylesheet_tag }}
+
+<div class="page-width">
+  <div class="MainProductSection page-width" style="max-width: 1200px; width: 100%; padding-top: 50px; padding-bottom: 50px; background: white; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 145px; display: flex; margin: 0 auto;">
+    
+    <div class="Section01" style="width: 100%; justify-content: flex-start; align-items: flex-start; gap: 50px; display: flex">
+      
+      <!-- Left Side: Artwork Container -->
+      <div class="ArtworkContainer" style="width: 800px; max-width: 66.67%; align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: center; gap: 20px; display: flex">
+        
+        <!-- Main Image -->
+        <div class="MainArtworkImage" style="width: 100%; height: 690px; justify-content: flex-start; align-items: flex-start; display: flex">
+          <div style="flex: 1 1 0; align-self: stretch; background: white; overflow: hidden; border-radius: 5px; justify-content: center; align-items: center; gap: 10px; display: flex">
+            <img class="main-product-image" id="main-product-image" style="flex: 1 1 0; align-self: stretch; object-fit: cover;" src="{{ product.featured_media | image_url: width: 800 }}" alt="{{ product.title }}" />
+          </div>
+        </div>
+        
+        <!-- Thumbnails -->
+        <div class="ThumbnailsContainer" style="align-self: stretch; position: relative; overflow: hidden; justify-content: flex-start; align-items: center; gap: 20px; display: flex">
+          <div class="Thumbnails" style="flex: 1 1 0; justify-content: flex-start; align-items: center; gap: 20px; display: flex; overflow-x: auto;">
+            {% for variant in product.variants %}
+              {% if variant.title contains 'Canvas Roll' %}
+                {% assign variant_image = variant.image | default: product.featured_media %}
+                <div class="ThumbnailImage" data-variant-id="{{ variant.id }}" data-image-url="{{ variant_image | image_url: width: 800 }}" style="width: 220px; min-width: 220px; height: 290px; flex-direction: column; justify-content: flex-start; align-items: flex-start; display: flex">
+                  <div class="thumbnail-wrapper" style="align-self: stretch; flex: 1 1 0; flex-direction: column; justify-content: flex-start; align-items: center; display: flex; cursor: pointer;">
+                    {% if forloop.first %}
+                      <div class="selected-indicator" style="width: 150px; height: 5px; position: relative; background: #171717; border-radius: 5px;"></div>
+                    {% endif %}
+                    <img style="width: 220px; height: 290px; border-radius: 5px; object-fit: cover;" src="{{ variant_image | image_url: width: 220 }}" alt="{{ variant.title }}" />
+                  </div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Side: Product Info -->
+      <div class="ProductInfo" style="flex: 1 1 0; min-width: 0; background: white; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 30px; display: flex">
+        
+        <!-- Product Header -->
+        <div class="ProductInfoContainer" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 16px; display: flex">
+          <div style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 20px; display: flex">
+            <h1 class="ProductName" style="align-self: stretch; color: #171717; font-size: 40px; font-family: Inter, sans-serif; font-weight: 400; line-height: 1.2; word-wrap: break-word">{{ product.title }}</h1>
+            <div style="color: #737373; font-size: 16px; font-family: Inter, sans-serif; font-weight: 400;">Collection → {{ collections.first.title | default: "Emergence" }}</div>
+            <div style="justify-content: flex-start; align-items: center; gap: 4px; display: inline-flex;">
+              <span style="color: #737373; font-size: 16px; font-family: Inter, sans-serif; font-style: italic; font-weight: 400;">Original Art Illustrations by </span>
+              <span style="color: #737373; font-size: 16px; font-family: Inter, sans-serif; font-weight: 400;">{{ product.vendor | default: "VividWalls" }}</span>
+            </div>
+            <div style="padding: 3px 10px; background: #171717; border-radius: 5px; justify-content: center; align-items: center; gap: 10px; display: inline-flex;">
+              <div style="color: white; font-size: 16px; font-family: Inter, sans-serif; font-weight: 400;">Limited Edition Print</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Product Form -->
+        <form action="{{ routes.cart_add_url }}" method="post" enctype="multipart/form-data" id="product-form-{{ section.id }}">
+          <div class="ShoppingCartComponent" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 20px; display: flex">
+            
+            <!-- Selected Size and Price -->
+            <div class="TotalSelectedPrice" style="align-self: stretch; padding-left: 4px; padding-right: 4px; justify-content: space-between; align-items: center; display: inline-flex">
+              <div class="Dimensions" style="justify-content: flex-start; align-items: center; gap: 3px; display: flex">
+                <span class="selected-width" style="color: #262626; font-size: 18px; font-family: Inter, sans-serif; font-weight: 400;">24</span>
+                <span style="color: #262626; font-size: 18px; font-family: Inter, sans-serif; font-weight: 400;">X</span>
+                <span class="selected-height" style="color: #262626; font-size: 18px; font-family: Inter, sans-serif; font-weight: 400;">36</span>
+              </div>
+              <div class="total-price-display" style="color: #262626; font-size: 18px; font-family: Inter, sans-serif; font-weight: 600;">{{ product.selected_or_first_available_variant.price | money }} USD</div>
+            </div>
+            
+            <!-- Size Options -->
+            <div class="VariantPicker" style="width: 100%; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex">
+              <div class="size-options" style="width: 100%; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex">
+                
+                {% for variant in product.variants %}
+                  {% if variant.title contains 'Canvas Roll' %}
+                    {% assign size_parts = variant.title | split: '/' | first | split: 'x' %}
+                    {% if size_parts.size == 2 %}
+                      {% assign width = size_parts[0] | strip %}
+                      {% assign height = size_parts[1] | strip %}
+                      {% assign variant_image = variant.image | default: product.featured_media %}
+                      
+                      <div class="variant-option" 
+                           data-variant-id="{{ variant.id }}"
+                           data-variant-price="{{ variant.price }}"
+                           data-variant-size="{{ width }}x{{ height }}"
+                           data-variant-available="{{ variant.available }}"
+                           data-variant-image="{{ variant_image | image_url: width: 800 }}"
+                           style="align-self: stretch; padding: 10px; {% if forloop.first %}background: #262626;{% else %}opacity: 0.70; background: #FAFAFA;{% endif %} border-radius: 5px; outline: 1px {% if forloop.first %}#262626{% else %}#FAFAFA{% endif %} solid; outline-offset: -1px; flex-direction: column; justify-content: flex-end; align-items: flex-end; gap: 10px; display: flex; cursor: pointer;">
+                        
+                        <div style="align-self: stretch; justify-content: space-between; align-items: center; display: inline-flex">
+                          <div style="justify-content: flex-start; align-items: center; gap: 3px; display: flex">
+                            <span class="variant-width" style="color: {% if forloop.first %}#F5F5F5{% else %}#525252{% endif %}; font-size: 16px; font-family: Inter, sans-serif; font-weight: {% if forloop.first %}600{% else %}400{% endif %};">{{ width }}</span>
+                            <span class="variant-separator" style="color: {% if forloop.first %}#F5F5F5{% else %}#525252{% endif %}; font-size: 16px; font-family: Inter, sans-serif; font-weight: {% if forloop.first %}600{% else %}400{% endif %};">X</span>
+                            <span class="variant-height" style="color: {% if forloop.first %}#F5F5F5{% else %}#525252{% endif %}; font-size: 16px; font-family: Inter, sans-serif; font-weight: {% if forloop.first %}600{% else %}400{% endif %};">{{ height }}</span>
+                          </div>
+                          <div class="variant-price" style="color: {% if forloop.first %}#F5F5F5{% else %}#525252{% endif %}; font-size: 16px; font-family: Inter, sans-serif; font-weight: 600;">{{ variant.price | money }}</div>
+                        </div>
+                        
+                        <div style="align-self: stretch; justify-content: flex-end; align-items: center; display: inline-flex">
+                          <div style="color: {% if forloop.first %}#E5E5E5{% else %}#525252{% endif %}; font-size: 14px; font-family: Inter, sans-serif; font-weight: 400;">
+                            {% assign sold = 200 | minus: variant.inventory_quantity %}
+                            {{ sold }} sold - {{ variant.inventory_quantity }} remaining
+                          </div>
+                        </div>
+                      </div>
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+                
+              </div>
+              
+              <!-- Gallery Wrap Option -->
+              <div style="align-self: stretch; padding-left: 4px; margin-bottom: -5px;">
+                <div style="color: #737373; font-size: 14px; font-family: Inter, sans-serif; font-weight: 500;">Canvas Finish Options</div>
+              </div>
+              
+              <div style="align-self: stretch; justify-content: flex-start; align-items: center; gap: 10px; display: inline-flex">
+                <div style="flex: 1 1 0; height: 54px; padding-left: 20px; padding-right: 20px; padding-top: 10px; padding-bottom: 10px; background: #FAFAFA; border-radius: 5px; flex-direction: column; justify-content: center; align-items: flex-start; gap: 8px; display: inline-flex">
+                  <label for="gallery-wrap-{{ section.id }}" style="position: relative; justify-content: flex-start; align-items: center; gap: 8px; display: inline-flex; cursor: pointer;">
+                    <div class="checkbox-visual" style="width: 16px; height: 16px; background: #FAFAFA; border: 1px solid #D4D4D4; border-radius: 4px; position: relative; pointer-events: none;">
+                      <div class="check-icon" style="width: 16px; height: 16px; position: absolute; top: 0; left: 0; display: none; justify-content: center; align-items: center;">
+                        <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+                          <path d="M1 4.5L4.5 8L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <input type="checkbox" id="gallery-wrap-{{ section.id }}" name="properties[Gallery Wrap]" value="yes" style="position: absolute; opacity: 0; width: 16px; height: 16px; left: 0; top: 0; cursor: pointer; z-index: 1;">
+                    <span style="color: #262626; font-size: 14px; font-family: Inter, sans-serif; font-weight: 500; pointer-events: none;">Gallery Wrapped Canvas</span>
+                  </label>
+                  <div style="justify-content: flex-start; align-items: center; gap: 10px; display: inline-flex">
+                    <div style="justify-content: center; align-items: center; display: flex">
+                      <span style="color: #737373; font-size: 12px; font-family: Inter, sans-serif; font-weight: 500;">24X36</span>
+                      <span style="color: #737373; font-size: 12px; font-family: Inter, sans-serif; font-weight: 500;"> + $75</span>
+                    </div>
+                    <div style="width: 10px; height: 0px; transform: rotate(90deg); transform-origin: top left; outline: 1px #D4D4D4 solid;"></div>
+                    <div style="justify-content: center; align-items: center; display: flex">
+                      <span style="color: #737373; font-size: 12px; font-family: Inter, sans-serif; font-weight: 500;">36X48</span>
+                      <span style="color: #737373; font-size: 12px; font-family: Inter, sans-serif; font-weight: 500;"> + $75</span>
+                    </div>
+                    <div style="width: 10px; height: 0px; transform: rotate(90deg); transform-origin: top left; outline: 1px #D4D4D4 solid;"></div>
+                    <div style="justify-content: center; align-items: center; display: flex">
+                      <span style="color: #737373; font-size: 12px; font-family: Inter, sans-serif; font-weight: 500;">53X72</span>
+                      <span style="color: #737373; font-size: 12px; font-family: Inter, sans-serif; font-weight: 500;"> + $125</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Buy Button Section -->
+            <div class="BuyButton" style="width: 100%; overflow: hidden; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex">
+              <div class="sku-display" style="color: #737373; font-size: 14px; font-family: Inter, sans-serif; font-weight: 400;">SKU: {{ product.handle | upcase }}-24X36</div>
+              
+              <div style="width: 100%; height: 60px; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex">
+                <!-- Quantity Selector -->
+                <div style="width: 152px; height: 100%; padding-left: 20px; padding-right: 20px; padding-top: 10px; padding-bottom: 10px; overflow: hidden; border: 1px solid #D4D4D4; border-radius: 5px; justify-content: center; align-items: center; gap: 10px; display: flex">
+                  <button type="button" class="quantity-minus" style="width: 24px; height: 24px; justify-content: center; align-items: center; gap: 10px; display: flex; background: none; border: none; cursor: pointer;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M5 12H19" stroke="#171717" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                  <div style="flex: 1 1 0; justify-content: center; align-items: center; gap: 10px; display: flex">
+                    <input type="number" name="quantity" value="1" min="1" class="quantity-input" style="color: #171717; font-size: 18px; font-family: Inter, sans-serif; font-weight: 600; border: none; background: transparent; text-align: center; width: 40px;">
+                  </div>
+                  <button type="button" class="quantity-plus" style="width: 24px; height: 24px; justify-content: center; align-items: center; gap: 10px; display: flex; background: none; border: none; cursor: pointer;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 5V19M5 12H19" stroke="#171717" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                </div>
+                
+                <!-- Add to Cart Button -->
+                <button type="submit" name="add" style="flex: 1 1 0; height: 100%; padding-left: 16px; padding-right: 16px; padding-top: 12px; padding-bottom: 12px; background: #171717; border-radius: 5px; justify-content: center; align-items: center; gap: 10px; display: flex; border: none; cursor: pointer;">
+                  <span style="color: white; font-size: 16px; font-family: Inter, sans-serif; font-weight: 600; text-transform: uppercase;">ADD TO CART</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <input type="hidden" name="id" id="variant-id-{{ section.id }}" value="{{ product.selected_or_first_available_variant.id }}">
+          <input type="hidden" id="gallery-wrap-price-{{ section.id }}" name="properties[_gallery_wrap_price]" value="0">
+        </form>
+        
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // Configuration
+  const galleryWrapPrices = {
+    '24x36': 75,
+    '36x48': 75,
+    '53x72': 125
+  };
+
+  // Get elements
+  const mainImage = document.getElementById('main-product-image');
+  const variantOptions = document.querySelectorAll('.variant-option');
+  const thumbnails = document.querySelectorAll('.ThumbnailImage');
+  const selectedWidth = document.querySelector('.selected-width');
+  const selectedHeight = document.querySelector('.selected-height');
+  const priceDisplay = document.querySelector('.total-price-display');
+  const skuDisplay = document.querySelector('.sku-display');
+  const variantIdInput = document.getElementById('variant-id-{{ section.id }}');
+  const galleryWrapCheckbox = document.getElementById('gallery-wrap-{{ section.id }}');
+  const galleryWrapPriceInput = document.getElementById('gallery-wrap-price-{{ section.id }}');
+  const quantityInput = document.querySelector('.quantity-input');
+
+  // Handle variant option click
+  function selectVariant(option) {
+    // Update variant ID
+    variantIdInput.value = option.dataset.variantId;
+    
+    // Update main image
+    const imageUrl = option.dataset.variantImage;
+    if (imageUrl && mainImage) {
+      mainImage.src = imageUrl;
+    }
+    
+    // Update visual state
+    variantOptions.forEach(opt => {
+      if (opt === option) {
+        opt.style.background = '#262626';
+        opt.style.opacity = '1';
+        opt.style.outline = '1px #262626 solid';
+        
+        // Update text colors to white
+        opt.querySelectorAll('.variant-width, .variant-separator, .variant-height, .variant-price').forEach(el => {
+          el.style.color = '#F5F5F5';
+          el.style.fontWeight = '600';
+        });
+        opt.querySelector('div:last-child div').style.color = '#E5E5E5';
+      } else {
+        opt.style.background = '#FAFAFA';
+        opt.style.opacity = '0.70';
+        opt.style.outline = '1px #FAFAFA solid';
+        
+        // Update text colors to gray
+        opt.querySelectorAll('.variant-width, .variant-separator, .variant-height').forEach(el => {
+          el.style.color = '#525252';
+          el.style.fontWeight = '400';
+        });
+        opt.querySelector('.variant-price').style.color = '#525252';
+        opt.querySelector('div:last-child div').style.color = '#525252';
+      }
+    });
+    
+    // Update selected size display
+    const size = option.dataset.variantSize.split('x');
+    selectedWidth.textContent = size[0];
+    selectedHeight.textContent = size[1];
+    
+    // Update SKU
+    skuDisplay.textContent = 'SKU: {{ product.handle | upcase }}-' + size[0] + 'X' + size[1];
+    
+    // Update price
+    updateTotalPrice();
+    
+    // Update matching thumbnail
+    const variantId = option.dataset.variantId;
+    thumbnails.forEach(thumb => {
+      const indicator = thumb.querySelector('.selected-indicator');
+      if (thumb.dataset.variantId === variantId) {
+        if (!indicator) {
+          const newIndicator = document.createElement('div');
+          newIndicator.className = 'selected-indicator';
+          newIndicator.style = 'width: 150px; height: 5px; position: relative; background: #171717; border-radius: 5px;';
+          thumb.querySelector('.thumbnail-wrapper').insertBefore(newIndicator, thumb.querySelector('img'));
+        }
+      } else {
+        if (indicator) {
+          indicator.remove();
+        }
+      }
+    });
+  }
+
+  // Update total price
+  function updateTotalPrice() {
+    const selectedOption = document.querySelector('.variant-option[style*="background: rgb(38, 38, 38)"]');
+    if (!selectedOption) return;
+    
+    let basePrice = parseFloat(selectedOption.dataset.variantPrice);
+    const size = selectedOption.dataset.variantSize;
+    
+    if (galleryWrapCheckbox && galleryWrapCheckbox.checked && galleryWrapPrices[size]) {
+      basePrice += galleryWrapPrices[size] * 100; // Convert to cents
+      galleryWrapPriceInput.value = galleryWrapPrices[size];
+    } else {
+      galleryWrapPriceInput.value = 0;
+    }
+    
+    const quantity = parseInt(quantityInput.value) || 1;
+    const totalPrice = basePrice * quantity;
+    
+    priceDisplay.textContent = Shopify.formatMoney(totalPrice, '{{ shop.money_format }}') + ' USD';
+  }
+
+  // Handle gallery wrap checkbox
+  if (galleryWrapCheckbox) {
+    galleryWrapCheckbox.addEventListener('change', function() {
+      const checkboxVisual = document.querySelector('.checkbox-visual');
+      const checkIcon = document.querySelector('.check-icon');
+      
+      if (this.checked) {
+        checkboxVisual.style.background = '#262626';
+        checkboxVisual.style.border = 'none';
+        checkIcon.style.display = 'flex';
+      } else {
+        checkboxVisual.style.background = '#FAFAFA';
+        checkboxVisual.style.border = '1px solid #D4D4D4';
+        checkIcon.style.display = 'none';
+      }
+      
+      updateTotalPrice();
+    });
+  }
+
+  // Handle quantity changes
+  document.querySelector('.quantity-minus').addEventListener('click', function() {
+    const current = parseInt(quantityInput.value) || 1;
+    if (current > 1) {
+      quantityInput.value = current - 1;
+      updateTotalPrice();
+    }
+  });
+
+  document.querySelector('.quantity-plus').addEventListener('click', function() {
+    const current = parseInt(quantityInput.value) || 1;
+    quantityInput.value = current + 1;
+    updateTotalPrice();
+  });
+
+  quantityInput.addEventListener('change', updateTotalPrice);
+
+  // Handle thumbnail clicks
+  thumbnails.forEach(thumb => {
+    thumb.addEventListener('click', function() {
+      const imageUrl = this.dataset.imageUrl;
+      if (imageUrl && mainImage) {
+        mainImage.src = imageUrl;
+      }
+      
+      // Find and click the matching variant option
+      const variantId = this.dataset.variantId;
+      variantOptions.forEach(option => {
+        if (option.dataset.variantId === variantId) {
+          option.click();
+        }
+      });
+    });
+  });
+
+  // Add click handlers to variant options
+  variantOptions.forEach(option => {
+    option.addEventListener('click', function() {
+      if (this.dataset.variantAvailable === 'false') return;
+      selectVariant(this);
+    });
+  });
+
+  // Initialize with first variant selected
+  if (variantOptions.length > 0) {
+    selectVariant(variantOptions[0]);
+  }
+
+})();
+</script>
+
+{% schema %}
+{
+  "name": "VividWalls Product",
+  "tag": "section",
+  "class": "section"
+}
+{% endschema %}

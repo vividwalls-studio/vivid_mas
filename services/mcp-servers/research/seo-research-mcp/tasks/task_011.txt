@@ -1,0 +1,11 @@
+# Task ID: 11
+# Title: Competitor Analysis MCP Tool
+# Status: pending
+# Dependencies: 4, 5, 10
+# Priority: medium
+# Description: Implement competitor_analysis MCP tool to identify and analyze competitors
+# Details:
+Create MCP tool that identifies top competitors for keywords/domains, analyzes their SEO strategies, backlink profiles, and ranking positions across multiple data sources.
+
+# Test Strategy:
+Test competitor identification accuracy and analysis completeness

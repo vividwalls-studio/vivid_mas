@@ -1,0 +1,198 @@
+{
+  "name": "VividWalls Newsletter Signup Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "newsletter-signup",
+        "authentication": "headerAuth",
+        "options": {
+          "headerAuth": {
+            "name": "X-Shopify-Hmac-Sha256",
+            "value": "={{ $json.headers['x-shopify-hmac-sha256'] }}"
+          }
+        }
+      },
+      "id": "webhook-receiver",
+      "name": "Shopify Newsletter Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.body.accepts_marketing }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check-consent",
+      "name": "Check Marketing Consent",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "manage_listmonk_subscribers",
+        "action": "add",
+        "email": "={{ $json.body.email }}",
+        "name": "={{ $json.body.first_name }} {{ $json.body.last_name }}",
+        "lists": [1],
+        "attributes": {
+          "source": "shopify",
+          "signup_date": "={{ $json.body.created_at }}",
+          "customer_id": "={{ $json.body.id }}",
+          "tags": "={{ $json.body.tags }}"
+        }
+      },
+      "id": "add-to-listmonk",
+      "name": "Add to Listmonk",
+      "type": "n8n-nodes-base.aiAgent",
+      "typeVersion": 1,
+      "position": [650, 250]
+    },
+    {
+      "parameters": {
+        "agent": "Newsletter Writer Agent",
+        "prompt": "Generate a personalized welcome email for a new VividWalls newsletter subscriber.\n\nSubscriber info:\n- Name: {{ $json.body.first_name }}\n- Email: {{ $json.body.email }}\n- Tags: {{ $json.body.tags }}\n\nUse the VividWalls brand voice (inspiring, artistic, welcoming) and include:\n1. Warm welcome message\n2. What to expect from our newsletters\n3. Featured art collections\n4. Special new subscriber discount (10% off first order)\n5. Call-to-action to browse collections",
+        "systemPrompt": "You are the VividWalls Newsletter Writer Agent. Create engaging, personalized email content that reflects our brand values of artistic expression, home transformation, and creative living. Focus on building relationships with art lovers and home decorators."
+      },
+      "id": "newsletter-agent",
+      "name": "Newsletter Writer Agent",
+      "type": "n8n-nodes-base.aiAgent",
+      "typeVersion": 1,
+      "position": [850, 250]
+    },
+    {
+      "parameters": {
+        "operation": "create_listmonk_campaign",
+        "name": "Welcome Series - {{ $json.body.first_name }}",
+        "subject": "Welcome to VividWalls, {{ $json.body.first_name }}! 🎨 Your 10% discount inside",
+        "lists": [1],
+        "template_type": "welcome_series",
+        "content": "={{ $node['newsletter-agent'].json.content }}",
+        "schedule_type": "immediate"
+      },
+      "id": "create-campaign",
+      "name": "Create Welcome Campaign",
+      "type": "n8n-nodes-base.aiAgent",
+      "typeVersion": 1,
+      "position": [1050, 250]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO newsletter_subscribers (email, first_name, source_type, source_url, signup_date, tags, status) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (email) DO UPDATE SET tags = $6, status = $7",
+        "additionalFields": {
+          "queryParams": "={{ $json.body.email }},{{ $json.body.first_name }},shopify,vividwalls.myshopify.com,{{ $json.body.created_at }},{{ JSON.stringify($json.body.tags) }},active"
+        }
+      },
+      "id": "save-to-db",
+      "name": "Save to Database",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [850, 350]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "to": "admin@vividwalls.com",
+        "subject": "New Newsletter Signup",
+        "text": "New newsletter signup from {{ $json.body.email }}",
+        "html": "<h3>New Newsletter Signup</h3><p><strong>Email:</strong> {{ $json.body.email }}<br><strong>Name:</strong> {{ $json.body.first_name }} {{ $json.body.last_name }}<br><strong>Date:</strong> {{ $json.body.created_at }}<br><strong>Tags:</strong> {{ $json.body.tags }}</p>"
+      },
+      "id": "notify-admin",
+      "name": "Notify Admin",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 1,
+      "position": [1050, 350]
+    }
+  ],
+  "connections": {
+    "Shopify Newsletter Webhook": {
+      "main": [
+        [
+          {
+            "node": "Check Marketing Consent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Marketing Consent": {
+      "main": [
+        [
+          {
+            "node": "Add to Listmonk",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Add to Listmonk": {
+      "main": [
+        [
+          {
+            "node": "Newsletter Writer Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save to Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Newsletter Writer Agent": {
+      "main": [
+        [
+          {
+            "node": "Create Welcome Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Welcome Campaign": {
+      "main": [
+        [
+          {
+            "node": "Notify Admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "newsletter",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "shopify",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "email-marketing",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}

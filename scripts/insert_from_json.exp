@@ -1,0 +1,142 @@
+#!/usr/bin/expect -f
+
+set timeout 600
+set passphrase "freedom"
+
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        send "cd /root/vivid_mas\r"
+    }
+}
+
+# Create a Python script to insert from JSON
+expect "root@*"
+send "cat > insert_json_data.py << 'EOFPY'\r"
+send "import json\r"
+send "import psycopg2\r"
+send "from psycopg2.extras import Json\r"
+send "\r"
+send "# Database connection\r"
+send "conn = psycopg2.connect(\r"
+send "    host='supabase-db',\r"
+send "    database='postgres',\r"
+send "    user='postgres',\r"
+send "    password='myqP9lSMLobnuIfkUpXQzZg07'\r"
+send ")\r"
+send "cur = conn.cursor()\r"
+send "\r"
+send "try:\r"
+send "    # Load agents\r"
+send "    with open('mcp_conversion/agents.json', 'r') as f:\r"
+send "        agents = json.load(f)\r"
+send "    \r"
+send "    # Insert agents\r"
+send "    for agent in agents:\r"
+send "        cur.execute('''\r"
+send "            INSERT INTO agents (id, name, role, backstory, type, capabilities, config,\r"
+send "                              short_term_memory, long_term_memory, communication_preferences,\r"
+send "                              episodic_memory, procedural_memory, semantic_memory)\r"
+send "            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\r"
+send "            ON CONFLICT (id) DO UPDATE SET\r"
+send "                name = EXCLUDED.name,\r"
+send "                role = EXCLUDED.role,\r"
+send "                backstory = EXCLUDED.backstory\r"
+send "        ''', (\r"
+send "            agent['id'], agent['name'], agent.get('role', ''), agent.get('backstory', ''),\r"
+send "            agent.get('type', 'task'), Json(agent.get('capabilities', [])), Json(agent.get('config', {})),\r"
+send "            Json([]), Json([]), Json([]), Json([]), Json([]), Json([])\r"
+send "        ))\r"
+send "    \r"
+send "    conn.commit()\r"
+send "    print(f'Inserted {len(agents)} agents')\r"
+send "    \r"
+send "    # Count final agents\r"
+send "    cur.execute('SELECT COUNT(*) FROM agents')\r"
+send "    count = cur.fetchone()\[0\]\r"
+send "    print(f'Total agents in database: {count}')\r"
+send "    \r"
+send "except Exception as e:\r"
+send "    print(f'Error: {e}')\r"
+send "    conn.rollback()\r"
+send "finally:\r"
+send "    cur.close()\r"
+send "    conn.close()\r"
+send "EOFPY\r"
+
+expect "root@*"
+send "apt-get install -y python3-psycopg2 2>/dev/null || true\r"
+
+expect "root@*"
+send "python3 insert_json_data.py\r"
+
+expect {
+    "Total agents in database:" {
+        puts "\nAgents inserted successfully!"
+    }
+    "Error:" {
+        puts "\nError during insertion"
+    }
+    timeout {
+        puts "\nTimeout during insertion"
+    }
+}
+
+# Now insert the related data
+expect "root@*"
+send "cat > insert_related_data.py << 'EOFPY2'\r"
+send "import json\r"
+send "import psycopg2\r"
+send "from psycopg2.extras import Json\r"
+send "\r"
+send "conn = psycopg2.connect(host='supabase-db', database='postgres', user='postgres', password='myqP9lSMLobnuIfkUpXQzZg07')\r"
+send "cur = conn.cursor()\r"
+send "\r"
+send "tables = [\r"
+send "    ('agent_beliefs', 'agent_beliefs.json'),\r"
+send "    ('agent_desires', 'agent_desires.json'),\r"
+send "    ('agent_goals', 'agent_goals.json'),\r"
+send "    ('agent_llm_config', 'agent_llm_config.json')\r"
+send "]\r"
+send "\r"
+send "for table_name, file_name in tables:\r"
+send "    try:\r"
+send "        with open(f'mcp_conversion/{file_name}', 'r') as f:\r"
+send "            data = json.load(f)\r"
+send "        \r"
+send "        for item in data:\r"
+send "            columns = ', '.join(item.keys())\r"
+send "            placeholders = ', '.join(['%s'] * len(item))\r"
+send "            values = list(item.values())\r"
+send "            \r"
+send "            cur.execute(f'INSERT INTO {table_name} ({columns}) VALUES ({placeholders}) ON CONFLICT DO NOTHING', values)\r"
+send "        \r"
+send "        conn.commit()\r"
+send "        print(f'Inserted data into {table_name}')\r"
+send "    except Exception as e:\r"
+send "        print(f'Error with {table_name}: {e}')\r"
+send "        conn.rollback()\r"
+send "\r"
+send "cur.close()\r"
+send "conn.close()\r"
+send "EOFPY2\r"
+
+expect "root@*"
+send "python3 insert_related_data.py\r"
+
+# Final verification
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT COUNT(*) FROM agents;\"\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT id, name, role FROM agents LIMIT 5;\"\r"
+
+expect "root@*"
+send "exit\r"
+
+expect eof

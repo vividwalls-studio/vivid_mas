@@ -1,0 +1,74 @@
+MANUAL INSERTION STEPS FOR DIGITAL OCEAN SUPABASE
+================================================
+
+Step 1: Upload files to droplet
+-------------------------------
+# First, upload the necessary directories
+rsync -avz -e "ssh -i ~/.ssh/digitalocean" ./scripts ./mcp_conversion ./sql_chunks root@157.230.13.13:/root/vivid_mas/
+
+# When prompted, enter passphrase: freedom
+
+Step 2: SSH into the droplet
+----------------------------
+ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+# When prompted, enter passphrase: freedom
+
+Step 3: Once logged in, run these commands
+------------------------------------------
+cd /root/vivid_mas
+
+# Check if files were uploaded
+ls -la mcp_conversion/
+ls -la scripts/postgrest_direct_insert.sh
+
+# Set environment variables
+export SUPABASE_URL="https://supabase.vividwalls.blog"
+
+# You'll need to get the ANON key from your Supabase dashboard or .env file
+# Then set it:
+export SUPABASE_ANON_KEY="your-anon-key-here"
+
+# Run the insertion script
+bash scripts/postgrest_direct_insert.sh
+
+# The script will:
+# - Show current database state
+# - Ask for confirmation (type 'y')
+# - Insert data into all tables
+# - Show success/failure for each table
+
+Step 4: Verify the insertion
+----------------------------
+# While still in SSH, run:
+docker exec -i supabase-db psql -U postgres -d postgres < scripts/verify_schema.sql
+
+# Or test via API:
+curl -X GET \
+  "https://supabase.vividwalls.blog/rest/v1/agents?select=id,name,role&limit=5" \
+  -H "apikey: $SUPABASE_ANON_KEY" \
+  -H "Authorization: Bearer $SUPABASE_ANON_KEY" | jq '.'
+
+Step 5: Exit SSH
+----------------
+exit
+
+Alternative: Direct SQL insertion
+---------------------------------
+If PostgREST method fails, you can insert directly via SQL:
+
+ssh -i ~/.ssh/digitalocean root@157.230.13.13
+cd /root/vivid_mas
+
+# Run SQL chunks directly
+for i in {1..4}; do
+    echo "Executing chunk_00${i}.sql..."
+    docker exec -i supabase-db psql -U postgres -d postgres < sql_chunks/chunk_00${i}.sql
+done
+
+Notes:
+------
+- The SUPABASE_ANON_KEY can be found in your Supabase dashboard under Settings > API
+- Or in the .env file in your Docker setup
+- The passphrase for the SSH key is: freedom
+- Make sure you're in the /root/vivid_mas directory on the droplet

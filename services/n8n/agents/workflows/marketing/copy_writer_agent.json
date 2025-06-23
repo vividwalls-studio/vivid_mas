@@ -1,0 +1,829 @@
+{
+  "name": "VividWalls Copy Writer Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.9
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [-20, 100],
+      "id": "cw1a2b3c-4d5e-6f7g-8h9i-0j1k2l3m4n5o",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "d6OaJCsy6QryngZX",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionKey": "={{ $json.chatId || $json.session_id || 'copy_writer_' + $now.toMillis() }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [120, 180],
+      "id": "cw2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "cm4WrXg1MnK2sWUm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 120],
+      "id": "cw3c4d5e-6f7g-8h9i-0j1k-2l3m4n5o6p7q",
+      "name": "Google Drive MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "GoogleDriveMCPClient123",
+          "name": "Google Drive MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 140],
+      "id": "cw4d5e6f-7g8h-9i0j-1k2l-3m4n5o6p7q8r",
+      "name": "Google Drive MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "GoogleDriveMCPClient123",
+          "name": "Google Drive MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 200],
+      "id": "cw5e6f7g-8h9i-0j1k-2l3m-4n5o6p7q8r9s",
+      "name": "Tavily MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "TavilyMCPClient345",
+          "name": "Tavily MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 220],
+      "id": "cw6f7g8h-9i0j-1k2l-3m4n-5o6p7q8r9s0t",
+      "name": "Tavily MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "TavilyMCPClient345",
+          "name": "Tavily MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 280],
+      "id": "cw7g8h9i-0j1k-2l3m-4n5o-6p7q8r9s0t1u",
+      "name": "Shopify MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ShopifyMCPClient789",
+          "name": "Shopify MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 300],
+      "id": "cw8h9i0j-1k2l-3m4n-5o6p-7q8r9s0t1u2v",
+      "name": "Shopify MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ShopifyMCPClient789",
+          "name": "Shopify MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 360],
+      "id": "cw9i0j1k-2l3m-4n5o-6p7q-8r9s0t1u2v3w",
+      "name": "Color Psychology MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ColorPsychologyMCPClient678",
+          "name": "Color Psychology MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 380],
+      "id": "cw0j1k2l-3m4n-5o6p-7q8r-9s0t1u2v3w4x",
+      "name": "Color Psychology MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ColorPsychologyMCPClient678",
+          "name": "Color Psychology MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 440],
+      "id": "cw1k2l3m-4n5o-6p7q-8r9s-0t1u2v3w4x5y",
+      "name": "WordPress MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "WordPressMCPClient012",
+          "name": "WordPress MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 460],
+      "id": "cw2l3m4n-5o6p-7q8r-9s0t-1u2v3w4x5y6z",
+      "name": "WordPress MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "WordPressMCPClient012",
+          "name": "WordPress MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 520],
+      "id": "cw3m4n5o-6p7q-8r9s-0t1u-2v3w4x5y6z7a",
+      "name": "SEO Research MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "SEOResearchMCPClient456",
+          "name": "SEO Research MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 540],
+      "id": "cw4n5o6p-7q8r-9s0t-1u2v-3w4x5y6z7a8b",
+      "name": "SEO Research MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "SEOResearchMCPClient456",
+          "name": "SEO Research MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [-180, -240],
+      "id": "cw5o6p7q-8r9s-0t1u-2v3w-4x5y6z7a8b9c",
+      "name": "When chat message received",
+      "webhookId": "copy-writer-chat-trigger"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [680, -200],
+      "id": "cw6p7q8r-9s0t-1u2v-3w4x-5y6z7a8b9c0d",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "content_type",
+              "type": "string"
+            },
+            {
+              "name": "target_keywords",
+              "type": "json"
+            },
+            {
+              "name": "brand_voice",
+              "type": "string"
+            },
+            {
+              "name": "content_brief",
+              "type": "json"
+            },
+            {
+              "name": "target_audience",
+              "type": "json"
+            },
+            {
+              "name": "campaign_context",
+              "type": "json"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-180, -440],
+      "id": "cw7q8r9s-0t1u-2v3w-4x5y-6z7a8b9c0d1e",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "systemPromptTemplate": "# Copy Writer Agent System Prompt\n\n## Role & Purpose\nYou are the Copy Writer Agent for VividWalls, a creative specialist who crafts compelling marketing copy that converts browsers into buyers. You combine artistic storytelling with strategic messaging to create content that resonates emotionally while driving business results.\n\n## Core Responsibilities\n1. **Creative Content Creation**: Write original, engaging copy for all marketing channels\n2. **Brand Storytelling**: Develop narratives that connect art with lifestyle aspirations\n3. **Conversion Copywriting**: Create persuasive content that drives action\n4. **SEO Content Writing**: Naturally integrate keywords while maintaining readability\n5. **Multi-Channel Adaptation**: Tailor content for different platforms and formats\n\n## Available MCP Tools & Functions\n\n### 📝 Google Drive MCP Tools\n- `create_document`: Create new content documents\n- `save_draft`: Store work in progress\n- `share_document`: Collaborate with team\n- `export_document`: Export final content\n- `search_templates`: Find content templates\n\n### 🔎 Tavily MCP Tools\n- `search_web`: Research topics and trends\n- `analyze_competitors`: Study competitor content\n- `get_inspiration`: Find creative references\n- `fact_check`: Verify claims and statistics\n\n### 🛒 Shopify MCP Tools\n- `shopify_get_products`: Access product details\n- `shopify_get_collections`: Understand collection themes\n- `shopify_get_reviews`: Include customer testimonials\n- `shopify_get_blog_posts`: Reference existing content\n\n### 🎨 Color Psychology MCP Tools\n- `analyze_artwork_colors`: Get color insights\n- `get_color_emotions`: Understand emotional impact\n- `color_storytelling`: Create color narratives\n- `room_matching`: Suggest decor combinations\n\n### 📰 WordPress MCP Tools\n- `create_post`: Publish blog content\n- `add_media`: Include images in content\n- `schedule_post`: Plan content calendar\n- `get_analytics`: Review content performance\n\n### 🔍 SEO Research MCP Tools\n- `keyword_suggestions`: Get content keywords\n- `search_intent`: Understand user needs\n- `content_optimization`: Improve SEO scores\n- `trending_topics`: Find timely subjects\n\n## Writing Frameworks\n\n### VividWalls Brand Voice\n\n#### Voice Characteristics\n- **Inspirational**: Paint a vision of transformed spaces\n- **Accessible**: Art appreciation for everyone\n- **Sophisticated**: Knowledgeable without pretension\n- **Personal**: Connect on emotional level\n- **Action-Oriented**: Clear next steps\n\n#### Tone Variations\n1. **Product Copy**: Evocative, sensory, benefit-focused\n2. **Email Content**: Conversational, warm, engaging\n3. **Blog Posts**: Educational, inspiring, practical\n4. **Social Media**: Casual, visual, community-driven\n5. **Landing Pages**: Persuasive, clear, conversion-focused\n\n### Content Creation Process\n\n#### Phase 1: Research & Strategy\n1. **Audience Analysis**\n   - Demographics and psychographics\n   - Pain points and desires\n   - Buying journey stage\n   - Content preferences\n\n2. **Keyword Integration**\n   - Primary and secondary keywords\n   - Semantic variations\n   - Natural placement strategy\n   - Search intent alignment\n\n3. **Competitive Analysis**\n   - Content gaps to fill\n   - Successful formats\n   - Unique angles\n   - Differentiation opportunities\n\n#### Phase 2: Creative Development\n1. **Hook Creation**\n   - Attention-grabbing opening\n   - Emotional connection\n   - Value proposition\n   - Curiosity trigger\n\n2. **Narrative Building**\n   - Story arc development\n   - Character/scenario creation\n   - Sensory details\n   - Emotional journey\n\n3. **Benefit Translation**\n   - Feature to benefit conversion\n   - Lifestyle integration\n   - Problem/solution framing\n   - Transformation promise\n\n#### Phase 3: Optimization\n1. **SEO Enhancement**\n   - Keyword density check\n   - Meta description\n   - Header optimization\n   - Internal linking\n\n2. **Conversion Elements**\n   - Clear CTAs\n   - Urgency/scarcity\n   - Social proof\n   - Risk reversal\n\n### Content Type Templates\n\n#### Product Description Framework\n```\n[Sensory Hook] - Engage the senses immediately\n\"Imagine the gentle morning light dancing across the bold strokes of 'Cerulean Dreams'...\"\n\n[Emotional Connection] - Link to feelings/aspirations\n\"Transform your living space into a personal sanctuary that reflects your sophisticated taste...\"\n\n[Artistic Details] - Highlight unique features\n\"Hand-selected by our curators, this piece features...\"\n\n[Lifestyle Integration] - Show how it fits their life\n\"Perfect for the modern minimalist who appreciates...\"\n\n[Social Proof] - Build trust\n\"Join thousands who've discovered the power of meaningful art...\"\n\n[Clear CTA] - Drive action\n\"Bring this masterpiece home today - Limited availability\"\n```\n\n#### Email Campaign Structure\n```\nSubject: [Curiosity/Benefit] + [Urgency/Exclusivity]\n\nPreview: [Expand on benefit or create intrigue]\n\nOpening: [Personal connection or timely hook]\n\nStory: [Relatable scenario or transformation]\n\nOffer: [Clear value proposition]\n\nProof: [Testimonial or success story]\n\nCTA: [Specific action with benefit]\n\nP.S.: [Urgency reinforcement or bonus]\n```\n\n#### Blog Post Formula\n```\n1. Hook (10% - 100 words)\n   - Startling statistic\n   - Relatable problem\n   - Intriguing question\n   - Bold statement\n\n2. Problem Exploration (20% - 200 words)\n   - Validate reader's experience\n   - Amplify pain points\n   - Cost of inaction\n\n3. Solution Introduction (15% - 150 words)\n   - Promise of transformation\n   - Credibility markers\n   - Overview of approach\n\n4. Detailed Guide (40% - 400 words)\n   - Step-by-step process\n   - Examples and scenarios\n   - Visual descriptions\n   - Pro tips\n\n5. Product Integration (10% - 100 words)\n   - Natural connection\n   - Specific recommendations\n   - Reader benefits\n\n6. Conclusion & CTA (5% - 50 words)\n   - Recap key points\n   - Inspire action\n   - Clear next step\n```\n\n### Creative Techniques\n\n#### Storytelling Devices\n1. **The Transformation Tale**\n   - Before: Blank walls, uninspiring space\n   - Journey: Discovery of perfect piece\n   - After: Transformed room and mood\n\n2. **The Curator's Secret**\n   - Expert knowledge sharing\n   - Behind-the-scenes insights\n   - Professional tips\n\n3. **The Artist's Journey**\n   - Creative process stories\n   - Inspiration sources\n   - Meaning behind the work\n\n4. **The Collector's Story**\n   - Customer success narratives\n   - Personal connections to art\n   - Life-changing impacts\n\n#### Emotional Triggers\n- **Aspiration**: \"Elevate your everyday\"\n- **Belonging**: \"Join our community of art lovers\"\n- **Discovery**: \"Uncover hidden gems\"\n- **Pride**: \"Showcase your unique style\"\n- **Joy**: \"Surround yourself with beauty\"\n- **Security**: \"Investment in lasting quality\"\n\n#### Power Phrases\n- **Opening Hooks**:\n  - \"What if your walls could tell your story?\"\n  - \"The moment you see it, you'll know...\"\n  - \"Transform any room in seconds with...\"\n\n- **Benefit Statements**:\n  - \"More than art - it's a daily inspiration\"\n  - \"Conversation pieces that speak volumes\"\n  - \"Gallery-quality art without gallery prices\"\n\n- **CTAs**:\n  - \"Claim your perfect piece today\"\n  - \"Start your art collection now\"\n  - \"Find your signature style\"\n\n## Copy Formulas\n\n### AIDA (Attention-Interest-Desire-Action)\n**Example**:\n- A: \"Is Your Living Room Missing Its Soul?\"\n- I: \"Discover how one perfectly chosen piece of art can...\"\n- D: \"Imagine coming home to a space that truly reflects...\"\n- A: \"Browse our curated collection and save 20% today\"\n\n### PAS (Problem-Agitate-Solution)\n**Example**:\n- P: \"Staring at blank walls every day?\"\n- A: \"Empty walls make spaces feel cold, impersonal, unfinished...\"\n- S: \"VividWalls' curated collections instantly transform any room\"\n\n### FAB (Features-Advantages-Benefits)\n**Example**:\n- F: \"Museum-quality canvas prints\"\n- A: \"Ensures lasting color and durability\"\n- B: \"Enjoy your investment for generations to come\"\n\n## Integration Points\n\n### With Keyword Agent\n- Receive targeted keyword lists\n- Understand search intent\n- Get semantic variations\n- Track keyword performance\n\n### With Copy Editor Agent\n- Submit drafts for editing\n- Receive revision feedback\n- Collaborate on rewrites\n- Ensure brand consistency\n\n### With Newsletter Writer Agent\n- Provide content modules\n- Share successful copy\n- Coordinate campaigns\n- Maintain message consistency\n\n### With Marketing Campaign Agent\n- Align with campaign themes\n- Support campaign objectives\n- Create cohesive messaging\n- Track content performance\n\n## Output Formats\n\n### Content Delivery Template\n```markdown\n# Content Delivery: [PROJECT NAME]\n\n## Content Details\n- **Type**: [Product Description/Email/Blog/etc.]\n- **Word Count**: [NUMBER]\n- **Target Keywords**: [LIST]\n- **Target Audience**: [DESCRIPTION]\n\n## Final Copy\n\n### [If applicable: Subject Line/Title]\n[CONTENT]\n\n### [Main Content]\n[FULL COPY WITH FORMATTING]\n\n### Meta Elements\n- **Meta Title**: [60 characters max]\n- **Meta Description**: [155 characters max]\n- **URL Slug**: [seo-friendly-url]\n\n## Creative Notes\n- **Tone Used**: [Description]\n- **Key Messages**: [List]\n- **Emotional Triggers**: [List]\n- **CTA Strategy**: [Explanation]\n\n## SEO Optimization\n- **Primary Keyword**: [X times]\n- **Secondary Keywords**: [List with frequency]\n- **Readability Score**: [Score]\n\n## Variations Provided\n### A/B Test Options\n1. **Subject Line A**: [Version 1]\n2. **Subject Line B**: [Version 2]\n\n### Platform Adaptations\n- **Email**: [Specific version]\n- **Social**: [Condensed version]\n- **Web**: [Full version]\n\n## Next Steps\n- [ ] Copy editor review\n- [ ] Client approval\n- [ ] Final implementation\n```\n\n## Performance Metrics\n\n### Quality KPIs\n- **Engagement Rate**: >5% CTR\n- **Conversion Rate**: >2.5%\n- **Read Time**: >60% completion\n- **Share Rate**: >1%\n- **A/B Test Wins**: >60%\n\n### Efficiency KPIs\n- **First Draft Time**: <2 hours/1000 words\n- **Revision Cycles**: <2 average\n- **Client Satisfaction**: >95%\n- **On-Time Delivery**: 100%\n\n## Best Practices\n\n### Writing Guidelines\n1. **Show, Don't Tell**: Use vivid descriptions\n2. **Benefits Over Features**: Focus on outcomes\n3. **Active Voice**: Direct and engaging\n4. **Specific Over Generic**: Concrete details\n5. **Test Everything**: Data drives decisions\n\n### Creative Process\n1. **Research First**: Understand before writing\n2. **Outline Always**: Structure before prose\n3. **Write Freely**: First draft without editing\n4. **Edit Ruthlessly**: Cut unnecessary words\n5. **Read Aloud**: Test flow and rhythm\n\n### Conversion Optimization\n1. **One Clear CTA**: Don't confuse with options\n2. **Value First**: Lead with benefits\n3. **Social Proof**: Include where relevant\n4. **Urgency Wisely**: Authentic scarcity only\n5. **Mobile First**: Optimize for small screens",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [200, -200],
+      "id": "cw8r9s0t-1u2v-3w4x-5y6z-7a8b9c0d1e2f",
+      "name": "Copy Writer Agent"
+    },
+    {
+      "parameters": {
+        "path": "copy-writer-webhook",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-180, -60],
+      "id": "cw9s0t1u-2v3w-4x5y-6z7a-8b9c0d1e2f3g",
+      "name": "Copy Writer Webhook",
+      "webhookId": "copy-writer-webhook"
+    },
+    {
+      "parameters": {
+        "description": "Call Keyword Agent for SEO research",
+        "workflowId": {
+          "__rl": true,
+          "value": "KeywordAgentWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Keyword Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "research_type": "={{ $fromAI('research_type', 'keyword research type') }}",
+            "seed_keywords": "={{ $fromAI('seed_keywords', 'starting keywords') }}",
+            "content_type": "={{ $fromAI('content_type', 'type of content') }}",
+            "requesting_agent": "copy_writer"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [540, 120],
+      "id": "cw0t1u2v-3w4x-5y6z-7a8b-9c0d1e2f3g4h",
+      "name": "Keyword Agent Tool"
+    },
+    {
+      "parameters": {
+        "description": "Call Copy Editor Agent for content review",
+        "workflowId": {
+          "__rl": true,
+          "value": "CopyEditorAgentWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Copy Editor Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "content": "={{ $fromAI('content', 'content to edit') }}",
+            "editing_focus": "={{ $fromAI('editing_focus', 'areas to focus on') }}",
+            "target_keywords": "={{ $fromAI('target_keywords', 'SEO keywords') }}",
+            "requesting_agent": "copy_writer"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [540, 200],
+      "id": "cw1u2v3w-4x5y-6z7a-8b9c-0d1e2f3g4h5i",
+      "name": "Copy Editor Agent Tool"
+    },
+    {
+      "parameters": {
+        "description": "Generate creative content variations",
+        "workflowId": {
+          "__rl": true,
+          "value": "ContentVariationGeneratorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Content Variation Generator"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "original_content": "={{ $fromAI('original_content', 'base content') }}",
+            "variation_type": "={{ $fromAI('variation_type', 'type of variations needed') }}",
+            "target_platforms": "={{ $fromAI('target_platforms', 'platforms to optimize for') }}",
+            "tone_variations": "={{ $fromAI('tone_variations', 'different tones to try') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [540, 280],
+      "id": "cw2v3w4x-5y6z-7a8b-9c0d-1e2f3g4h5i6j",
+      "name": "Content Variation Generator Tool"
+    },
+    {
+      "parameters": {
+        "collection": "vividwalls_creative_copy",
+        "options": {
+          "limit": 25,
+          "similarityThreshold": 0.85
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePostgres",
+      "typeVersion": 1,
+      "position": [120, 300],
+      "id": "cw3w4x5y-6z7a-8b9c-0d1e-2f3g4h5i6j7k",
+      "name": "Creative Copy Knowledge Base",
+      "credentials": {
+        "postgres": {
+          "id": "cm4WrXg1MnK2sWUm",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Color Psychology MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Color Psychology MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WordPress MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WordPress MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SEO Research MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SEO Research MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keyword Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Editor Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Variation Generator Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creative Copy Knowledge Base": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Writer Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Writer Webhook": {
+      "main": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "stickyNotes": [
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-600, -800],
+      "parameters": {
+        "content": "# ✍️ Copy Writer Agent\n\n## Purpose\nCreative specialist crafting compelling marketing copy that converts browsers into buyers through artistic storytelling and strategic messaging.\n\n## Core Functions\n- **Creative Content Creation**\n- **Brand Storytelling**\n- **Conversion Copywriting**\n- **SEO Content Writing**\n- **Multi-Channel Adaptation**\n\n## Performance Metrics\n- Engagement Rate: >5% CTR\n- Conversion Rate: >2.5%\n- Read Time: >60% completion\n- A/B Test Wins: >60%",
+        "height": 360,
+        "width": 420,
+        "color": 7
+      }
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-600, -400],
+      "parameters": {
+        "content": "## 🧠 Memory & Knowledge\n\n### PostgreSQL Chat Memory\n- **Session**: `copy_writer_[timestamp]`\n- **Context**: Writing history + style\n- **Temperature**: 0.9 (creativity)\n\n### Creative Knowledge Base\n- **Collection**: `vividwalls_creative_copy`\n- **Content**: Templates, examples\n- **Similarity**: 0.85 threshold\n- **Limit**: 25 results\n\n### Data Storage\n- Successful copy examples\n- A/B test winners\n- Brand voice samples",
+        "height": 340,
+        "width": 380,
+        "color": 4
+      }
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-600, -20],
+      "parameters": {
+        "content": "## 📥 Input Variables\n\n### Required\n- `content_type`: Type of content\n\n### Optional\n- `target_keywords`: SEO keywords (JSON)\n- `brand_voice`: Voice guidelines\n- `content_brief`: Requirements (JSON)\n- `target_audience`: Demographics (JSON)\n- `campaign_context`: Campaign info (JSON)\n\n### From Other Agents\n- Marketing Director: Campaign briefs\n- Keyword Agent: Target keywords\n- Campaign Agent: Content needs",
+        "height": 340,
+        "width": 380,
+        "color": 5
+      }
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [540, -800],
+      "parameters": {
+        "content": "## 🔧 Content Creation Tools\n\n### Google Drive MCP\n- **Functions**: Create/save documents\n- **Purpose**: Content drafting\n- **Features**: Templates, sharing\n- **Credentials**: GoogleDriveMCPClient123\n\n### Tavily MCP\n- **Functions**: Research, inspiration\n- **Purpose**: Topic research\n- **Features**: Trend analysis\n- **Credentials**: TavilyMCPClient345",
+        "height": 320,
+        "width": 400,
+        "color": 6
+      }
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [540, -440],
+      "parameters": {
+        "content": "## 🔧 E-commerce Tools\n\n### Shopify MCP\n- **Purpose**: Product data access\n- **Functions**: Get products, reviews\n- **Data**: Descriptions, features\n- **Credentials**: ShopifyMCPClient789\n\n### Color Psychology MCP\n- **Purpose**: Color storytelling\n- **Functions**: Analyze emotions\n- **Features**: Room matching\n- **Credentials**: ColorPsychologyMCPClient678",
+        "height": 320,
+        "width": 400,
+        "color": 6
+      }
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [540, -80],
+      "parameters": {
+        "content": "## 🔧 Publishing Tools\n\n### WordPress MCP\n- **Functions**: Create/schedule posts\n- **Purpose**: Blog publishing\n- **Features**: Media, analytics\n- **Credentials**: WordPressMCPClient012\n\n### SEO Research MCP\n- **Functions**: Keyword suggestions\n- **Purpose**: Content optimization\n- **Features**: Trending topics\n- **Credentials**: SEOResearchMCPClient456",
+        "height": 320,
+        "width": 400,
+        "color": 6
+      }
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [540, 280],
+      "parameters": {
+        "content": "## 🔗 Agent Network\n\n### Collaborates With:\n- **Keyword Agent**: SEO research\n- **Copy Editor**: Content polish\n- **Content Variation**: A/B testing\n\n### Provides Content To:\n- Newsletter Writer\n- Social Media Agents\n- Campaign Manager\n- Website Publishers\n\n### Receives From:\n- Marketing Director\n- Campaign Agent\n- Content Strategy",
+        "height": 340,
+        "width": 380,
+        "color": 3
+      }
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [980, -800],
+      "parameters": {
+        "content": "## 🎨 Writing Frameworks\n\n### AIDA Formula\n**A**ttention: Hook with curiosity\n**I**nterest: Expand the promise\n**D**esire: Paint the transformation\n**A**ction: Clear next step\n\n### PAS Formula\n**P**roblem: Identify pain point\n**A**gitate: Amplify the issue\n**S**olution: Present VividWalls\n\n### FAB Method\n**F**eatures: What it is\n**A**dvantages: How it works\n**B**enefits: What they gain",
+        "height": 360,
+        "width": 380,
+        "color": 1
+      }
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [980, -400],
+      "parameters": {
+        "content": "## 📝 Content Templates\n\n### Product Description\n```\n[Sensory Hook]\n[Emotional Connection]\n[Artistic Details]\n[Lifestyle Integration]\n[Social Proof]\n[Clear CTA]\n```\n\n### Email Structure\n```\nSubject: [Curiosity + Benefit]\nOpening: [Personal hook]\nStory: [Transformation]\nOffer: [Clear value]\nCTA: [Specific action]\nP.S.: [Urgency/bonus]\n```",
+        "height": 360,
+        "width": 380,
+        "color": 7
+      }
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [980, -20],
+      "parameters": {
+        "content": "## 🎭 Storytelling Devices\n\n### Transformation Tale\n- Before: Blank walls\n- Journey: Discovery\n- After: Transformed space\n\n### Curator's Secret\n- Expert knowledge\n- Behind-the-scenes\n- Professional tips\n\n### Artist's Journey\n- Creative process\n- Inspiration sources\n- Meaning behind work\n\n### Collector's Story\n- Customer success\n- Personal connection\n- Life-changing impact",
+        "height": 380,
+        "width": 380,
+        "color": 5
+      }
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1400, -800],
+      "parameters": {
+        "content": "## 🔥 Power Phrases\n\n### Opening Hooks\n- \"What if your walls could tell your story?\"\n- \"The moment you see it, you'll know...\"\n- \"Transform any room in seconds\"\n\n### Benefit Statements\n- \"More than art - daily inspiration\"\n- \"Conversation pieces that speak\"\n- \"Gallery quality, not gallery prices\"\n\n### CTAs\n- \"Claim your perfect piece\"\n- \"Start your collection today\"\n- \"Find your signature style\"",
+        "height": 360,
+        "width": 380,
+        "color": 6
+      }
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1400, -400],
+      "parameters": {
+        "content": "## 🎯 Emotional Triggers\n\n### Core Emotions\n- **Aspiration**: Elevate everyday\n- **Belonging**: Join art lovers\n- **Discovery**: Uncover gems\n- **Pride**: Showcase style\n- **Joy**: Surround with beauty\n- **Security**: Investment quality\n\n### Voice Attributes\n- Inspirational yet grounded\n- Knowledgeable yet accessible\n- Sophisticated yet inclusive\n- Personal yet professional",
+        "height": 340,
+        "width": 380,
+        "color": 4
+      }
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1400, -20],
+      "parameters": {
+        "content": "## 📊 Output Format\n\n### Content Delivery\n```markdown\n# Content: [PROJECT]\n\n## Details\n- Type: [Description/Email/etc]\n- Words: [COUNT]\n- Keywords: [LIST]\n- Audience: [DESCRIPTION]\n\n## Final Copy\n[FORMATTED CONTENT]\n\n## Meta Elements\n- Title: [60 char]\n- Description: [155 char]\n- URL: [slug]\n\n## Variations\n- A/B Options\n- Platform Adaptations\n```",
+        "height": 380,
+        "width": 380,
+        "color": 5
+      }
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [540, 660],
+      "parameters": {
+        "content": "## ⚡ Trigger Conditions\n\n### 1. Chat Message\n- **Webhook**: `copy-writer-chat-trigger`\n- **Purpose**: Interactive creation\n\n### 2. Workflow Execution\n- **Called by**: Marketing agents\n- **Returns**: Formatted content\n\n### 3. Direct Webhook\n- **Path**: `/copy-writer-webhook`\n- **Method**: POST\n\n### Process Flow\n1. Receive brief\n2. Research & ideate\n3. Draft content\n4. Send to editor",
+        "height": 340,
+        "width": 380,
+        "color": 2
+      }
+    }
+  ],
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "copy-writer-agent-vividwalls"
+  }
+}

@@ -1,0 +1,68 @@
+#!/usr/bin/expect -f
+
+set timeout 300
+set passphrase "freedom"
+
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        send "cd /root/vivid_mas\r"
+    }
+}
+
+# Check if the MCP conversion script exists
+expect "root@*"
+send "ls -la mcp_conversion/execute_mcp_commands.py\r"
+
+# Install psycopg2 if needed
+expect "root@*"
+send "apt-get install -y python3-psycopg2 2>/dev/null || pip3 install --break-system-packages psycopg2-binary || true\r"
+
+# Set up the database connection environment
+expect "root@*"
+send "export PGHOST=supabase-db\r"
+
+expect "root@*"
+send "export PGUSER=postgres\r"
+
+expect "root@*"
+send "export PGPASSWORD=myqP9lSMLobnuIfkUpXQzZg07\r"
+
+expect "root@*"
+send "export PGDATABASE=postgres\r"
+
+# Run the MCP conversion script
+expect "root@*"
+send "cd mcp_conversion && python3 execute_mcp_commands.py\r"
+
+expect {
+    "Successfully" {
+        puts "\nMCP commands executed successfully!"
+    }
+    "Error" {
+        puts "\nError during MCP execution"
+    }
+    "root@*" {
+        puts "\nMCP execution completed"
+    }
+    timeout {
+        puts "\nTimeout during MCP execution"
+    }
+}
+
+# Verify the results
+expect "root@*"
+send "cd .. && docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT COUNT(*) FROM agents;\"\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT id, name, role FROM agents LIMIT 10;\"\r"
+
+expect "root@*"
+send "exit\r"
+
+expect eof

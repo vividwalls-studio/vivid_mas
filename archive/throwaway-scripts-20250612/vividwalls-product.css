@@ -1,0 +1,832 @@
+/* VividWalls Product Page CSS - Matching Figma Design Exactly */
+
+/* Reset and Base Styles */
+* {
+  box-sizing: border-box;
+}
+
+/* Main Container */
+.vividwalls-product-section {
+  max-width: 1200px;
+  width: 100%;
+  padding-top: 100px;
+  padding-bottom: 100px;
+  background: white;
+  margin: 0 auto;
+}
+
+.vividwalls-main-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 145px; /* Figma spec: 145px gap between sections */
+}
+
+/* Section 01 */
+.vividwalls-section-01 {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 50px;
+}
+
+/* Artwork Container */
+.vividwalls-artwork-container {
+  width: 800px;
+  max-width: 66.67%;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 20px;
+}
+
+.vividwalls-main-image {
+  width: 100%;
+  height: 690px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.vividwalls-image-wrapper {
+  flex: 1 1 0;
+  align-self: stretch;
+  background: white;
+  overflow: hidden;
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.vividwalls-main-img {
+  flex: 1 1 0;
+  align-self: stretch;
+  object-fit: cover;
+}
+
+/* Thumbnails */
+.vividwalls-thumbnails-container {
+  align-self: stretch;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 20px;
+}
+
+.vividwalls-thumbnails {
+  flex: 1 1 0;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 20px;
+  overflow-x: auto;
+}
+
+.vividwalls-thumbnail-item {
+  width: 220px;
+  min-width: 220px;
+  height: 290px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.vividwalls-thumbnail-wrapper {
+  align-self: stretch;
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  cursor: pointer;
+}
+
+.vividwalls-thumbnail {
+  width: 220px;
+  height: 290px;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+.vividwalls-selected-indicator {
+  width: 150px;
+  height: 5px;
+  position: relative;
+  background: #171717;
+  border-radius: 5px;
+  margin-bottom: 5px;
+}
+
+/* Social Share */
+.vividwalls-social-share {
+  width: calc(100% - 8px);
+  left: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  position: absolute;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.vividwalls-share-icon {
+  width: 35px;
+  height: 35px;
+  opacity: 0.70;
+  background: white;
+  border-radius: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.vividwalls-share-icon:hover {
+  opacity: 1;
+}
+
+/* Product Info */
+.vividwalls-product-info {
+  flex: 1 1 0;
+  min-width: 0;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 30px;
+}
+
+.vividwalls-info-container {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.vividwalls-product-header {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.vividwalls-product-name {
+  align-self: stretch;
+  color: #171717;
+  font-size: 40px; /* Figma spec: 40px */
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1.2;
+  word-wrap: break-word;
+}
+
+.vividwalls-collection-name {
+  color: #737373;
+  font-size: 16px;
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+  word-wrap: break-word;
+  margin-top: 10px;
+}
+
+.vividwalls-artist-info {
+  display: inline-flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.vividwalls-artist-label {
+  color: #737373;
+  font-size: 16px;
+  font-family: Inter, sans-serif;
+  font-style: italic;
+  font-weight: 400;
+  word-wrap: break-word;
+}
+
+.vividwalls-artist-name {
+  color: #737373;
+  font-size: 16px;
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+  word-wrap: break-word;
+}
+
+.vividwalls-tag-container {
+  display: inline-flex;
+  padding: 3px 10px;
+  background: #171717;
+  border-radius: 5px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.vividwalls-tag {
+  color: white;
+  font-size: 16px;
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+  word-wrap: break-word;
+}
+
+/* Shopping Cart Component */
+.vividwalls-shopping-cart {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.vividwalls-total-price-display {
+  align-self: stretch;
+  padding-left: 4px;
+  padding-right: 4px;
+  display: inline-flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vividwalls-dimensions {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 3px;
+}
+
+.vividwalls-width,
+.vividwalls-separator,
+.vividwalls-height {
+  color: #262626;
+  font-size: 18px;
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+  word-wrap: break-word;
+}
+
+.vividwalls-total-price {
+  color: #262626;
+  font-size: 18px;
+  font-family: Inter, sans-serif;
+  font-weight: 600;
+  word-wrap: break-word;
+}
+
+/* Variant Picker */
+.vividwalls-variant-picker {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.vividwalls-variant-options {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.vividwalls-variant-option {
+  align-self: stretch;
+  padding: 10px;
+  opacity: 0.70;
+  background: #FAFAFA;
+  border-radius: 5px;
+  outline: 1px #FAFAFA solid;
+  outline-offset: -1px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vividwalls-variant-option:hover {
+  opacity: 0.85;
+}
+
+.vividwalls-variant-option.selected {
+  opacity: 1;
+  background: #262626;
+  outline: 1px #262626 solid;
+}
+
+.vividwalls-variant-info {
+  align-self: stretch;
+  display: inline-flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vividwalls-variant-dimensions {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 3px;
+}
+
+.vividwalls-variant-option .vividwalls-variant-width,
+.vividwalls-variant-option .vividwalls-variant-separator,
+.vividwalls-variant-option .vividwalls-variant-height {
+  color: #525252;
+  font-size: 16px;
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+  word-wrap: break-word;
+}
+
+.vividwalls-variant-option.selected .vividwalls-variant-width,
+.vividwalls-variant-option.selected .vividwalls-variant-separator,
+.vividwalls-variant-option.selected .vividwalls-variant-height {
+  color: #F5F5F5;
+  font-weight: 600;
+}
+
+.vividwalls-variant-price {
+  color: #525252;
+  font-size: 16px;
+  font-family: Inter, sans-serif;
+  font-weight: 600;
+  word-wrap: break-word;
+}
+
+.vividwalls-variant-option.selected .vividwalls-variant-price {
+  color: #F5F5F5;
+}
+
+.vividwalls-variant-stock {
+  align-self: stretch;
+  display: inline-flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.vividwalls-stock-info {
+  color: #525252;
+  font-size: 14px;
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+  word-wrap: break-word;
+}
+
+.vividwalls-variant-option.selected .vividwalls-stock-info {
+  color: #E5E5E5;
+}
+
+/* Canvas Finish Options */
+.vividwalls-canvas-finish-label {
+  align-self: stretch;
+  padding-left: 4px;
+  margin-bottom: -5px;
+}
+
+.vividwalls-canvas-finish-label span {
+  color: #737373;
+  font-size: 14px;
+  font-family: Inter, sans-serif;
+  font-weight: 500;
+  word-wrap: break-word;
+}
+
+.vividwalls-gallery-wrap-container {
+  align-self: stretch;
+  display: inline-flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+}
+
+.vividwalls-gallery-wrap-option {
+  flex: 1 1 0;
+  height: 54px;
+  padding: 10px 20px;
+  background: #FAFAFA;
+  border-radius: 5px;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.vividwalls-gallery-wrap-checkbox {
+  position: relative;
+  display: inline-flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.vividwalls-checkbox-visual {
+  width: 16px;
+  height: 16px;
+  background: #FAFAFA;
+  border: 1px solid #D4D4D4;
+  border-radius: 4px;
+  position: relative;
+  pointer-events: none;
+}
+
+.vividwalls-checkbox-visual.checked {
+  background: #262626;
+  border: none;
+}
+
+.vividwalls-check-icon {
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+.vividwalls-check-icon.visible {
+  display: flex;
+}
+
+.vividwalls-gallery-wrap-checkbox input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 16px;
+  height: 16px;
+  left: 0;
+  top: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.vividwalls-gallery-wrap-label {
+  color: #262626;
+  font-size: 14px;
+  font-family: Inter, sans-serif;
+  font-weight: 500;
+  word-wrap: break-word;
+  pointer-events: none;
+}
+
+.vividwalls-gallery-wrap-prices {
+  display: inline-flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+}
+
+.vividwalls-gallery-wrap-prices span {
+  color: #737373;
+  font-size: 12px;
+  font-family: Inter, sans-serif;
+  font-weight: 500;
+  word-wrap: break-word;
+}
+
+.vividwalls-price-separator {
+  width: 10px;
+  height: 0px;
+  transform: rotate(90deg);
+  transform-origin: top left;
+  outline: 1px #D4D4D4 solid;
+  outline-offset: -0.50px;
+}
+
+/* Buy Button Section */
+.vividwalls-buy-section {
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.vividwalls-sku {
+  color: #737373;
+  font-size: 14px;
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+  word-wrap: break-word;
+}
+
+.vividwalls-quantity-and-buy {
+  width: 100%;
+  height: 60px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.vividwalls-quantity-selector {
+  width: 152px;
+  height: 100%;
+  padding: 10px 20px;
+  overflow: hidden;
+  border: 1px solid #D4D4D4;
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.vividwalls-quantity-button {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.vividwalls-quantity-value {
+  flex: 1 1 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.vividwalls-quantity-input {
+  color: #171717;
+  font-size: 18px;
+  font-family: Inter, sans-serif;
+  font-weight: 600;
+  word-wrap: break-word;
+  border: none;
+  background: transparent;
+  text-align: center;
+  width: 40px;
+}
+
+.vividwalls-add-to-cart {
+  flex: 1 1 0;
+  height: 100%;
+  padding: 12px 16px;
+  background: #171717;
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.vividwalls-add-to-cart span {
+  color: white;
+  font-size: 16px;
+  font-family: Inter, sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0px;
+  word-wrap: break-word;
+}
+
+/* Purchase Options */
+.vividwalls-purchase-options {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.vividwalls-shop-pay-button {
+  width: 100%;
+  height: 60px;
+  background: #5A31F4;
+  border-radius: 5px;
+  border: none;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vividwalls-shipping-info {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.vividwalls-shipping-label {
+  display: inline-flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 4px;
+}
+
+.vividwalls-shipping-label .underline {
+  color: #171717;
+  font-size: 16px;
+  font-family: Inter, sans-serif;
+  font-style: italic;
+  font-weight: 400;
+  text-decoration: underline;
+}
+
+.vividwalls-shipping-label .regular {
+  color: #737373;
+  font-size: 16px;
+  font-family: Inter, sans-serif;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.vividwalls-installment-info {
+  width: 100%;
+  position: relative;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.vividwalls-installment-text {
+  flex: 1 1 0;
+  color: #737373;
+  font-size: 16px;
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+}
+
+.vividwalls-installment-price {
+  font-weight: 600;
+}
+
+.vividwalls-power-info {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.vividwalls-power-text {
+  flex: 1 1 0;
+  color: #737373;
+  font-size: 16px;
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+  text-decoration: underline;
+}
+
+/* Section 02 */
+.vividwalls-section-02 {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.vividwalls-section-02-content {
+  align-self: stretch;
+  min-height: 400px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 50px;
+  flex-wrap: wrap;
+}
+
+.vividwalls-description-container {
+  width: 322px;
+  min-width: 280px;
+  flex: 0 0 auto;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+}
+
+.vividwalls-description-wrapper {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+}
+
+.vividwalls-description-text {
+  align-self: stretch;
+  color: #737373;
+  font-size: 16px;
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+  word-wrap: break-word;
+  max-height: 200px;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.vividwalls-description-text.expanded {
+  max-height: none;
+  overflow: visible;
+}
+
+.vividwalls-read-more-container {
+  width: 119px;
+  padding-left: 10px;
+  display: inline-flex;
+  justify-content: flex-start;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.vividwalls-read-more {
+  color: #171717;
+  font-size: 16px;
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+  text-decoration: underline;
+  line-height: 24px;
+  word-wrap: break-word;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.vividwalls-additional-image {
+  flex: 1 1 0;
+  min-width: 300px;
+  align-self: stretch;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.vividwalls-additional-image-wrapper {
+  flex: 1 1 0;
+  align-self: stretch;
+  background: white;
+  overflow: hidden;
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.vividwalls-additional-image-wrapper img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* Chevron Icon for Selected Variant */
+.vividwalls-variant-option.selected .vividwalls-variant-info::after {
+  content: '';
+  width: 20px;
+  height: 20px;
+  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7.5 15L12.5 10L7.5 5' stroke='%23F5F5F5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-left: 10px;
+}

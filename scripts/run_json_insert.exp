@@ -1,0 +1,51 @@
+#!/usr/bin/expect -f
+
+set timeout 600
+set passphrase "freedom"
+
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        send "cd /root/vivid_mas\r"
+    }
+}
+
+# Copy the Python script
+expect "root@*"
+send "cp scripts/simple_json_insert.py .\r"
+
+# Make it executable
+expect "root@*"
+send "chmod +x simple_json_insert.py\r"
+
+# Run the script
+expect "root@*"
+send "python3 simple_json_insert.py\r"
+
+# Wait for completion
+set timeout 1200
+expect {
+    "Final Summary" {
+        puts "\nInsertion completed!"
+    }
+    timeout {
+        puts "\nTimeout during insertion"
+    }
+}
+
+# Extra verification
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT COUNT(*) as total FROM agents;\"\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT id, name, role FROM agents LIMIT 5;\"\r"
+
+expect "root@*"
+send "exit\r"
+
+expect eof

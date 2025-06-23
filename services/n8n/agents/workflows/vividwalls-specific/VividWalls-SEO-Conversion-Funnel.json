@@ -1,0 +1,303 @@
+{
+  "name": "VividWalls SEO to Newsletter Conversion Funnel",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "seo-landing-signup",
+        "authentication": "none",
+        "options": {
+          "cors": true
+        }
+      },
+      "id": "landing-webhook",
+      "name": "SEO Landing Page Signup",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "notes": "Receives signups from SEO-optimized landing pages"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract and enrich signup data\nconst signupData = {\n  email: $input.item.json.body.email,\n  first_name: $input.item.json.body.first_name || '',\n  source: 'seo_landing',\n  landing_page_url: $input.item.json.body.page_url,\n  keyword: $input.item.json.body.utm_campaign?.replace('seo-', '') || 'unknown',\n  utm_source: $input.item.json.body.utm_source || 'organic',\n  utm_medium: $input.item.json.body.utm_medium || 'search',\n  referrer: $input.item.json.headers.referer || '',\n  ip_address: $input.item.json.headers['x-forwarded-for'] || $input.item.json.headers['x-real-ip'],\n  user_agent: $input.item.json.headers['user-agent'],\n  timestamp: new Date().toISOString()\n};\n\n// Validate email\nconst emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\nif (!emailRegex.test(signupData.email)) {\n  throw new Error('Invalid email address');\n}\n\nreturn { json: signupData };"
+      },
+      "id": "process-signup",
+      "name": "Process & Validate Signup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "keyword_analysis",
+        "keyword": "={{ $json.keyword }}",
+        "options": {
+          "get_serp_data": true,
+          "get_related_keywords": true,
+          "get_search_volume": true
+        }
+      },
+      "id": "analyze-keyword",
+      "name": "Analyze Keyword Performance",
+      "type": "n8n-nodes-base.seoResearchMcp",
+      "typeVersion": 1,
+      "position": [650, 450]
+    },
+    {
+      "parameters": {
+        "agent": "Marketing Research Agent",
+        "prompt": "Analyze this newsletter signup from an SEO landing page and determine:\n\nSignup Data:\n- Keyword: {{ $json.keyword }}\n- Landing Page: {{ $json.landing_page_url }}\n- Source: {{ $json.utm_source }}\n- Referrer: {{ $json.referrer }}\n\nKeyword Data: {{ $node['analyze-keyword'].json }}\n\nProvide:\n1. User intent classification (informational, commercial, transactional)\n2. Recommended email content topics based on keyword\n3. Product categories most relevant to this search\n4. Personalization strategy\n5. Follow-up campaign suggestions\n6. Estimated customer lifetime value tier",
+        "options": {
+          "systemPrompt": "You are an SEO and conversion optimization specialist. Analyze user behavior and search intent to maximize newsletter engagement and sales conversion."
+        }
+      },
+      "id": "intent-analysis",
+      "name": "User Intent Analysis",
+      "type": "n8n-nodes-base.aiAgent",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "operation": "manage_listmonk_subscribers",
+        "action": "add",
+        "email": "={{ $json.email }}",
+        "name": "={{ $json.first_name }}",
+        "lists": [1, 4],
+        "attributes": {
+          "source": "seo_landing",
+          "keyword": "={{ $json.keyword }}",
+          "landing_page": "={{ $json.landing_page_url }}",
+          "utm_source": "={{ $json.utm_source }}",
+          "utm_medium": "={{ $json.utm_medium }}",
+          "signup_date": "={{ $json.timestamp }}",
+          "intent": "={{ $node['intent-analysis'].json.user_intent }}",
+          "clv_tier": "={{ $node['intent-analysis'].json.clv_tier }}"
+        },
+        "tags": ["seo", "{{ $json.keyword }}", "{{ $node['intent-analysis'].json.user_intent }}"]
+      },
+      "id": "add-subscriber",
+      "name": "Add to Listmonk with SEO Tags",
+      "type": "n8n-nodes-base.aiAgent",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create_embedded_survey",
+        "survey_type": "preference",
+        "questions": [
+          {
+            "question": "What type of wall art are you looking for?",
+            "options": ["Abstract", "Nature", "Minimalist", "Colorful", "Photography"]
+          },
+          {
+            "question": "Which room are you decorating?",
+            "options": ["Living Room", "Bedroom", "Office", "Kitchen", "Bathroom"]
+          },
+          {
+            "question": "What's your preferred size?",
+            "options": ["Small (under 16\")", "Medium (16-24\")", "Large (24-36\")", "Extra Large (36\"+)"]
+          }
+        ],
+        "email": "={{ $json.email }}",
+        "embed_in_welcome": true
+      },
+      "id": "create-survey",
+      "name": "Create Preference Survey",
+      "type": "n8n-nodes-base.aiAgent",
+      "typeVersion": 1,
+      "position": [1250, 450]
+    },
+    {
+      "parameters": {
+        "agent": "Newsletter Writer Agent",
+        "prompt": "Create a highly personalized welcome email for this SEO-driven signup:\n\nSubscriber Info:\n- Email: {{ $json.email }}\n- Name: {{ $json.first_name }}\n- Search Keyword: {{ $json.keyword }}\n- User Intent: {{ $node['intent-analysis'].json.user_intent }}\n- Recommended Topics: {{ $node['intent-analysis'].json.content_topics }}\n\nCreate a welcome email that:\n1. Acknowledges their specific interest (based on keyword)\n2. Provides immediate value related to their search\n3. Features 3-4 products matching their intent\n4. Includes educational content about their topic\n5. Offers a special discount for SEO visitors (15% off)\n6. Includes the preference survey\n7. Sets expectations for future content\n\nUse keyword naturally in subject and content.",
+        "options": {
+          "systemPrompt": "You are a conversion-focused email copywriter specializing in SEO-driven personalization. Create emails that feel like a natural continuation of the user's search journey."
+        }
+      },
+      "id": "welcome-email",
+      "name": "Generate SEO Welcome Email",
+      "type": "n8n-nodes-base.aiAgent",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create_listmonk_campaign",
+        "name": "SEO Welcome - {{ $json.keyword }}",
+        "subject": "={{ $node['welcome-email'].json.subject_line }}",
+        "lists": [4],
+        "template_type": "seo_welcome",
+        "content": "={{ $node['welcome-email'].json.html_content }}",
+        "schedule_type": "immediate",
+        "tags": ["welcome", "seo", "{{ $json.keyword }}"],
+        "track_clicks": true,
+        "track_opens": true,
+        "include_survey": "={{ $node['create-survey'].json.survey_html }}"
+      },
+      "id": "send-welcome",
+      "name": "Send Welcome Campaign",
+      "type": "n8n-nodes-base.aiAgent",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO seo_newsletter_conversions (email, keyword, landing_page_url, utm_source, utm_medium, user_intent, signup_timestamp, welcome_campaign_id, conversion_value) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT (email) DO UPDATE SET keyword = $2, last_interaction = $7",
+        "additionalFields": {
+          "queryParams": "={{ $json.email }},{{ $json.keyword }},{{ $json.landing_page_url }},{{ $json.utm_source }},{{ $json.utm_medium }},{{ $node['intent-analysis'].json.user_intent }},{{ $json.timestamp }},{{ $node['send-welcome'].json.campaign_id }},0"
+        }
+      },
+      "id": "track-conversion",
+      "name": "Track SEO Conversion",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1650, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Create follow-up automation sequence based on intent\nconst intent = $node['intent-analysis'].json.user_intent;\nconst keyword = $input.item.json.keyword;\n\nconst followUpSequence = {\n  informational: [\n    { delay: 3, type: 'educational', topic: 'design_tips' },\n    { delay: 7, type: 'product_showcase', focus: 'inspiration' },\n    { delay: 14, type: 'discount', amount: 10 }\n  ],\n  commercial: [\n    { delay: 2, type: 'product_comparison', focus: keyword },\n    { delay: 5, type: 'customer_reviews', category: 'related' },\n    { delay: 10, type: 'discount', amount: 15 }\n  ],\n  transactional: [\n    { delay: 1, type: 'product_showcase', urgency: 'high' },\n    { delay: 3, type: 'discount', amount: 20 },\n    { delay: 7, type: 'abandoned_browse', reminder: true }\n  ]\n};\n\nconst sequence = followUpSequence[intent] || followUpSequence.informational;\n\nreturn sequence.map(step => ({\n  json: {\n    email: $input.item.json.email,\n    keyword: keyword,\n    sequence_step: step,\n    schedule_date: new Date(Date.now() + step.delay * 24 * 60 * 60 * 1000).toISOString()\n  }\n}));"
+      },
+      "id": "plan-sequence",
+      "name": "Plan Follow-up Sequence",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1650, 450]
+    },
+    {
+      "parameters": {
+        "operation": "track_behavioral_intent",
+        "subscriber_id": "={{ $json.email }}",
+        "event_type": "seo_signup",
+        "event_data": {
+          "keyword": "={{ $json.keyword }}",
+          "landing_page": "={{ $json.landing_page_url }}",
+          "intent": "={{ $node['intent-analysis'].json.user_intent }}",
+          "predicted_interests": "={{ $node['intent-analysis'].json.product_categories }}",
+          "engagement_score": 100
+        },
+        "trigger_automations": true
+      },
+      "id": "track-behavior",
+      "name": "Track Behavioral Intent",
+      "type": "n8n-nodes-base.aiAgent",
+      "typeVersion": 1,
+      "position": [1450, 450]
+    }
+  ],
+  "connections": {
+    "SEO Landing Page Signup": {
+      "main": [
+        [
+          {
+            "node": "Process & Validate Signup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process & Validate Signup": {
+      "main": [
+        [
+          {
+            "node": "Analyze Keyword Performance",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "User Intent Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User Intent Analysis": {
+      "main": [
+        [
+          {
+            "node": "Add to Listmonk with SEO Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to Listmonk with SEO Tags": {
+      "main": [
+        [
+          {
+            "node": "Create Preference Survey",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate SEO Welcome Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate SEO Welcome Email": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Welcome Campaign": {
+      "main": [
+        [
+          {
+            "node": "Track SEO Conversion",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Track Behavioral Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Track SEO Conversion": {
+      "main": [
+        [
+          {
+            "node": "Plan Follow-up Sequence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "seo",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "conversion",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "newsletter",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}

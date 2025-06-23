@@ -1,0 +1,11 @@
+# Task ID: 5
+# Title: Backlink Analysis MCP Tool
+# Status: pending
+# Dependencies: 3
+# Priority: high
+# Description: Implement backlink_analysis MCP tool for domain and URL backlink profile analysis
+# Details:
+Create MCP tool that analyzes backlink profiles for domains/URLs, including referring domains, anchor text analysis, link types, and authority metrics using DataForSEO Backlinks API.
+
+# Test Strategy:
+Test with various domains/URLs, validate backlink data accuracy, and verify response formatting

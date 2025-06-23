@@ -1,0 +1,358 @@
+{% comment %}
+  VividWalls Product Page - Exact Figma HTML Structure
+  This is a pixel-perfect implementation of the provided Figma design
+{% endcomment %}
+
+{%- assign product_form_id = 'product-form-' | append: section.id -%}
+{%- assign selected_variant = product.selected_or_first_available_variant -%}
+
+<div data-layer="main-product-section" class="MainProductSection" style="width: 1200px; padding-top: 100px; padding-bottom: 100px; background: white; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 145px; display: inline-flex; margin: 0 auto;">
+  <div data-layer="Section-01" class="Section01" style="width: 1200px; justify-content: flex-start; align-items: flex-start; gap: 50px; display: inline-flex">
+    <div data-layer="Artwork Container" class="ArtworkContainer" style="width: 800px; align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: center; gap: 20px; display: inline-flex">
+      <div data-layer="Main Artwork Image" class="MainArtworkImage" style="width: 800px; height: 693px; justify-content: flex-start; align-items: flex-start; display: inline-flex">
+        <div data-layer="Artwork Image/{{ product.handle }}" class="ArtworkImage{{ product.handle | capitalize | replace: '-', '' }}" style="flex: 1 1 0; align-self: stretch; background: #F5F5F5; overflow: hidden; border-radius: 5px; justify-content: center; align-items: center; gap: 10px; display: flex">
+          <img data-layer="img" class="Img" style="flex: 1 1 0; align-self: stretch" src="{{ product.featured_media | image_url: width: 800 }}" />
+        </div>
+      </div>
+      <div data-layer="Thumbnails Container" class="ThumbnailsContainer" style="align-self: stretch; position: relative; overflow: hidden; justify-content: flex-start; align-items: center; gap: 20px; display: inline-flex">
+        <div data-layer="Thumbnails" class="Thumbnails" style="flex: 1 1 0; justify-content: flex-start; align-items: center; gap: 20px; display: flex">
+          {%- for media in product.media limit: 4 -%}
+            <div data-layer="Thumbnail-Image" class="ThumbnailImage" style="width: 220px; height: 289px; flex-direction: column; justify-content: flex-start; align-items: flex-start; display: inline-flex">
+              <div data-layer="Thumbnail-Image / {% if forloop.first %}Full{% elsif forloop.index == 2 %}Large{% elsif forloop.index == 3 %}Medium{% else %}Small{% endif %}" data-state="{% if forloop.index == 2 %}Selected{% else %}Default{% endif %}" class="ThumbnailImage{% if forloop.first %}Full{% elsif forloop.index == 2 %}Large{% elsif forloop.index == 3 %}Medium{% else %}Small{% endif %}" style="align-self: stretch; flex: 1 1 0; flex-direction: column; justify-content: flex-start; align-items: center; display: flex">
+                {%- if forloop.index == 2 -%}
+                  <div data-layer="Seleted" class="Seleted" style="width: 150px; height: 5px; position: relative; background: #262626; border-radius: 5px"></div>
+                {%- endif -%}
+                <img data-layer="Screenshot {{ forloop.index }}" class="Screenshot{{ forloop.index }}" style="width: 220px; height: 289px; border-radius: 5px" src="{{ media | image_url: width: 220 }}" />
+              </div>
+            </div>
+          {%- endfor -%}
+        </div>
+        <div data-layer="Social Share Container" class="SocialShareContainer" style="width: 792px; left: 5px; top: 127px; position: absolute; justify-content: flex-end; align-items: center; display: flex">
+          <div data-layer="Social Share Icon" class="SocialShareIcon" style="width: 35px; height: 35px; opacity: 0.70; background: white; border-radius: 100px; justify-content: center; align-items: center; gap: 10px; display: flex">
+            <div data-layer="Icons black/Chevron Right" class="IconsBlackChevronRight" style="width: 24px; height: 24px; position: relative">
+              <div data-layer="Chevron Right" class="ChevronRight" style="width: 24px; height: 24px; left: 0px; top: 0px; position: absolute"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div data-layer="Product Info" class="ProductInfo" style="flex: 1 1 0; background: white; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 30px; display: inline-flex">
+      <div data-layer="Product Info Container" class="ProductInfoContainer" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 16px; display: flex">
+        <div data-layer="Product Info" class="ProductInfo" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex">
+          <div data-layer="Product Name" class="ProductName" style="align-self: stretch; color: #171717; font-size: 40px; font-family: Inter; font-weight: 400; word-wrap: break-word">{{ product.title }}</div>
+          <div data-layer="Artist Name" class="ArtistName" style="color: #737373; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">Collection →  {{ product.collections.first.title | default: "Vivid Layers" }}</div>
+          <div data-layer="Artist Info Container" class="ArtistInfoContainer" style="justify-content: flex-start; align-items: center; gap: 4px; display: inline-flex">
+            <div data-layer="Label" class="Label" style="color: #737373; font-size: 16px; font-family: Inter; font-style: italic; font-weight: 400; word-wrap: break-word">Original Art Illustrations by </div>
+            <div data-layer="Artist Name" class="ArtistName" style="color: #737373; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">{{ product.vendor | default: "Kingler Bercy" }}</div>
+          </div>
+          <div data-layer="Tag Container" class="TagContainer" style="padding: 10px; background: #262626; border-radius: 5px; justify-content: center; align-items: center; gap: 10px; display: inline-flex">
+            <div data-layer="Tag" class="Tag" style="color: #E5E5E5; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">Limited Edition Print</div>
+          </div>
+        </div>
+      </div>
+      
+      <form action="{{ routes.cart_add_url }}" method="post" enctype="multipart/form-data" id="{{ product_form_id }}">
+        <div data-layer="Shopping Cart Component" class="ShoppingCartComponent" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 20px; display: flex">
+          <div data-layer="Total Selected Price" class="TotalSelectedPrice" style="align-self: stretch; padding-left: 4px; padding-right: 4px; justify-content: space-between; align-items: center; display: inline-flex">
+            <div data-layer="Dimensions" class="Dimensions" style="justify-content: flex-start; align-items: center; gap: 3px; display: flex">
+              {%- assign dimensions = selected_variant.title | split: 'x' -%}
+              <div data-layer="Width" class="Width" style="color: #262626; font-size: 18px; font-family: Inter; font-weight: 500; word-wrap: break-word">{{ dimensions[0] | strip }}</div>
+              <div data-layer="Separator" class="Separator" style="color: #262626; font-size: 18px; font-family: Inter; font-weight: 500; word-wrap: break-word">X</div>
+              <div data-layer="Height" class="Height" style="color: #262626; font-size: 18px; font-family: Inter; font-weight: 500; word-wrap: break-word">{{ dimensions[1] | strip }}</div>
+            </div>
+            <div data-layer="Total Price" class="TotalPrice" style="color: #262626; font-size: 18px; font-family: Inter; font-weight: 600; word-wrap: break-word">{{ selected_variant.price | money }} USD</div>
+          </div>
+          <div data-layer="Variant_Picker" class="VariantPicker" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex">
+            <div data-layer="Availablity" data-showoptions="True" class="Availablity" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex">
+              {%- for variant in product.variants -%}
+                {%- assign variant_dimensions = variant.title | split: 'x' -%}
+                <div data-layer="Options & Availabity" data-isdefault="{% if forloop.first %}True{% else %}False{% endif %}" data-isselected="{% if variant == selected_variant %}True{% else %}False{% endif %}" data-issoldout="{% unless variant.available %}True{% else %}False{% endunless %}" class="OptionsAvailabity variant-option" data-variant-id="{{ variant.id }}" style="align-self: stretch; padding: 10px; {% if variant == selected_variant %}background: #262626;{% else %}opacity: 0.70; background: #FAFAFA;{% endif %} border-radius: 5px; outline: 1px {% if variant == selected_variant %}#262626{% else %}#FAFAFA{% endif %} solid; outline-offset: -1px; flex-direction: column; justify-content: flex-end; align-items: flex-end; gap: 10px; display: flex; cursor: pointer;">
+                  <div data-layer="Product Info" class="ProductInfo" style="align-self: stretch; justify-content: space-between; align-items: center; display: inline-flex">
+                    <div data-layer="Dimensions" class="Dimensions" style="justify-content: flex-start; align-items: center; gap: 3px; display: flex">
+                      <div data-layer="Width" class="Width" style="color: {% if variant == selected_variant %}#F5F5F5{% else %}#525252{% endif %}; font-size: 16px; font-family: Inter; font-weight: {% if variant == selected_variant %}600{% else %}500{% endif %}; word-wrap: break-word">{{ variant_dimensions[0] | strip }}</div>
+                      <div data-layer="Separator" class="Separator" style="color: {% if variant == selected_variant %}#F5F5F5{% else %}#525252{% endif %}; font-size: 16px; font-family: Inter; font-weight: {% if variant == selected_variant %}600{% else %}500{% endif %}; word-wrap: break-word">X</div>
+                      <div data-layer="Height" class="Height" style="color: {% if variant == selected_variant %}#F5F5F5{% else %}#525252{% endif %}; font-size: 16px; font-family: Inter; font-weight: {% if variant == selected_variant %}600{% else %}500{% endif %}; word-wrap: break-word">{{ variant_dimensions[1] | strip }}</div>
+                    </div>
+                    <div data-layer="Price" class="Price" style="color: {% if variant == selected_variant %}#F5F5F5{% else %}#525252{% endif %}; font-size: 16px; font-family: Inter; font-weight: 600; word-wrap: break-word">{{ variant.price | money }}</div>
+                  </div>
+                  <div data-layer="Frame 20" class="Frame20" style="align-self: stretch; justify-content: {% if variant == selected_variant %}space-between{% else %}flex-end{% endif %}; align-items: center; display: inline-flex">
+                    {%- if variant == selected_variant -%}
+                      <div data-layer="Icon Instance" class="IconInstance" style="width: 24px; height: 24px; justify-content: center; align-items: center; gap: 10px; display: flex">
+                        <div data-layer="Icons black/Chevron Up" class="IconsBlackChevronUp" style="flex: 1 1 0; align-self: stretch; position: relative">
+                          <div data-layer="Chevron Up" class="ChevronUp" style="width: 24px; height: 24px; left: 0px; top: 0px; position: absolute"></div>
+                        </div>
+                      </div>
+                    {%- endif -%}
+                    <div data-layer="Stock Info" class="StockInfo" style="color: {% if variant == selected_variant %}#E5E5E5{% else %}#525252{% endif %}; font-size: 14px; font-family: Inter; font-weight: 400; word-wrap: break-word">
+                      {%- assign sold = variant.metafields.custom.units_sold | default: 0 -%}
+                      {%- assign remaining = variant.inventory_quantity -%}
+                      {{ sold }} sold - {{ remaining }} remaining
+                    </div>
+                  </div>
+                </div>
+              {%- endfor -%}
+            </div>
+            <div data-layer="Container" class="Container" style="align-self: stretch; justify-content: flex-start; align-items: center; gap: 10px; display: inline-flex">
+              <div data-layer="Options/True/False" class="OptionsTrueFalse" style="flex: 1 1 0; height: 54px; padding-left: 20px; padding-right: 20px; padding-top: 10px; padding-bottom: 10px; background: #FAFAFA; border-radius: 5px; flex-direction: column; justify-content: center; align-items: flex-start; gap: 8px; display: inline-flex">
+                <div data-layer="Gallery Wrapped Canvas - Checkbox" data-state="Checked" class="GalleryWrappedCanvasCheckbox" style="position: relative; justify-content: flex-start; align-items: center; gap: 8px; display: inline-flex">
+                  <div data-layer="Rectangle 2" class="Rectangle2" style="width: 16px; height: 16px; background: #262626; border-radius: 4px"></div>
+                  <div data-layer="Accept terms and conditions" class="AcceptTermsAndConditions" style="color: #262626; font-size: 14px; font-family: Inter; font-weight: 500; word-wrap: break-word">Gallery Wrapped Canvas</div>
+                  <div data-layer="Check" class="Check" style="width: 15px; height: 15px; left: 0px; top: 1px; position: absolute"></div>
+                </div>
+                <div data-layer="Container" class="Container" style="justify-content: flex-start; align-items: center; gap: 10px; display: inline-flex">
+                  <div data-layer="Size - Small" class="SizeSmall" style="justify-content: center; align-items: center; display: flex">
+                    <div data-layer="24X36" class="X36" style="color: #737373; font-size: 12px; font-family: Inter; font-weight: 500; word-wrap: break-word">24X36</div>
+                    <div data-layer="+ $75" class="75" style="color: #737373; font-size: 12px; font-family: Inter; font-weight: 500; word-wrap: break-word"> + $75</div>
+                  </div>
+                  <div data-layer="Line" class="Line" style="width: 10px; height: 0px; transform: rotate(90deg); transform-origin: top left; outline: 1px #D4D4D4 solid; outline-offset: -0.50px"></div>
+                  <div data-layer="Size - Medium" class="SizeMedium" style="justify-content: center; align-items: center; display: flex">
+                    <div data-layer="36X48" class="X48" style="color: #737373; font-size: 12px; font-family: Inter; font-weight: 500; word-wrap: break-word">36X48</div>
+                    <div data-layer="+ $75" class="75" style="color: #737373; font-size: 12px; font-family: Inter; font-weight: 500; word-wrap: break-word"> + $75</div>
+                  </div>
+                  <div data-layer="Line" class="Line" style="width: 10px; height: 0px; transform: rotate(90deg); transform-origin: top left; outline: 1px #D4D4D4 solid; outline-offset: -0.50px"></div>
+                  <div data-layer="Size - Large" class="SizeLarge" style="justify-content: center; align-items: center; display: flex">
+                    <div data-layer="53X72" class="X72" style="color: #737373; font-size: 12px; font-family: Inter; font-weight: 500; word-wrap: break-word">53X72</div>
+                    <div data-layer="+ $100" class="100" style="color: #737373; font-size: 12px; font-family: Inter; font-weight: 500; word-wrap: break-word"> + $125</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div data-layer="Buy Button" class="BuyButton" style="align-self: stretch; overflow: hidden; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex">
+            <div data-layer="SKU" class="Sku" style="color: #737373; font-size: 14px; font-family: Inter; font-weight: 400; word-wrap: break-word">SKU: {{ selected_variant.sku }}</div>
+            <div data-layer="Quantity Selector" class="QuantitySelector" style="align-self: stretch; height: 60px; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
+              <div data-layer="Quantity Selector" class="QuantitySelector" style="width: 152px; align-self: stretch; padding-left: 20px; padding-right: 20px; padding-top: 10px; padding-bottom: 10px; overflow: hidden; outline: 1px #D4D4D4 solid; outline-offset: -1px; justify-content: center; align-items: center; gap: 10px; display: flex">
+                <div data-layer="Quantity Icon" class="QuantityIcon" style="width: 24px; height: 24px; justify-content: center; align-items: center; gap: 10px; display: flex">
+                  <div data-layer="Icons black/Minus" class="IconsBlackMinus" style="flex: 1 1 0; align-self: stretch; position: relative">
+                    <div data-layer="Minus" class="Minus" style="width: 24px; height: 24px; left: 0px; top: 0px; position: absolute"></div>
+                  </div>
+                </div>
+                <div data-layer="Quantity Value" class="QuantityValue" style="flex: 1 1 0; justify-content: center; align-items: center; gap: 10px; display: flex">
+                  <input type="number" name="quantity" value="1" min="1" data-layer="Quantity Text" class="QuantityText" style="color: #171717; font-size: 18px; font-family: Inter; font-weight: 700; word-wrap: break-word; border: none; background: transparent; text-align: center; width: 40px;">
+                </div>
+                <div data-layer="Quantity Icon" class="QuantityIcon" style="width: 24px; height: 24px; justify-content: center; align-items: center; gap: 10px; display: flex">
+                  <div data-layer="Icons black/Plus" class="IconsBlackPlus" style="flex: 1 1 0; align-self: stretch; position: relative">
+                    <div data-layer="Plus" class="Plus" style="width: 24px; height: 24px; left: 0px; top: 0px; position: absolute"></div>
+                  </div>
+                </div>
+              </div>
+              <button type="submit" name="add" data-layer="Button Button" data-property-1="Primary" class="ButtonButton" style="flex: 1 1 0; align-self: stretch; padding-left: 16px; padding-right: 16px; padding-top: 12px; padding-bottom: 12px; background: #262626; border-radius: 4px; justify-content: center; align-items: center; gap: 10px; display: flex; border: none; cursor: pointer;">
+                <div data-layer="Button" class="Button" style="color: #F5F5F5; font-size: 16px; font-family: Inter; font-weight: 500; word-wrap: break-word">ADD TO CART</div>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <input type="hidden" name="id" value="{{ selected_variant.id }}">
+      </form>
+      
+      <div data-layer="Purchase Button Container" class="PurchaseButtonContainer" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 20px; display: flex">
+        <div data-layer="Buy button" class="BuyButton" style="align-self: stretch; height: 60px; position: relative; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex">
+          {{ form | payment_button }}
+        </div>
+        <div data-layer="Shipping Info" class="ShippingInfo" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex">
+          <div data-layer="Artist Info Container" class="ArtistInfoContainer" style="justify-content: flex-start; align-items: center; gap: 4px; display: inline-flex">
+            <div data-layer="Artist Label" class="ArtistLabel"><span style="color: #171717; font-size: 16px; font-family: Inter; font-style: italic; font-weight: 400; text-decoration: underline; word-wrap: break-word">Shipping</span><span style="color: #737373; font-size: 16px; font-family: Inter; font-style: italic; font-weight: 400; word-wrap: break-word"> calculated at checkout.</span></div>
+          </div>
+          <div data-layer="Installment Info" class="InstallmentInfo" style="align-self: stretch; position: relative; justify-content: flex-start; align-items: center; display: inline-flex">
+            <div data-layer="Installment Text" class="InstallmentText" style="flex: 1 1 0"><span style="color: #525252; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">4 interest-free installments, or from </span><span style="color: #525252; font-size: 16px; font-family: Inter; font-weight: 700; word-wrap: break-word">${{ selected_variant.price | divided_by: 4.0 | money_without_currency }}</span><span style="color: #525252; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">/mo with </span></div>
+          </div>
+          <div data-layer="Power Info" class="PowerInfo" style="align-self: stretch; justify-content: center; align-items: center; gap: 10px; display: inline-flex">
+            <div data-layer="Power Text" class="PowerText" style="flex: 1 1 0"><span style="color: #525252; font-size: 16px; font-family: Inter; font-weight: 400; text-decoration: underline; word-wrap: break-word">Check your purchasing power</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div data-layer="Section-02" data-property-1="Variant2" class="Section02" style="width: 1200px; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 20px; display: flex">
+    <div data-layer="Frame 33" class="Frame33" style="align-self: stretch; height: 714px; justify-content: flex-start; align-items: center; gap: 50px; display: inline-flex">
+      <div data-layer="Description" class="Description" style="width: 322px; align-self: stretch; position: relative; overflow: hidden; flex-direction: column; justify-content: flex-start; align-items: center; gap: 10px; display: inline-flex">
+        <div data-layer="Product Description Container" class="ProductDescriptionContainer" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: center; gap: 10px; display: flex">
+          <div data-layer="Product Description" class="ProductDescription" style="align-self: stretch; color: #404040; font-size: 16px; font-family: Inter; font-weight: 400; line-height: 24px; word-wrap: break-word">{{ product.description }}</div>
+        </div>
+        <div data-layer="Read More Container" class="ReadMoreContainer" style="width: 119px; padding-left: 10px; left: -8px; top: 368px; position: absolute; background: white; justify-content: flex-start; align-items: flex-end; gap: 10px; display: inline-flex">
+          <div data-layer="Read More Text" class="ReadMoreText" style="color: black; font-size: 16px; font-family: Inter; font-weight: 400; text-decoration: underline; line-height: 24px; word-wrap: break-word">read more</div>
+        </div>
+      </div>
+      <div data-layer="Additional Artwork Image" class="AdditionalArtworkImage" style="flex: 1 1 0; align-self: stretch; justify-content: flex-start; align-items: flex-start; display: flex">
+        <div data-layer="Artwork Image/{{ product.handle }}" class="ArtworkImage{{ product.handle | capitalize | replace: '-', '' }}" style="flex: 1 1 0; align-self: stretch; background: white; overflow: hidden; border-radius: 5px; justify-content: center; align-items: center; gap: 10px; display: flex">
+          <img data-layer="img" class="Img" style="flex: 1 1 0; align-self: stretch" src="{{ product.media[1] | image_url: width: 828 }}" />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Variant selection
+  document.querySelectorAll('.variant-option').forEach(option => {
+    option.addEventListener('click', function() {
+      const variantId = this.dataset.variantId;
+      document.querySelector('input[name="id"]').value = variantId;
+      
+      // Update styles for all variant options
+      document.querySelectorAll('.variant-option').forEach(opt => {
+        opt.style.background = '#FAFAFA';
+        opt.style.opacity = '0.70';
+        opt.style.outline = '1px #FAFAFA solid';
+        opt.dataset.isselected = 'False';
+        
+        // Update text colors
+        opt.querySelectorAll('.Width, .Height, .Separator').forEach(el => {
+          el.style.color = '#525252';
+          el.style.fontWeight = '500';
+        });
+        opt.querySelector('.Price').style.color = '#525252';
+        opt.querySelector('.StockInfo').style.color = '#525252';
+        
+        // Remove chevron icon
+        const chevron = opt.querySelector('.IconInstance');
+        if (chevron) chevron.remove();
+      });
+      
+      // Apply selected styles
+      this.style.background = '#262626';
+      this.style.opacity = '1';
+      this.style.outline = '1px #262626 solid';
+      this.dataset.isselected = 'True';
+      
+      // Update text colors for selected
+      this.querySelectorAll('.Width, .Height, .Separator').forEach(el => {
+        el.style.color = '#F5F5F5';
+        el.style.fontWeight = '600';
+      });
+      this.querySelector('.Price').style.color = '#F5F5F5';
+      this.querySelector('.StockInfo').style.color = '#E5E5E5';
+      
+      // Add chevron icon
+      const frame20 = this.querySelector('.Frame20');
+      frame20.style.justifyContent = 'space-between';
+      const chevronHtml = `<div data-layer="Icon Instance" class="IconInstance" style="width: 24px; height: 24px; justify-content: center; align-items: center; gap: 10px; display: flex">
+        <div data-layer="Icons black/Chevron Up" class="IconsBlackChevronUp" style="flex: 1 1 0; align-self: stretch; position: relative">
+          <div data-layer="Chevron Up" class="ChevronUp" style="width: 24px; height: 24px; left: 0px; top: 0px; position: absolute"></div>
+        </div>
+      </div>`;
+      frame20.insertAdjacentHTML('afterbegin', chevronHtml);
+      
+      // Update main display
+      const selectedDimensions = this.querySelector('.Dimensions').cloneNode(true);
+      const selectedPrice = this.querySelector('.Price').cloneNode(true);
+      
+      document.querySelector('.TotalSelectedPrice .Dimensions').replaceWith(selectedDimensions);
+      document.querySelector('.TotalSelectedPrice .Dimensions').style.fontSize = '18px';
+      document.querySelector('.TotalSelectedPrice .Dimensions .Width').style.color = '#262626';
+      document.querySelector('.TotalSelectedPrice .Dimensions .Height').style.color = '#262626';
+      document.querySelector('.TotalSelectedPrice .Dimensions .Separator').style.color = '#262626';
+      
+      document.querySelector('.TotalPrice').textContent = selectedPrice.textContent + ' USD';
+      
+      // Update SKU
+      const sku = '{{ product.handle | upcase }}-' + this.querySelector('.Width').textContent + 'X' + this.querySelector('.Height').textContent;
+      document.querySelector('.Sku').textContent = 'SKU: ' + sku;
+    });
+  });
+
+  // Thumbnail click handling
+  document.querySelectorAll('[data-layer*="Thumbnail-Image"]').forEach((thumb, index) => {
+    thumb.addEventListener('click', function() {
+      const img = this.querySelector('img');
+      const mainImg = document.querySelector('.MainArtworkImage img');
+      mainImg.src = img.src.replace('_220x', '_800x');
+      
+      // Update selected state
+      document.querySelectorAll('[data-layer*="Thumbnail-Image"]').forEach(t => {
+        t.dataset.state = 'Default';
+        const selected = t.querySelector('.Seleted');
+        if (selected) selected.remove();
+      });
+      
+      this.dataset.state = 'Selected';
+      if (!this.querySelector('.Seleted')) {
+        const selectedDiv = document.createElement('div');
+        selectedDiv.setAttribute('data-layer', 'Seleted');
+        selectedDiv.className = 'Seleted';
+        selectedDiv.style = 'width: 150px; height: 5px; position: relative; background: #262626; border-radius: 5px';
+        this.querySelector('[data-layer*="Thumbnail-Image /"]').insertBefore(selectedDiv, this.querySelector('img'));
+      }
+    });
+  });
+
+  // Quantity selector
+  const quantityInput = document.querySelector('.QuantityText');
+  document.querySelectorAll('.QuantityIcon').forEach((icon, index) => {
+    icon.addEventListener('click', function() {
+      const currentValue = parseInt(quantityInput.value) || 1;
+      if (index === 0 && currentValue > 1) {
+        quantityInput.value = currentValue - 1;
+      } else if (index === 1) {
+        quantityInput.value = currentValue + 1;
+      }
+    });
+  });
+</script>
+
+{% schema %}
+{
+  "name": "VividWalls Product",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Product Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_sticky_info",
+      "default": true,
+      "label": "Enable sticky product info"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "title",
+      "name": "Title",
+      "limit": 1,
+      "settings": []
+    },
+    {
+      "type": "collection_info",
+      "name": "Collection Info",
+      "limit": 1,
+      "settings": []
+    },
+    {
+      "type": "artist_info",
+      "name": "Artist Info",
+      "limit": 1,
+      "settings": []
+    },
+    {
+      "type": "limited_edition",
+      "name": "Limited Edition Tag",
+      "limit": 1,
+      "settings": []
+    }
+  ],
+  "presets": [
+    {
+      "name": "VividWalls Product",
+      "blocks": [
+        {
+          "type": "title"
+        },
+        {
+          "type": "collection_info"
+        },
+        {
+          "type": "artist_info"
+        },
+        {
+          "type": "limited_edition"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

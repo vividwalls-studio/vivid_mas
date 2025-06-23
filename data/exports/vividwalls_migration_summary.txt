@@ -1,0 +1,36 @@
+VividWalls Data Migration Summary
+==================================================
+
+Collections: 8
+  - Chromatic Echoes
+  - Geometric Intersect
+  - Geometric Symmetry
+  - Intersecting Perspectives
+  - Intersecting Spaces
+  - Shape Emergence
+  - Space Form
+  - Vivid Layers
+
+Sizes: 3
+  - 24x36
+  - 36x48
+  - 53x72
+
+Print Types: 2
+  - Canvas Roll
+  - Gallery Wrapped Stretched Canvas
+
+Locations: 2
+  - 170 Avenue F
+  - Printful
+
+Q&A Categories: 9
+  - About Us
+  - Art & Collections
+  - Customer Support
+  - Payment & Pricing
+  - Policies & Terms
+  - Product Customization
+  - Product Information
+  - Returns & Exchanges
+  - Shipping & Delivery

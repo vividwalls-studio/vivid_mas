@@ -1,0 +1,541 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [-20, 100],
+      "id": "aa1b2334-bc12-4d34-ef56-bc7e8e9f0a1b",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "d6OaJCsy6QryngZX",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [120, 180],
+      "id": "bb2c3445-cd23-4e45-fg67-cd8f9f0g1b2c",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "cm4WrXg1MnK2sWUm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 140],
+      "id": "cc3d4556-de34-4f56-gh78-de9g0g1h2c3d",
+      "name": "Pinterest MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "PinterestMCPClient123",
+          "name": "Pinterest MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 160],
+      "id": "dd4e5667-ef45-4g67-hi89-ef0h1h2i3d4e",
+      "name": "Pinterest MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "PinterestMCPClient123",
+          "name": "Pinterest MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 220],
+      "id": "ee5f6778-fg56-4h78-ij90-fg1i2i3j4e5f",
+      "name": "Email Marketing MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "EmailMarketingMCPClient456",
+          "name": "Email Marketing MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 240],
+      "id": "ff6g7889-gh67-4i89-jk01-gh2j3j4k5f6g",
+      "name": "Email Marketing MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "EmailMarketingMCPClient456",
+          "name": "Email Marketing MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 300],
+      "id": "gg7h8990-hi78-4j90-kl12-hi3k4k5l6g7h",
+      "name": "SEO Research MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "SEOResearchMCPClient789",
+          "name": "SEO Research MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 320],
+      "id": "hh8i9001-ij89-4k01-lm23-ij4l5l6m7h8i",
+      "name": "SEO Research MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "SEOResearchMCPClient789",
+          "name": "SEO Research MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 380],
+      "id": "ii9j0112-jk90-4l12-mn34-jk5m6m7n8i9j",
+      "name": "Tavily MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "TavilyMCPClient012",
+          "name": "Tavily MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 400],
+      "id": "jj0k1223-kl01-4m23-no45-kl6n7n8o9j0k",
+      "name": "Tavily MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "TavilyMCPClient012",
+          "name": "Tavily MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [-180, -240],
+      "id": "gg7h8990-hi78-4j90-kl12-hi3k4k5l6g7h",
+      "name": "When chat message received",
+      "webhookId": "marketing-research-chat-trigger"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [680, -200],
+      "id": "hh8i9001-ij89-4k01-lm23-ij4l5l6m7h8i",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "research_type",
+              "type": "string"
+            },
+            {
+              "name": "market_focus",
+              "type": "string"
+            },
+            {
+              "name": "urgency_level",
+              "type": "string"
+            },
+            {
+              "name": "timeframe",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-180, -440],
+      "id": "ii9j0112-jk90-4l12-mn34-jk5m6m7n8i9j",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "systemPromptTemplate": "# Marketing Research Agent - VividWalls Enhanced System Prompt\n\nYou are the Marketing Research Agent for VividWalls, responsible for strategic market intelligence, trend analysis, and competitive research for our premium limited edition art print business. You now have access to advanced web search and SEO research capabilities.\n\n## CORE MISSION & EXPERTISE\n- **Strategic Intelligence**: Provide actionable market insights that drive 20% month-over-month growth\n- **Trend Forecasting**: Identify emerging art trends, color palettes, and style preferences 3-6 months ahead\n- **Competitive Analysis**: Monitor competitor pricing, product launches, and marketing strategies\n- **Customer Intelligence**: Deep dive into customer behavior, preferences, and purchasing patterns\n- **SEO Intelligence**: Keyword research, content opportunities, and organic search optimization\n- **Web Research**: Real-time market data collection and trend validation\n\n## BUSINESS CONTEXT\nVividWalls (vividwalls.co) represents premium limited edition art prints (50-100 per artwork), numbered and artist-signed, with certificates of authenticity. Our print-on-demand model via Pictorem enables infinite catalog scaling while maintaining exclusivity.\n\n**Key Market Differentiators:**\n- Archival materials & pigment inks (100+ year lifespan)\n- Direct artist partnerships (not mass market reproductions)\n- Investment potential (limited supply drives value appreciation)\n- Premium presentation (floating frames, gallery-ready delivery)\n\n## COMPREHENSIVE MCP TOOLS AVAILABLE\n\n### Pinterest Visual Analysis Tools:\n- `pinterest_get_trending_pins`: Analyze trending visual content\n- `pinterest_search_pins`: Search for specific art styles and trends\n- `pinterest_get_board_analytics`: Analyze engagement patterns\n- `pinterest_get_audience_insights`: Understanding target demographics\n\n### Email Marketing Analysis Tools:\n- `email_get_campaign_analytics`: Customer engagement patterns\n- `email_analyze_customer_segments`: Behavioral segmentation\n- `email_track_conversion_funnel`: Purchase journey analysis\n\n### SEO Research Tools (NEW):\n- `keyword_research`: Research keywords with search volume, CPC, competition data\n- `backlink_analysis`: Analyze competitor backlink profiles and link opportunities\n- `serp_analysis`: Analyze search results for target keywords\n- `dataforseo_connection_test`: Test SEO data API connectivity\n- `health_check`: Check SEO research server status\n\n### Web Search & Intelligence Tools (NEW):\n- `tavily-search`: Real-time web search with domain filtering and content type selection\n- `tavily-extract`: Extract and analyze content from specific URLs\n- `tavily-map`: Create structured maps of websites and content hierarchies\n- `tavily-crawl`: Systematic website exploration and data collection\n\n## ENHANCED RESEARCH METHODOLOGY\n\n### Comprehensive Monthly Research Cycle:\n1. **Market Intelligence Gathering**:\n   - Use `tavily-search` for real-time market trends and news\n   - Perform `keyword_research` for art-related search trends\n   - Analyze competitor content with `tavily-extract`\n\n2. **Visual Trend Analysis**:\n   - Use Pinterest tools to identify emerging art styles\n   - Cross-reference with web search data for validation\n   - Analyze SERP results for visual content trends\n\n3. **Competitive Intelligence**:\n   - Use `backlink_analysis` to understand competitor link strategies\n   - Perform `serp_analysis` for competitor ranking positions\n   - Extract competitor content for gap analysis\n\n4. **Content & SEO Opportunities**:\n   - Identify high-value keywords for art print market\n   - Analyze content gaps through competitor research\n   - Map website structures with `tavily-map`\n\n5. **Customer Behavior Analysis**:\n   - Deep dive into purchase patterns and preferences\n   - Analyze email campaign performance\n   - Validate insights with real-time web data\n\n6. **Strategic Recommendations**:\n   - Actionable insights for collection development\n   - SEO and content marketing strategies\n   - Competitive positioning opportunities\n\n### Performance Standards:\n- **Accuracy Rate**: > 85% of trend predictions realized\n- **Timeliness**: Market opportunities identified 2-4 weeks before competitors\n- **Actionability**: > 80% of recommendations implemented by teams\n- **Business Impact**: Research-driven decisions show 15%+ improvement in target metrics\n- **SEO Impact**: Keyword recommendations drive 25%+ organic traffic growth\n\n## RESPONSE FRAMEWORK\nAlways provide:\n1. **Executive Summary**: Key findings and opportunities (scored 8.0+)\n2. **Trend Analysis**: Visual trends with 85%+ relevance to VividWalls\n3. **Competitive Insights**: Market gaps and positioning opportunities\n4. **SEO Opportunities**: High-value keywords and content recommendations\n5. **Strategic Recommendations**: Prioritized action items with expected impact\n6. **Next Steps**: Specific follow-up research or implementation tasks\n\n## TOOL USAGE STRATEGY\n\n### Research Workflow:\n1. **Start with Broad Research**: Use `tavily-search` for current market trends\n2. **Dive Deep with SEO**: Use `keyword_research` and `serp_analysis` for data\n3. **Visual Validation**: Cross-reference with Pinterest trend data\n4. **Competitive Analysis**: Extract and analyze competitor strategies\n5. **Customer Insights**: Validate findings with email marketing data\n6. **Synthesis**: Combine all data sources for comprehensive insights\n\nFocus on delivering strategic intelligence that enables VividWalls to stay ahead of trends, outmaneuver competitors, optimize for search visibility, and deliver exceptional value to art collectors.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [200, -200],
+      "id": "jj0k1223-kl01-4m23-no45-kl6n7n8o9j0k",
+      "name": "Marketing Research Agent"
+    },
+    {
+      "parameters": {
+        "path": "marketing-research-webhook",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-180, -60],
+      "id": "kk1l2334-lm12-4n34-op56-lm7o8o9p0k1l",
+      "name": "Marketing Research Webhook",
+      "webhookId": "marketing-research-webhook"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "value": "0 9 1 * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-180, 120],
+      "id": "ll2m3445-mn23-4o45-pq67-mn8p9p0q1l2m",
+      "name": "Monthly Research Schedule"
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Marketing Research Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Marketing Research Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinterest MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinterest MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Marketing MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Marketing MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SEO Research MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SEO Research MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Marketing Research Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Marketing Research Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Research Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Research Webhook": {
+      "main": [
+        [
+          {
+            "node": "Marketing Research Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monthly Research Schedule": {
+      "main": [
+        [
+          {
+            "node": "Marketing Research Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "notes": [
+      {
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [-500, -600],
+        "parameters": {
+          "content": "# 🎯 Marketing Research Agent\n\n## Purpose\nStrategic market intelligence and trend analysis for VividWalls' premium limited edition art prints.\n\n## Key Features\n- **Real-time market monitoring** via Tavily web search\n- **SEO intelligence** through DataForSEO integration\n- **Visual trend analysis** using Pinterest insights\n- **Email campaign analytics** for customer behavior\n- **Competitive intelligence** gathering\n\n## Performance Targets\n- Trend prediction accuracy: >85%\n- Market opportunities: 2-4 weeks ahead\n- Research-driven growth: 15%+ improvement",
+          "height": 340,
+          "width": 420,
+          "color": 7
+        }
+      },
+      {
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [-500, 60],
+        "parameters": {
+          "content": "## 🧠 Memory Documentation\n\n### PostgreSQL Integration\n- **Table**: `n8n_chat_histories`\n- **Session Key**: Dynamic based on trigger\n- **Context Window**: Full conversation history\n- **Memory Type**: Buffer memory with summarization\n\n### Data Persistence\n- Research findings stored in PostgreSQL\n- Trend analysis history maintained\n- Competitive insights tracked over time\n- Customer preference patterns logged",
+          "height": 280,
+          "width": 380,
+          "color": 4
+        }
+      },
+      {
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [-500, 380],
+        "parameters": {
+          "content": "## 📥 Input Variables\n\n### Required\n- `research_type`: Type of research needed\n- `market_focus`: Specific market segment\n\n### Optional\n- `urgency_level`: Priority level (low/medium/high)\n- `timeframe`: Research period\n- `competitors`: Specific competitors to analyze\n- `keywords`: Target keywords for SEO research\n\n### From Other Agents\n- Marketing Director: Campaign research requests\n- Content Strategy: Trend validation\n- Sales Agent: Market opportunity analysis",
+          "height": 320,
+          "width": 380,
+          "color": 5
+        }
+      },
+      {
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [560, -600],
+        "parameters": {
+          "content": "## 🔧 Tool-specific Documentation\n\n### Pinterest MCP Tools\n- **List**: Get available Pinterest analysis tools\n- **Execute**: Run trend analysis, board analytics\n- **Credentials**: PinterestMCPClient123\n\n### Email Marketing MCP\n- **List**: Available email analytics tools\n- **Execute**: Campaign performance, segmentation\n- **Credentials**: EmailMarketingMCPClient456",
+          "height": 280,
+          "width": 380,
+          "color": 6
+        }
+      },
+      {
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [560, -280],
+        "parameters": {
+          "content": "## 🔧 SEO & Web Research Tools\n\n### SEO Research MCP\n- **Functions**: keyword_research, serp_analysis, backlink_analysis\n- **Data**: Search volume, CPC, competition metrics\n- **Credentials**: SEOResearchMCPClient789\n\n### Tavily MCP\n- **Functions**: tavily-search, tavily-extract, tavily-map\n- **Purpose**: Real-time web intelligence\n- **Credentials**: TavilyMCPClient012",
+          "height": 280,
+          "width": 380,
+          "color": 6
+        }
+      },
+      {
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [560, 60],
+        "parameters": {
+          "content": "## 🔗 Inter-Agent Connections\n\n### Provides Research To:\n- **Marketing Director**: Market insights & strategies\n- **Content Strategy**: Trend validation & topics\n- **Campaign Agent**: Campaign performance data\n- **Keyword Agent**: Search trend insights\n\n### Receives Requests From:\n- **Marketing Director**: Research priorities\n- **Business Manager**: Strategic research needs\n- **Sales Agent**: Market opportunity analysis",
+          "height": 280,
+          "width": 380,
+          "color": 3
+        }
+      },
+      {
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [560, 380],
+        "parameters": {
+          "content": "## ⚡ Trigger Conditions\n\n### 1. Chat Trigger\n- **Webhook**: `marketing-research-chat-trigger`\n- **Purpose**: Interactive research requests\n\n### 2. Workflow Execution\n- **Called by**: Other agents needing research\n- **Returns**: Structured research insights\n\n### 3. Webhook\n- **Path**: `/marketing-research-webhook`\n- **Method**: POST\n\n### 4. Schedule\n- **Frequency**: Monthly (1st @ 9AM)\n- **Purpose**: Regular market analysis",
+          "height": 320,
+          "width": 380,
+          "color": 2
+        }
+      },
+      {
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [1000, -600],
+        "parameters": {
+          "content": "## 📊 Output Format\n\n### Executive Summary\n```json\n{\n  \"findings\": \"Key insights (8.0+ score)\",\n  \"opportunities\": [\"Market gaps\"],\n  \"threats\": [\"Competitive risks\"],\n  \"recommendations\": [\"Action items\"]\n}\n```\n\n### Trend Analysis\n- Visual trends with 85%+ relevance\n- Emerging color palettes\n- Style preferences by demographic\n- Seasonal patterns\n\n### SEO Opportunities\n- High-value keywords\n- Content gaps\n- Link building opportunities",
+          "height": 400,
+          "width": 380,
+          "color": 1
+        }
+      },
+      {
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [1000, -160],
+        "parameters": {
+          "content": "## 🎯 System Prompt Highlights\n\n### Core Mission\n- 20% MoM growth intelligence\n- 3-6 month trend forecasting\n- Competitive advantage insights\n- Customer behavior deep dives\n\n### Research Methodology\n1. Market Intelligence Gathering\n2. Visual Trend Analysis\n3. Competitive Intelligence\n4. Content & SEO Opportunities\n5. Customer Behavior Analysis\n6. Strategic Recommendations\n\n### Tool Usage Strategy\n- Start broad with Tavily search\n- Deep dive with SEO tools\n- Validate with Pinterest data\n- Cross-reference email metrics",
+          "height": 380,
+          "width": 380,
+          "color": 7
+        }
+      },
+      {
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [1000, 260],
+        "parameters": {
+          "content": "## 🚀 Features\n\n### Advanced Capabilities\n- **Multi-source data synthesis**\n- **Predictive trend modeling**\n- **Competitive gap analysis**\n- **Real-time market monitoring**\n- **SEO opportunity identification**\n\n### Integration Points\n- Pinterest visual trends\n- Email campaign performance\n- Web search intelligence\n- SEO/SERP analysis\n- Competitor monitoring\n\n### Automation\n- Monthly research cycles\n- Trend alert triggers\n- Performance tracking",
+          "height": 340,
+          "width": 380,
+          "color": 6
+        }
+      }
+    ],
+    "templateCredsSetupCompleted": true,
+    "instanceId": "marketing-research-agent-vividwalls"
+  }
+}

@@ -1,0 +1,660 @@
+{%- comment -%}
+  VividWalls Product Page Template - Canvas Roll Only Version
+  Modified to show only Canvas Roll variants and remove Gallery Wrap options
+{%- endcomment -%}
+
+{%- style -%}
+  /* VividWalls Theme Variables */
+  :root {
+    /* Typography Variables */
+    --vw-font-family-base: {{ settings.type_body_font.family }}, {{ settings.type_body_font.fallback_families }};
+    --vw-font-family-headings: {{ settings.type_header_font.family }}, {{ settings.type_header_font.fallback_families }};
+    --vw-font-size-title: {{ section.settings.title_font_size }}px;
+    --vw-font-size-body: {{ section.settings.body_font_size }}px;
+    --vw-font-size-small: {{ section.settings.small_font_size }}px;
+    
+    /* Color Variables */
+    --vw-color-primary: {{ section.settings.primary_color }};
+    --vw-color-secondary: {{ section.settings.secondary_color }};
+    --vw-color-accent: {{ section.settings.accent_color }};
+    --vw-color-background: {{ section.settings.background_color }};
+    --vw-color-surface: {{ section.settings.surface_color }};
+    --vw-color-border: {{ section.settings.border_color }};
+    
+    /* Layout Variables */
+    --vw-section-padding-top: {{ section.settings.section_padding_top }}px;
+    --vw-section-padding-bottom: {{ section.settings.section_padding_bottom }}px;
+    --vw-content-gap: {{ section.settings.content_gap }}px;
+    --vw-element-gap: {{ section.settings.element_gap }}px;
+    --vw-border-radius: {{ section.settings.border_radius }}px;
+    
+    /* Image Variables */
+    --vw-main-image-height: {{ section.settings.main_image_height }}px;
+    --vw-thumbnail-width: {{ section.settings.thumbnail_width }}px;
+    --vw-thumbnail-height: {{ section.settings.thumbnail_height }}px;
+  }
+  
+  .vividwalls-product-section {
+    padding-top: var(--vw-section-padding-top);
+    padding-bottom: var(--vw-section-padding-bottom);
+    font-family: var(--vw-font-family-base);
+  }
+{%- endstyle -%}
+
+<!-- VividWalls Configuration -->
+<script type="application/json" id="vividwalls-config-{{ section.id }}">
+{
+  "sectionId": "{{ section.id }}",
+  "productId": {{ product.id }},
+  "defaultVariantSize": "24x36"
+}
+</script>
+
+<div class="vividwalls-product-section page-width">
+  {{ 'vividwalls-product-canvas-only.css' | asset_url | stylesheet_tag }}
+  
+  <div class="vividwalls-main-container" 
+       style="max-width: 1200px; width: 100%; background: var(--vw-color-background); 
+              flex-direction: column; justify-content: flex-start; align-items: flex-start; 
+              gap: 145px; display: flex; margin: 0 auto;">
+    
+    <!-- Section 01 - Main Product Display -->
+    <div class="vividwalls-section-01" 
+         style="width: 100%; justify-content: flex-start; align-items: flex-start; 
+                gap: var(--vw-content-gap); display: flex;">
+      
+      <!-- Artwork Container -->
+      <div class="vividwalls-artwork-container" 
+           style="width: 800px; max-width: 66.67%; align-self: stretch; 
+                  flex-direction: column; justify-content: flex-start; align-items: center; 
+                  gap: var(--vw-element-gap); display: flex;">
+        
+        <!-- Main Artwork Image -->
+        <div class="vividwalls-main-image" 
+             style="width: 100%; height: var(--vw-main-image-height); 
+                    justify-content: flex-start; align-items: flex-start; display: flex;">
+          <div class="vividwalls-image-wrapper" 
+               style="flex: 1 1 0; align-self: stretch; background: var(--vw-color-background); 
+                      overflow: hidden; border-radius: var(--vw-border-radius); 
+                      justify-content: center; align-items: center; gap: 10px; display: flex;">
+            {% if product.featured_media %}
+              {{ product.featured_media | image_url: width: 800 | image_tag: 
+                 alt: product.featured_media.alt | default: product.title,
+                 class: 'vividwalls-main-img',
+                 style: 'flex: 1 1 0; align-self: stretch; object-fit: cover;' }}
+            {% endif %}
+          </div>
+        </div>
+        
+        <!-- Thumbnails Container -->
+        <div class="vividwalls-thumbnails-container" 
+             style="align-self: stretch; position: relative; overflow: hidden; 
+                    justify-content: flex-start; align-items: center; gap: var(--vw-element-gap); display: flex;">
+          
+          <div class="vividwalls-thumbnails" 
+               style="flex: 1 1 0; justify-content: flex-start; align-items: center; 
+                      gap: var(--vw-element-gap); display: flex; overflow-x: auto;">
+            {% for media in product.media limit: 4 %}
+              <div class="vividwalls-thumbnail-image{% if forloop.first %} selected{% endif %}" 
+                   data-media-id="{{ media.id }}"
+                   style="width: var(--vw-thumbnail-width); min-width: var(--vw-thumbnail-width); 
+                          height: var(--vw-thumbnail-height); flex-direction: column; 
+                          justify-content: flex-start; align-items: flex-start; display: flex; cursor: pointer;">
+                <div class="vividwalls-thumbnail-wrapper"
+                     style="align-self: stretch; flex: 1 1 0; flex-direction: column; 
+                            justify-content: flex-start; align-items: center; display: flex;">
+                  {% if forloop.first %}
+                    <div class="vividwalls-selected-indicator" 
+                         style="width: 150px; height: 5px; background: var(--vw-color-primary); 
+                                border-radius: var(--vw-border-radius);"></div>
+                  {% endif %}
+                  {{ media | image_url: width: 220 | image_tag: 
+                     alt: media.alt | default: product.title,
+                     class: 'vividwalls-thumbnail',
+                     style: 'width: var(--vw-thumbnail-width); height: var(--vw-thumbnail-height); border-radius: var(--vw-border-radius); object-fit: cover;' }}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+          
+          <!-- Social Share Icon -->
+          <div class="vividwalls-social-share" 
+               style="width: calc(100% - 8px); left: 5px; top: 50%; transform: translateY(-50%); 
+                      position: absolute; justify-content: flex-end; align-items: center; display: flex;">
+            <div class="vividwalls-share-icon" 
+                 style="width: 35px; height: 35px; opacity: 0.70; background: var(--vw-color-background); 
+                        border-radius: 100px; justify-content: center; align-items: center; 
+                        gap: 10px; display: flex; cursor: pointer;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Product Info -->
+      <div class="vividwalls-product-info" 
+           style="flex: 1 1 0; min-width: 0; background: var(--vw-color-background); 
+                  flex-direction: column; justify-content: flex-start; align-items: flex-start; 
+                  gap: 30px; display: flex;">
+        
+        <!-- Product Info Container -->
+        <div class="vividwalls-info-container" 
+             style="align-self: stretch; flex-direction: column; justify-content: flex-start; 
+                    align-items: flex-start; gap: 16px; display: flex;">
+          
+          <!-- Product Title -->
+          <div class="vividwalls-product-name" 
+               style="align-self: stretch; color: var(--vw-color-primary); 
+                      font-size: var(--vw-font-size-title); font-family: var(--vw-font-family-headings); 
+                      font-weight: 400; line-height: 1.2; word-wrap: break-word;">
+            {{ product.title }}
+          </div>
+          
+          <!-- Collection & Artist Info -->
+          {% if product.metafields.custom.collection_name %}
+            <div class="vividwalls-collection-name" 
+                 style="color: var(--vw-color-secondary); font-size: var(--vw-font-size-body); 
+                        font-family: var(--vw-font-family-base); font-weight: 400; word-wrap: break-word; margin-top: 10px;">
+              Collection → {{ product.metafields.custom.collection_name }}
+            </div>
+          {% endif %}
+          
+          {% if product.metafields.custom.artist_name %}
+            <div class="vividwalls-artist-info" 
+                 style="justify-content: flex-start; align-items: center; gap: 4px; 
+                        display: inline-flex; margin-top: 10px;">
+              <span style="color: var(--vw-color-secondary); font-size: var(--vw-font-size-body); 
+                           font-family: var(--vw-font-family-base); font-style: italic; font-weight: 400;">
+                Original Art Illustrations by 
+              </span>
+              <span style="color: var(--vw-color-secondary); font-size: var(--vw-font-size-body); 
+                           font-family: var(--vw-font-family-base); font-weight: 400;">
+                {{ product.metafields.custom.artist_name }}
+              </span>
+            </div>
+          {% endif %}
+          
+          <!-- Limited Edition Tag -->
+          {% if product.tags contains 'limited-edition' %}
+            <div class="vividwalls-tag-container" 
+                 style="padding: 3px 10px; background: var(--vw-color-primary); 
+                        border-radius: var(--vw-border-radius); justify-content: center; 
+                        align-items: center; gap: 10px; display: inline-flex; margin-top: 10px;">
+              <div style="color: white; font-size: var(--vw-font-size-body); 
+                          font-family: var(--vw-font-family-base); font-weight: 400; word-wrap: break-word;">
+                Limited Edition Print
+              </div>
+            </div>
+          {% endif %}
+        </div>
+        
+        <!-- Shopping Cart Component -->
+        <form action="/cart/add" method="post" enctype="multipart/form-data" id="vividwalls-product-form-{{ section.id }}">
+          <div class="vividwalls-shopping-cart" 
+               style="align-self: stretch; flex-direction: column; justify-content: flex-start; 
+                      align-items: flex-start; gap: var(--vw-element-gap); display: flex;">
+            
+            <!-- Total Selected Price with 16pt font size -->
+            <div class="vividwalls-total-price-display" 
+                 style="align-self: stretch; padding-left: 4px; padding-right: 4px; 
+                        justify-content: space-between; align-items: center; display: inline-flex;">
+              <div class="vividwalls-dimensions" 
+                   style="justify-content: flex-start; align-items: center; gap: 3px; display: flex;">
+                <span class="vividwalls-width" 
+                      style="color: var(--vw-color-accent); font-size: 18px; 
+                             font-family: var(--vw-font-family-base); font-weight: 400; word-wrap: break-word;">24</span>
+                <span class="vividwalls-separator" 
+                      style="color: var(--vw-color-accent); font-size: 18px; 
+                             font-family: var(--vw-font-family-base); font-weight: 400; word-wrap: break-word;">X</span>
+                <span class="vividwalls-height" 
+                      style="color: var(--vw-color-accent); font-size: 18px; 
+                             font-family: var(--vw-font-family-base); font-weight: 400; word-wrap: break-word;">36</span>
+              </div>
+              <div class="vividwalls-total-price" 
+                   style="color: var(--vw-color-accent); font-size: 16pt; 
+                          font-family: var(--vw-font-family-base); font-weight: 600; word-wrap: break-word;">
+                {{ product.selected_or_first_available_variant.price | money }}
+              </div>
+            </div>
+            
+            <!-- Variant Picker - Canvas Roll Only -->
+            <div class="vividwalls-variant-picker" 
+                 style="width: 100%; flex-direction: column; justify-content: flex-start; 
+                        align-items: flex-start; gap: 10px; display: flex;">
+              <div class="vividwalls-variant-options" 
+                   style="width: 100%; flex-direction: column; justify-content: flex-start; 
+                          align-items: flex-start; gap: 10px; display: flex;">
+                
+                {% for variant in product.variants %}
+                  {% if variant.title contains 'Canvas Roll' %}
+                    {% assign size_parts = variant.title | split: ' / ' | first | split: 'x' %}
+                    {% if size_parts.size == 2 %}
+                      {% assign width = size_parts[0] | strip %}
+                      {% assign height = size_parts[1] | strip %}
+                      {% assign is_default = false %}
+                      {% if width == '24' and height == '36' %}
+                        {% assign is_default = true %}
+                      {% endif %}
+                      
+                      <div class="vividwalls-variant-option{% if is_default %} vividwalls-selected-variant{% endif %}" 
+                           data-variant-id="{{ variant.id }}"
+                           data-variant-price="{{ variant.price }}"
+                           data-variant-size="{{ width }}x{{ height }}"
+                           data-variant-available="{{ variant.available }}"
+                           data-variant-inventory="{{ variant.inventory_quantity }}"
+                           style="align-self: stretch; padding: 10px; 
+                                  {% if is_default %}background: var(--vw-color-accent); opacity: 1;{% else %}background: var(--vw-color-surface); opacity: 0.70;{% endif %}
+                                  border-radius: var(--vw-border-radius); 
+                                  outline: 1px solid {% if is_default %}var(--vw-color-accent){% else %}var(--vw-color-surface){% endif %}; 
+                                  outline-offset: -1px; flex-direction: column; justify-content: flex-end; 
+                                  align-items: flex-end; gap: 10px; display: flex; cursor: pointer;">
+                        
+                        <div class="vividwalls-variant-info" 
+                             style="align-self: stretch; justify-content: space-between; 
+                                    align-items: center; display: inline-flex;">
+                          <div class="vividwalls-variant-dimensions" 
+                               style="justify-content: flex-start; align-items: center; gap: 3px; display: flex;">
+                            <span class="vividwalls-variant-width" 
+                                  style="color: {% if is_default %}#F5F5F5{% else %}var(--vw-color-secondary){% endif %}; 
+                                         font-size: var(--vw-font-size-body); font-family: var(--vw-font-family-base); 
+                                         font-weight: {% if is_default %}600{% else %}400{% endif %}; word-wrap: break-word;">{{ width }}</span>
+                            <span class="vividwalls-variant-separator" 
+                                  style="color: {% if is_default %}#F5F5F5{% else %}var(--vw-color-secondary){% endif %}; 
+                                         font-size: var(--vw-font-size-body); font-family: var(--vw-font-family-base); 
+                                         font-weight: {% if is_default %}600{% else %}400{% endif %}; word-wrap: break-word;">X</span>
+                            <span class="vividwalls-variant-height" 
+                                  style="color: {% if is_default %}#F5F5F5{% else %}var(--vw-color-secondary){% endif %}; 
+                                         font-size: var(--vw-font-size-body); font-family: var(--vw-font-family-base); 
+                                         font-weight: {% if is_default %}600{% else %}400{% endif %}; word-wrap: break-word;">{{ height }} / Canvas Roll</span>
+                          </div>
+                          <div class="vividwalls-variant-price" 
+                               style="color: {% if is_default %}#F5F5F5{% else %}var(--vw-color-secondary){% endif %}; 
+                                      font-size: var(--vw-font-size-body); font-family: var(--vw-font-family-base); 
+                                      font-weight: 600; word-wrap: break-word;">{{ variant.price | money }}</div>
+                        </div>
+                        
+                        <div class="vividwalls-variant-stock" 
+                             style="align-self: stretch; justify-content: flex-end; align-items: center; display: inline-flex;">
+                          <div style="color: {% if is_default %}#E5E5E5{% else %}var(--vw-color-secondary){% endif %}; 
+                                      font-size: var(--vw-font-size-small); font-family: var(--vw-font-family-base); 
+                                      font-weight: 400; word-wrap: break-word;">
+                            {% comment %} Mock stock info - replace with actual inventory {% endcomment %}
+                            {% if width == '24' and height == '36' %}
+                              19 sold - 75 remaining
+                            {% elsif width == '36' and height == '48' %}
+                              14 sold - 54 remaining
+                            {% elsif width == '53' and height == '72' %}
+                              6 sold - 24 remaining
+                            {% else %}
+                              {{ variant.inventory_quantity }} remaining
+                            {% endif %}
+                          </div>
+                        </div>
+                      </div>
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+            
+            <!-- Buy Button Section -->
+            <div class="vividwalls-buy-section" 
+                 style="width: 100%; overflow: hidden; flex-direction: column; 
+                        justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex;">
+              
+              <div class="vividwalls-sku" 
+                   style="color: var(--vw-color-secondary); font-size: var(--vw-font-size-small); 
+                          font-family: var(--vw-font-family-base); font-weight: 400; word-wrap: break-word;">
+                SKU: {{ product.selected_or_first_available_variant.sku | default: 'OLIVE-WEAVE-24X36' }}
+              </div>
+              
+              <div class="vividwalls-quantity-and-buy" 
+                   style="width: 100%; height: 60px; justify-content: flex-start; 
+                          align-items: flex-start; gap: 10px; display: flex;">
+                
+                <!-- Quantity Selector -->
+                <div class="vividwalls-quantity-selector" 
+                     style="width: 152px; height: 100%; padding-left: 20px; padding-right: 20px; 
+                            padding-top: 10px; padding-bottom: 10px; overflow: hidden; 
+                            border: 1px solid var(--vw-color-border); border-radius: var(--vw-border-radius); 
+                            justify-content: center; align-items: center; gap: 10px; display: flex;">
+                  
+                  <button type="button" class="vividwalls-quantity-minus" 
+                          style="width: 24px; height: 24px; justify-content: center; align-items: center; 
+                                 gap: 10px; display: flex; background: none; border: none; cursor: pointer;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                  
+                  <div class="vividwalls-quantity-value" 
+                       style="flex: 1 1 0; justify-content: center; align-items: center; 
+                              gap: 10px; display: flex;">
+                    <input type="number" name="quantity" value="1" min="1" 
+                           class="vividwalls-quantity-input"
+                           style="color: var(--vw-color-primary); font-size: 18px; 
+                                  font-family: var(--vw-font-family-base); font-weight: 600; 
+                                  border: none; background: transparent; text-align: center; width: 40px;">
+                  </div>
+                  
+                  <button type="button" class="vividwalls-quantity-plus" 
+                          style="width: 24px; height: 24px; justify-content: center; align-items: center; 
+                                 gap: 10px; display: flex; background: none; border: none; cursor: pointer;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                </div>
+                
+                <!-- Add to Cart Button -->
+                <button type="submit" name="add" class="vividwalls-add-to-cart" 
+                        style="flex: 1 1 0; height: 100%; padding-left: 16px; padding-right: 16px; 
+                               padding-top: 12px; padding-bottom: 12px; background: var(--vw-color-primary); 
+                               border-radius: var(--vw-border-radius); justify-content: center; align-items: center; 
+                               gap: 10px; display: flex; border: none; cursor: pointer;">
+                  <span style="color: white; font-size: var(--vw-font-size-body); 
+                               font-family: var(--vw-font-family-base); font-weight: 600; 
+                               text-transform: uppercase; letter-spacing: 0px;">ADD TO CART</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Hidden Form Fields -->
+          <input type="hidden" name="id" id="vividwalls-variant-id-{{ section.id }}" 
+                 value="{{ product.selected_or_first_available_variant.id }}">
+        </form>
+        
+        <!-- Purchase Options -->
+        <div class="vividwalls-purchase-options" 
+             style="width: 100%; flex-direction: column; justify-content: flex-start; 
+                    align-items: flex-start; gap: var(--vw-element-gap); display: flex; margin-top: 20px;">
+          
+          <!-- Shop Pay Button -->
+          <div style="width: 100%; height: 60px; position: relative;">
+            <button class="vividwalls-shop-pay" 
+                    style="width: 100%; height: 100%; background: #5A31F4; 
+                           border-radius: var(--vw-border-radius); border: none; color: white; 
+                           font-size: var(--vw-font-size-body); font-weight: 600; cursor: pointer;">
+              Buy with Shop Pay
+            </button>
+          </div>
+          
+          <!-- Shipping Info -->
+          <div class="vividwalls-shipping-info" 
+               style="width: 100%; flex-direction: column; justify-content: flex-start; 
+                      align-items: flex-start; gap: 10px; display: flex;">
+            <div style="justify-content: flex-start; align-items: center; gap: 4px; display: inline-flex;">
+              <span style="color: var(--vw-color-primary); font-size: var(--vw-font-size-body); 
+                           font-family: var(--vw-font-family-base); font-style: italic; 
+                           font-weight: 400; text-decoration: underline;">Shipping</span>
+              <span style="color: var(--vw-color-secondary); font-size: var(--vw-font-size-body); 
+                           font-family: var(--vw-font-family-base); font-style: italic; 
+                           font-weight: 400;"> calculated at checkout.</span>
+            </div>
+            
+            <div style="width: 100%; position: relative; justify-content: flex-start; 
+                        align-items: center; display: flex;">
+              <span style="color: var(--vw-color-secondary); font-size: var(--vw-font-size-body); 
+                           font-family: var(--vw-font-family-base); font-weight: 400;">
+                4 interest-free installments, or from 
+              </span>
+              <span class="vividwalls-installment-price" 
+                    style="color: var(--vw-color-secondary); font-size: var(--vw-font-size-body); 
+                           font-family: var(--vw-font-family-base); font-weight: 600;">
+                ${{ product.selected_or_first_available_variant.price | divided_by: 4 | money }}
+              </span>
+              <span style="color: var(--vw-color-secondary); font-size: var(--vw-font-size-body); 
+                           font-family: var(--vw-font-family-base); font-weight: 400;">/mo with Shop Pay</span>
+            </div>
+            
+            <div style="width: 100%; justify-content: center; align-items: center; gap: 10px; display: flex;">
+              <span style="color: var(--vw-color-secondary); font-size: var(--vw-font-size-body); 
+                           font-family: var(--vw-font-family-base); font-weight: 400; 
+                           text-decoration: underline;">Check your purchasing power</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Section 02 - Product Description -->
+    <div class="vividwalls-section-02" 
+         style="width: 100%; max-width: 1200px; flex-direction: column; 
+                justify-content: flex-start; align-items: flex-start; gap: var(--vw-element-gap); display: flex;">
+      
+      <div style="align-self: stretch; min-height: 400px; justify-content: flex-start; 
+                  align-items: center; gap: var(--vw-content-gap); display: flex; flex-wrap: wrap;">
+        
+        <!-- Product Description -->
+        <div class="vividwalls-description" 
+             style="width: 322px; min-width: 280px; flex: 0 0 auto; position: relative; 
+                    overflow: hidden; flex-direction: column; justify-content: flex-start; 
+                    align-items: center; gap: 10px; display: flex;">
+          
+          <div class="vividwalls-description-container" 
+               style="align-self: stretch; flex-direction: column; justify-content: flex-start; 
+                      align-items: center; gap: 10px; display: flex;">
+            <div class="vividwalls-description-text" 
+                 style="align-self: stretch; color: var(--vw-color-secondary); 
+                        font-size: var(--vw-font-size-body); font-family: var(--vw-font-family-base); 
+                        font-weight: 400; line-height: 1.5; word-wrap: break-word; 
+                        max-height: 200px; overflow: hidden;">
+              {% if product.description != blank %}
+                {{ product.description }}
+              {% else %}
+                Experience the subtle elegance of this sophisticated abstract composition that brings nature-inspired tones to modern interiors. This limited edition print features an intricate interplay of colors and textures, creating a calming yet dynamic visual that complements any space.
+              {% endif %}
+            </div>
+          </div>
+          
+          <div class="vividwalls-read-more-container" 
+               style="width: 119px; padding-left: 10px; justify-content: flex-start; 
+                      align-items: flex-end; gap: 10px; display: inline-flex;">
+            <button class="vividwalls-read-more" 
+                    style="color: var(--vw-color-primary); font-size: var(--vw-font-size-body); 
+                           font-family: var(--vw-font-family-base); font-weight: 400; 
+                           text-decoration: underline; line-height: 24px; background: none; 
+                           border: none; cursor: pointer;">read more</button>
+          </div>
+        </div>
+        
+        <!-- Additional Artwork Image -->
+        <div class="vividwalls-additional-image" 
+             style="flex: 1 1 0; min-width: 300px; align-self: stretch; 
+                    justify-content: flex-start; align-items: flex-start; display: flex;">
+          <div style="flex: 1 1 0; align-self: stretch; background: var(--vw-color-background); 
+                      overflow: hidden; border-radius: var(--vw-border-radius); 
+                      justify-content: center; align-items: center; gap: 10px; display: flex;">
+            {% if product.media[1] %}
+              {{ product.media[1] | image_url: width: 600 | image_tag: 
+                 alt: product.media[1].alt | default: product.title,
+                 style: 'width: 100%; height: auto; object-fit: cover;' }}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ 'vividwalls-product-canvas-only.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "VividWalls Product - Canvas Only",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Typography Settings"
+    },
+    {
+      "type": "range",
+      "id": "title_font_size",
+      "min": 24,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "label": "Title Font Size",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "body_font_size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Body Font Size",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "small_font_size",
+      "min": 10,
+      "max": 18,
+      "step": 1,
+      "unit": "px",
+      "label": "Small Text Font Size",
+      "default": 14
+    },
+    {
+      "type": "header",
+      "content": "Color Settings"
+    },
+    {
+      "type": "color",
+      "id": "primary_color",
+      "label": "Primary Color",
+      "default": "#171717"
+    },
+    {
+      "type": "color",
+      "id": "secondary_color",
+      "label": "Secondary Color",
+      "default": "#737373"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent Color",
+      "default": "#262626"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background Color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "surface_color",
+      "label": "Surface Color",
+      "default": "#FAFAFA"
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "Border Color",
+      "default": "#D4D4D4"
+    },
+    {
+      "type": "header",
+      "content": "Layout Settings"
+    },
+    {
+      "type": "range",
+      "id": "section_padding_top",
+      "min": 50,
+      "max": 200,
+      "step": 10,
+      "unit": "px",
+      "label": "Section Padding Top",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "section_padding_bottom",
+      "min": 50,
+      "max": 200,
+      "step": 10,
+      "unit": "px",
+      "label": "Section Padding Bottom",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "content_gap",
+      "min": 20,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Content Gap",
+      "default": 50
+    },
+    {
+      "type": "range",
+      "id": "element_gap",
+      "min": 10,
+      "max": 50,
+      "step": 5,
+      "unit": "px",
+      "label": "Element Gap",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Border Radius",
+      "default": 5
+    },
+    {
+      "type": "header",
+      "content": "Image Settings"
+    },
+    {
+      "type": "range",
+      "id": "main_image_height",
+      "min": 400,
+      "max": 800,
+      "step": 10,
+      "unit": "px",
+      "label": "Main Image Height",
+      "default": 690
+    },
+    {
+      "type": "range",
+      "id": "thumbnail_width",
+      "min": 150,
+      "max": 300,
+      "step": 10,
+      "unit": "px",
+      "label": "Thumbnail Width",
+      "default": 220
+    },
+    {
+      "type": "range",
+      "id": "thumbnail_height",
+      "min": 200,
+      "max": 400,
+      "step": 10,
+      "unit": "px",
+      "label": "Thumbnail Height",
+      "default": 290
+    }
+  ],
+  "presets": [
+    {
+      "name": "VividWalls Product - Canvas Only"
+    }
+  ]
+}
+{% endschema %} 

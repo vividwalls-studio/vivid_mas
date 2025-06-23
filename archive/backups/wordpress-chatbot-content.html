@@ -1,0 +1,185 @@
+<style>
+/* ─── Chat Panel ─── */
+.chat-panel {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin: 24px 0;
+  box-shadow: 0 4px 32px rgba(0,51,102,0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 500px;
+}
+#messages {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.message { display: flex; width: 100%; }
+.message.assistant { justify-content: flex-start; }
+.message.user      { justify-content: flex-end;   }
+
+.bubble {
+  padding: 10px 15px;
+  border-radius: 8px;
+  max-width: 80%;
+  line-height: 1.4;
+  font-size: 16px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  animation: fadeIn 0.3s ease-in both;
+}
+.message.assistant .bubble { background: #f7f7f7; color: #222; }
+.message.user      .bubble { background: #dbefff;  color: #222; }
+
+/* typing indicator */
+.typing-indicator { display: inline-block; }
+.dot {
+  width: 8px; height: 8px;
+  margin: 0 2px;
+  background: #999;
+  border-radius: 50%;
+  opacity: 0;
+  animation: blink 1s infinite alternate;
+}
+.dot:nth-child(2){ animation-delay: .2s }
+.dot:nth-child(3){ animation-delay: .4s }
+@keyframes blink { to { opacity: 1 } }
+
+/* ─── Input Area ─── */
+#input-area {
+  display: flex;
+  padding: 8px 16px;
+  gap: 8px;
+}
+#message-input {
+  flex: 1;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  resize: vertical;
+  min-height: 40px;
+  max-height: 100px;
+}
+#send-btn {
+  padding: 10px 20px;
+  font-size: 16px;
+  background: #003366;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background .3s ease;
+}
+#send-btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+#send-btn:hover:enabled { background: #005599; }
+
+/* ─── Animations ─── */
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+</style>
+
+<div style="max-width: 900px; margin: 0 auto;">
+  <h2>AI Insurance Assistant</h2>
+  <p>Our Insurance Assistant is here to educate the public and help narrow the 48% uninsured gap. Ask questions, learn about coverages, and get personalized guidance—right here, right now.</p>
+  
+  <h3>Privacy Statement</h3>
+  <p>We respect your privacy. All conversations are encrypted in transit to our secure n8n endpoint, and no personal data is stored beyond what's needed. By using this assistant you agree to our Privacy Policy.</p>
+  
+  <h3>Start Chatting</h3>
+
+  <div class="chat-panel">
+    <div id="messages"></div>
+    <div id="input-area">
+      <textarea id="message-input" rows="1" placeholder="Type your message…"></textarea>
+      <button id="send-btn">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const messagesDiv = document.getElementById('messages'),
+          inputElem   = document.getElementById('message-input'),
+          sendBtn     = document.getElementById('send-btn');
+
+    function scrollBottom(){
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function addMsg(role, text){
+      const m = document.createElement('div');
+      m.className = 'message ' + role;
+      const b = document.createElement('div');
+      b.className = 'bubble';
+      b.textContent = text;
+      m.appendChild(b);
+      messagesDiv.appendChild(m);
+      scrollBottom();
+    }
+
+    function showTyping(){
+      const m = document.createElement('div');
+      m.className = 'message assistant';
+      const b = document.createElement('div');
+      b.className = 'bubble';
+      b.innerHTML = '<span class="typing-indicator"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>';
+      m.appendChild(b);
+      messagesDiv.appendChild(m);
+      scrollBottom();
+      return m;
+    }
+
+    function fetchReply(userText, typingElem){
+      // Updated to use the correct n8n webhook URL
+      fetch('http://157.230.13.13:5678/webhook/chatbot', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: userText})
+      })
+      .then(r => r.json())
+      .then(data => {
+        typingElem.remove();
+        addMsg('assistant', data.reply || 'Sorry, something went wrong.');
+        sendBtn.disabled = false;
+        inputElem.disabled = false;
+      })
+      .catch(() => {
+        typingElem.remove();
+        addMsg('assistant', 'Failed to connect to AI assistant.');
+        sendBtn.disabled = false;
+        inputElem.disabled = false;
+      });
+    }
+
+    function sendMessage(){
+      const txt = inputElem.value.trim();
+      if(!txt) return;
+      addMsg('user', txt);
+      inputElem.value    = '';
+      inputElem.disabled = true;
+      sendBtn.disabled   = true;
+      const typingElem = showTyping();
+      fetchReply(txt, typingElem);
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    inputElem.addEventListener('keydown', e => {
+      if(e.key === 'Enter' && !e.shiftKey){
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // Add initial greeting
+    addMsg('assistant', 'Hello! I\'m your AI Insurance Assistant. How can I help you learn about insurance today?');
+  })();
+</script> 

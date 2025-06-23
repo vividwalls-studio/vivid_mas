@@ -1,0 +1,486 @@
+{
+  "name": "VividWalls Analytics Director Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [-20, 100],
+      "id": "ad1a2b3c-4d5e-6f7g-8h9i-0j1k2l3m4n5o",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "d6OaJCsy6QryngZX",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionKey": "={{ $json.chatId || $json.session_id || 'analytics_director_' + $now.toMillis() }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [120, 180],
+      "id": "ad2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "cm4WrXg1MnK2sWUm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 120],
+      "id": "ad3c4d5e-6f7g-8h9i-0j1k-2l3m4n5o6p7q",
+      "name": "KPI Dashboard MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "KPIDashboardMCPClient123",
+          "name": "KPI Dashboard MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 140],
+      "id": "ad4d5e6f-7g8h-9i0j-1k2l-3m4n5o6p7q8r",
+      "name": "KPI Dashboard MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "KPIDashboardMCPClient123",
+          "name": "KPI Dashboard MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [400, 200],
+      "id": "ad5e6f7g-8h9i-0j1k-2l3m-4n5o6p7q8r9s",
+      "name": "Supabase MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "SupabaseMCPClient456",
+          "name": "Supabase MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [260, 220],
+      "id": "ad6f7g8h-9i0j-1k2l-3m4n-5o6p7q8r9s0t",
+      "name": "Supabase MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "SupabaseMCPClient456",
+          "name": "Supabase MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [-400, 100],
+      "id": "ad7g8h9i-0j1k-2l3m-4n5o-6p7q8r9s0t1u",
+      "name": "When chat message received",
+      "webhookId": "analytics-director-chat-trigger"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [820, 100],
+      "id": "ad8h9i0j-1k2l-3m4n-5o6p-7q8r9s0t1u2v",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "report_type"
+            },
+            {
+              "name": "date_range",
+              "type": "json"
+            },
+            {
+              "name": "metrics",
+              "type": "json"
+            },
+            {
+              "name": "segments",
+              "type": "json"
+            },
+            {
+              "name": "format"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-400, -100],
+      "id": "ad9i0j1k-2l3m-4n5o-6p7q-8r9s0t1u2v3w",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseMessage": "=## Analytics Director Agent\n\n### Report Type: {{ $json.report_type }}\n### Status: {{ $json.status }}\n\n{{ $json.response }}\n\n#### Key Insights:\n{{ $json.insights || 'Analysis in progress' }}\n\n#### Metrics Summary:\n{{ $json.metrics_summary || 'Gathering data' }}\n\n#### Recommendations:\n{{ $json.recommendations || 'Formulating recommendations' }}\n\n{{ $json.additional_info || '' }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [380, 100],
+      "id": "ad0j1k2l-3m4n-5o6p-7q8r-9s0t1u2v3w4x",
+      "name": "Analytics Director Agent"
+    },
+    {
+      "parameters": {
+        "path": "analytics-director-webhook",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-400, 300],
+      "id": "ad1k2l3m-4n5o-6p7q-8r9s-0t1u2v3w4x5y",
+      "name": "Analytics Director Webhook",
+      "webhookId": "analytics-director-webhook"
+    },
+    {
+      "parameters": {
+        "systemPromptTemplate": "# VividWalls Analytics Director Agent\n\nYou are the Analytics Director for VividWalls, responsible for providing data-driven insights, performance monitoring, and strategic recommendations across all business operations. You own and operate the analytics infrastructure while serving other agents with critical metrics.\n\n## Core Responsibilities\n\n### Data Ownership\n- Maintain and operate KPI Dashboard MCP for real-time metrics\n- Manage analytics data in Supabase database\n- Ensure data quality and accuracy across systems\n- Create custom reports and dashboards\n- Develop predictive models and forecasts\n\n### Performance Monitoring\n- Track KPIs across all business functions\n- Monitor agent performance and efficiency\n- Analyze customer behavior patterns\n- Measure campaign effectiveness\n- Identify trends and anomalies\n\n### Strategic Insights\n- Provide actionable recommendations\n- Support decision-making with data\n- Identify growth opportunities\n- Highlight risks and issues\n- Forecast business outcomes\n\n## Available MCP Tools\n\n### KPI Dashboard MCP\n- get_metrics: Retrieve specific KPI data\n- create_dashboard: Build custom dashboards\n- set_alerts: Configure metric thresholds\n- export_reports: Generate formatted reports\n- track_goals: Monitor target achievement\n\n### Supabase MCP\n- query_data: Execute analytics queries\n- aggregate_metrics: Perform calculations\n- store_results: Cache analysis results\n- manage_views: Create data views\n- schedule_updates: Automate data refresh\n\n## Analytics Domains\n\n### Sales Analytics\n- Revenue trends and forecasting\n- Product performance metrics\n- Customer lifetime value\n- Conversion funnel analysis\n- Cart abandonment patterns\n\n### Marketing Analytics\n- Campaign ROI measurement\n- Channel attribution analysis\n- Customer acquisition costs\n- Engagement metrics tracking\n- Content performance analysis\n\n### Operational Analytics\n- Inventory turnover rates\n- Fulfillment efficiency\n- Customer service metrics\n- Website performance\n- System reliability\n\n### Customer Analytics\n- Segmentation analysis\n- Behavior patterns\n- Satisfaction scores\n- Retention metrics\n- Preference modeling\n\n## Reporting Framework\n\n### Standard Reports\n1. **Daily Dashboard**: Key metrics snapshot\n2. **Weekly Performance**: Trend analysis\n3. **Monthly Business Review**: Comprehensive analysis\n4. **Quarterly Strategy**: Long-term insights\n5. **Ad-hoc Analysis**: Custom investigations\n\n### Report Components\n- Executive summary\n- Key metrics visualization\n- Trend analysis\n- Segment breakdowns\n- Recommendations\n- Action items\n\n## Data Sources Integration\n\n### Primary Sources\n- Shopify: Sales and customer data\n- Website: Traffic and behavior\n- Email: Campaign performance\n- Social Media: Engagement metrics\n- Customer Service: Support data\n\n### Data Processing\n1. Collection: Automated data ingestion\n2. Cleaning: Quality assurance\n3. Transformation: Standardization\n4. Analysis: Statistical modeling\n5. Visualization: Dashboard creation\n6. Distribution: Report delivery\n\n## Service Model\n\n### For Director Agents\n- Strategic KPI dashboards\n- Performance comparisons\n- Predictive insights\n- ROI calculations\n- Resource optimization\n\n### For Operational Agents\n- Real-time metrics\n- Task performance\n- Efficiency tracking\n- Alert notifications\n- Trend indicators\n\n### For Business Manager\n- Executive dashboards\n- Business health metrics\n- Strategic recommendations\n- Risk assessments\n- Growth opportunities\n\n## Analytics Methodologies\n\n### Descriptive Analytics\n- What happened?\n- Historical performance\n- Trend identification\n- Pattern recognition\n\n### Diagnostic Analytics\n- Why did it happen?\n- Root cause analysis\n- Correlation studies\n- Impact assessment\n\n### Predictive Analytics\n- What will happen?\n- Forecasting models\n- Trend projection\n- Risk prediction\n\n### Prescriptive Analytics\n- What should we do?\n- Optimization recommendations\n- Scenario planning\n- Decision support\n\n## Success Metrics\n\n### Analytics Quality\n- Data accuracy: >99.5%\n- Report timeliness: Within SLA\n- Insight actionability: High\n- User satisfaction: >4.5/5\n- System uptime: >99.9%\n\n### Business Impact\n- Decision speed improvement\n- Revenue optimization\n- Cost reduction identification\n- Risk mitigation\n- Growth acceleration\n\n## Best Practices\n\n### Data Governance\n1. Maintain single source of truth\n2. Document all calculations\n3. Version control dashboards\n4. Regular data audits\n5. Clear metric definitions\n\n### Insight Delivery\n1. Lead with key findings\n2. Visualize complex data\n3. Provide context always\n4. Include recommendations\n5. Enable self-service\n\n### Collaboration\n- Regular sync with directors\n- Proactive insight sharing\n- Responsive to requests\n- Educational approach\n- Continuous improvement\n\nWhen providing analytics:\n1. Understand the business question\n2. Identify relevant data sources\n3. Perform thorough analysis\n4. Validate findings\n5. Create clear visualizations\n6. Deliver actionable insights\n7. Follow up on implementation\n\nAlways focus on driving business value through data-driven decision making."
+      },
+      "type": "@n8n/n8n-nodes-langchain.systemMessage",
+      "typeVersion": 1.1,
+      "position": [180, 20],
+      "id": "ad2l3m4n-5o6p-7q8r-9s0t-1u2v3w4x5y6z",
+      "name": "System Message"
+    },
+    {
+      "parameters": {
+        "description": "Request specific reports or data from other agents",
+        "workflowId": {
+          "__rl": true,
+          "value": "DataCollectionOrchestratorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Data Collection Orchestrator"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "data_request": "={{ $fromAI('data_request', 'specific data needed') }}",
+            "source_agent": "={{ $fromAI('source_agent', 'agent to query') }}",
+            "parameters": "={{ $fromAI('parameters', 'query parameters') }}",
+            "format": "={{ $fromAI('format', 'desired data format') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [640, 280],
+      "id": "ad3m4n5o-6p7q-8r9s-0t1u-2v3w4x5y6z7a",
+      "name": "Data Collection Tool"
+    },
+    {
+      "parameters": {
+        "description": "Generate and export formatted reports",
+        "workflowId": {
+          "__rl": true,
+          "value": "ReportGeneratorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Report Generator"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "report_type": "={{ $fromAI('report_type', 'type of report') }}",
+            "data": "={{ $fromAI('data', 'report data') }}",
+            "format": "={{ $fromAI('format', 'output format') }}",
+            "recipients": "={{ $fromAI('recipients', 'report recipients') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [640, 400],
+      "id": "ad4n5o6p-7q8r-9s0t-1u2v-3w4x5y6z7a8b",
+      "name": "Report Generator Tool"
+    },
+    {
+      "parameters": {
+        "toolDescription": "=Access historical analytics data, benchmarks, and best practices",
+        "mode": "retrieve-as-tool",
+        "toolName": "analytics_knowledge_base",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.1,
+      "position": [640, 520],
+      "id": "ad5o6p7q-8r9s-0t1u-2v3w-4x5y6z7a8b9c",
+      "name": "Analytics Knowledge Base",
+      "credentials": {
+        "postgres": {
+          "id": "cm4WrXg1MnK2sWUm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [800, 600],
+      "id": "ad6p7q8r-9s0t-1u2v-3w4x-5y6z7a8b9c0d",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "d6OaJCsy6QryngZX",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "baseURL": "=https://n8n.vividwalls.com",
+        "allowUnauthorizedCerts": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [640, 640],
+      "id": "ad7q8r9s-0t1u-2v3w-4x5y-6z7a8b9c0d1e",
+      "name": "HTTP Request Tool",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "N8nBasicAuth123",
+          "name": "n8n Basic Auth"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Analytics Director Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Analytics Director Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KPI Dashboard MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Analytics Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KPI Dashboard MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Analytics Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Analytics Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Analytics Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Analytics Director Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Analytics Director Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analytics Director Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analytics Director Webhook": {
+      "main": [
+        [
+          {
+            "node": "Analytics Director Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "System Message": {
+      "ai_prompt": [
+        [
+          {
+            "node": "Analytics Director Agent",
+            "type": "ai_prompt",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Collection Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Analytics Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report Generator Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Analytics Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analytics Knowledge Base": {
+      "ai_tool": [
+        [
+          {
+            "node": "Analytics Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Analytics Knowledge Base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Analytics Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "8d886cbbbe7cfda2db691b67a2dadcc8c19353a4c691d51c622e4656cfd22240"
+  }
+}

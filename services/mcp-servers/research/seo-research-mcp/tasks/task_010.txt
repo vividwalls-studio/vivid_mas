@@ -1,0 +1,11 @@
+# Task ID: 10
+# Title: SERP Analysis MCP Tool
+# Status: pending
+# Dependencies: 3, 8
+# Priority: medium
+# Description: Implement serp_analysis MCP tool for SERP snapshot and ranking analysis
+# Details:
+Create MCP tool that provides SERP snapshots for keywords, analyzes ranking positions, identifies featured snippets, and tracks SERP features using DataForSEO and SerpAPI.
+
+# Test Strategy:
+Test SERP analysis accuracy, ranking position detection, and feature identification

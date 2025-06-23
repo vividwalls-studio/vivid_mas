@@ -1,0 +1,117 @@
+#!/usr/bin/expect -f
+
+set timeout 600
+set passphrase "freedom"
+
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        send "cd /root/vivid_mas\r"
+    }
+}
+
+# Check what columns exist
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'agents' ORDER BY ordinal_position;\" | head -20\r"
+
+# Add only the missing JSONB columns
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"ALTER TABLE agents ADD COLUMN IF NOT EXISTS short_term_memory JSONB DEFAULT '[]'::jsonb;\"\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"ALTER TABLE agents ADD COLUMN IF NOT EXISTS long_term_memory JSONB DEFAULT '[]'::jsonb;\"\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"ALTER TABLE agents ADD COLUMN IF NOT EXISTS communication_preferences JSONB DEFAULT '[]'::jsonb;\"\r"
+
+# Add missing voice config columns
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"ALTER TABLE agent_voice_config ADD COLUMN IF NOT EXISTS description TEXT;\"\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"ALTER TABLE agent_voice_config ADD COLUMN IF NOT EXISTS volume VARCHAR(255);\"\r"
+
+# Now run the SQL chunks
+expect "root@*"
+send "echo 'Starting data insertion...'\r"
+
+# Execute chunks one by one
+expect "root@*"
+send "echo 'Chunk 1:' && docker exec -i supabase-db psql -U postgres -d postgres < sql_chunks/chunk_001.sql 2>&1 | tail -5\r"
+
+expect {
+    "COMMIT" {
+        puts "\nChunk 1 success"
+    }
+    "ROLLBACK" {
+        puts "\nChunk 1 failed"
+    }
+    "root@*" {
+        # Continue
+    }
+}
+
+expect "root@*"
+send "echo 'Chunk 2:' && docker exec -i supabase-db psql -U postgres -d postgres < sql_chunks/chunk_002.sql 2>&1 | tail -5\r"
+
+expect {
+    "COMMIT" {
+        puts "\nChunk 2 success"
+    }
+    "ROLLBACK" {
+        puts "\nChunk 2 failed"
+    }
+    "root@*" {
+        # Continue
+    }
+}
+
+expect "root@*"
+send "echo 'Chunk 3:' && docker exec -i supabase-db psql -U postgres -d postgres < sql_chunks/chunk_003.sql 2>&1 | tail -5\r"
+
+expect {
+    "COMMIT" {
+        puts "\nChunk 3 success"
+    }
+    "ROLLBACK" {
+        puts "\nChunk 3 failed"
+    }
+    "root@*" {
+        # Continue
+    }
+}
+
+expect "root@*"
+send "echo 'Chunk 4:' && docker exec -i supabase-db psql -U postgres -d postgres < sql_chunks/chunk_004.sql 2>&1 | tail -5\r"
+
+expect {
+    "COMMIT" {
+        puts "\nChunk 4 success"
+    }
+    "ROLLBACK" {
+        puts "\nChunk 4 failed"
+    }
+    "root@*" {
+        # Continue
+    }
+}
+
+# Final count
+expect "root@*"
+send "echo 'Final verification:'\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT COUNT(*) as total_agents FROM agents;\"\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"SELECT id, name, role FROM agents LIMIT 5;\"\r"
+
+expect "root@*"
+send "exit\r"
+
+expect eof

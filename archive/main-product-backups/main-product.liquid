@@ -1,0 +1,341 @@
+{% comment %}VividWalls - Exact Figma Layout with Theme Editor{% endcomment %}
+{{ 'main-product-responsive.css' | asset_url | stylesheet_tag }}
+{{ 'main-product-functions.js' | asset_url | script_tag }}
+
+<script>
+window.routes = {
+  cart_add_url: '/cart/add',
+  cart_change_url: '/cart/change',
+  cart_update_url: '/cart/update',
+  cart_url: '/cart'
+};
+window.variantStrings = {
+  addToCart: 'Add to cart',
+  soldOut: 'Sold out',
+  unavailable: 'Unavailable'
+};
+</script>
+
+<div class="page-width">
+  <div data-layer="main-product-section" style="background:white;flex-direction:column;justify-content:flex-start;align-items:flex-start;gap:145px;display:inline-flex">
+    
+    <!-- Section-01: Main Product Display -->
+    <div data-layer="Section-01" style="justify-content:flex-start;align-items:flex-start;gap:50px;display:inline-flex">
+      
+      <!-- Left Side: Artwork Container -->
+      <div data-layer="Artwork Container" style="align-self:stretch;flex-direction:column;justify-content:flex-start;align-items:center;gap:20px;display:inline-flex">
+        <div data-layer="Main Image" style="width:800px;height:550px;position:relative;background:#F5F5F5;border-radius:10px">
+          <img id="main-product-image" 
+               src="{{ product.featured_image | image_url: width: 800 }}" 
+               alt="{{ product.featured_image.alt | escape }}"
+               style="width:100%;height:100%;object-fit:cover;border-radius:10px">
+        </div>
+        
+        <!-- Thumbnail Carousel -->
+        <div data-layer="Thumbnail Carousel" style="justify-content:flex-start;align-items:flex-start;gap:10px;display:inline-flex">
+          {% for image in product.images limit: 5 %}
+            <div class="thumbnail-item" data-image-url="{{ image | image_url: width: 800 }}" 
+                 style="width:80px;height:80px;background:#F5F5F5;border-radius:5px;cursor:pointer;{% if forloop.first %}border:2px solid #262626{% else %}border:2px solid transparent{% endif %}">
+              <img src="{{ image | image_url: width: 80 }}" 
+                   alt="{{ image.alt | escape }}"
+                   style="width:100%;height:100%;object-fit:cover;border-radius:3px">
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      
+      <!-- Right Side: Product Details - EXACT FIGMA STRUCTURE -->
+      <div data-layer="Product Details" class="ProductDetails">
+        <div data-layer="Product Info Container" class="ProductInfoContainer">
+          <div data-layer="Product Info" class="ProductInfo">
+            <div data-layer="Product Name" class="ProductName">{{ product.title }}</div>
+            <div data-layer="Collection Name" class="CollectionName">Collection → {{ section.settings.collection_name | default: 'Vivid Layers' }}</div>
+            <div data-layer="Artist Info Container" class="ArtistInfoContainer">
+              <div data-layer="Artist Label" class="ArtistLabel">Original Art Illustrations by </div>
+              <div data-layer="Artist Name" class="ArtistName">{{ section.settings.artist_name | default: 'Kingler Bercy' }}</div>
+            </div>
+            <div data-layer="Tag Container" class="TagContainer">
+              <div data-layer="Tag" class="Tag">Limited Edition Print</div>
+            </div>
+          </div>
+        </div>
+        
+        <div data-layer="Shopping Cart Component" class="ShoppingCartComponent">
+          <div data-layer="Total Selected Price" class="TotalSelectedPrice">
+            <div data-layer="Dimensions" class="Dimensions">
+              <div data-layer="Width" class="Width" id="selected-width">53</div>
+              <div data-layer="Separator" class="Separator">X</div>
+              <div data-layer="Height" class="Height" id="selected-height">72</div>
+            </div>
+            <div data-layer="Total Price" class="TotalPrice" id="total-price">${{ product.selected_or_first_available_variant.price | money_without_currency }} USD</div>
+          </div>
+          
+          <!-- Variant Picker - EXACT FIGMA STRUCTURE -->
+          <div data-layer="Variant_Picker" class="VariantPicker">
+            <div data-layer="Variant Options" class="VariantOptions">
+              
+              <!-- Large Option (53x72) -->
+              <div data-layer="Option - Large" 
+                   class="variant-option {% if product.selected_or_first_available_variant.title contains '53x72' %}selected{% else %}unselected{% endif %}"
+                   data-variant-id="{{ product.variants[2].id | default: '' }}"
+                   data-price="{{ product.variants[2].price | default: 100000 }}"
+                   data-width="53" data-height="72">
+                <div data-layer="Container" class="Container">
+                  <div data-layer="Dimensions" class="Dimensions">
+                    <div data-layer="Width" class="Width">53</div>
+                    <div data-layer="Separator" class="Separator">X</div>
+                    <div data-layer="Height" class="Height">72</div>
+                  </div>
+                  <div data-layer="Price" class="Price">${{ product.variants[2].price | default: 100000 | money_without_currency }}</div>
+                </div>
+                <div data-layer="Inventory Container" class="InventoryContainer">
+                  <div data-layer="Icon Instance" style="width:24px;height:24px;justify-content:center;align-items:center;gap:10px;display:flex">
+                    <div data-layer="Icons black/Chevron Up" style="flex:1 1 0;align-self:stretch;position:relative">
+                      <div data-layer="Chevron Up" style="width:24px;height:24px;left:0px;top:0px;position:absolute"></div>
+                    </div>
+                  </div>
+                  <div data-layer="Stock Info" class="StockInfo">50 sold - 250 remaining</div>
+                </div>
+              </div>
+              
+              <!-- Medium Option (36x48) -->
+              <div data-layer="Option - Medium" 
+                   class="variant-option {% if product.selected_or_first_available_variant.title contains '36x48' %}selected{% else %}unselected{% endif %}"
+                   data-variant-id="{{ product.variants[1].id | default: '' }}"
+                   data-price="{{ product.variants[1].price | default: 70000 }}"
+                   data-width="36" data-height="48">
+                <div data-layer="Container" class="Container">
+                  <div data-layer="Dimensions" class="Dimensions">
+                    <div data-layer="Width" class="Width">36</div>
+                    <div data-layer="Separator" class="Separator">X</div>
+                    <div data-layer="Height" class="Height">48</div>
+                  </div>
+                  <div data-layer="Price" class="Price">${{ product.variants[1].price | default: 70000 | money_without_currency }}</div>
+                </div>
+                <div data-layer="Inventory" class="Inventory">
+                  <div data-layer="Stock Info" class="StockInfo">150 sold - 150 remaining</div>
+                </div>
+              </div>
+              
+              <!-- Small Option (24x36) -->
+              <div data-layer="Option - Small" 
+                   class="variant-option {% if product.selected_or_first_available_variant.title contains '24x36' %}selected{% else %}unselected{% endif %}"
+                   data-variant-id="{{ product.variants[0].id | default: '' }}"
+                   data-price="{{ product.variants[0].price | default: 40000 }}"
+                   data-width="24" data-height="36">
+                <div data-layer="Container" class="Container">
+                  <div data-layer="Dimensions" class="Dimensions">
+                    <div data-layer="Width" class="Width">24</div>
+                    <div data-layer="Separator" class="Separator">X</div>
+                    <div data-layer="Height" class="Height">36</div>
+                  </div>
+                  <div data-layer="Price" class="Price">${{ product.variants[0].price | default: 40000 | money_without_currency }}</div>
+                </div>
+                <div data-layer="Inventory Container" class="InventoryContainer">
+                  <div data-layer="Stock Info" class="StockInfo">50 sold - 150 remaining</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Gallery Wrap Option - EXACT FIGMA STRUCTURE -->
+            <div data-layer="Container" class="gallery-wrap-container">
+              <div data-layer="Options/True/False" class="gallery-wrap-option">
+                <div data-layer="Gallery Wrapped Canvas - Checkbox" class="gallery-wrap-checkbox">
+                  <div data-layer="Rectangle 2" class="checkbox-box"></div>
+                  <div data-layer="Accept terms and conditions" class="checkbox-label">Gallery Wrapped Canvas</div>
+                  <div data-layer="Check" style="width:15px;height:15px;left:0px;top:1px;position:absolute"></div>
+                </div>
+                <div data-layer="Container" class="gallery-wrap-sizes">
+                  <div data-layer="Size - Small" class="size-option">
+                    <span>24X36 + $75</span>
+                  </div>
+                  <div data-layer="Line" class="size-divider"></div>
+                  <div data-layer="Size - Medium" class="size-option">
+                    <span>36X48 + $75</span>
+                  </div>
+                  <div data-layer="Line" class="size-divider"></div>
+                  <div data-layer="Size - Large" class="size-option">
+                    <span>53X72 + $100</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Buy Button Section - EXACT FIGMA STRUCTURE -->
+          <div data-layer="Buy Button" class="BuyButton">
+            <div data-layer="SKU" class="Sku" id="product-sku">SKU: {{ product.selected_or_first_available_variant.sku | default: 'OLIVE-WEAVE-36X48' }}</div>
+            <div data-layer="Quantity Selector" class="QuantitySelector">
+              <div data-layer="Quantity Selector" class="quantity-input">
+                <div data-layer="Quantity Icon" class="quantity-btn" onclick="changeQuantity(-1)">
+                  <div data-layer="Icons black/Minus" style="flex:1 1 0;align-self:stretch;position:relative">
+                    <div data-layer="Minus" style="width:24px;height:24px;left:0px;top:0px;position:absolute">−</div>
+                  </div>
+                </div>
+                <div data-layer="Quantity Value" class="quantity-value">
+                  <div data-layer="Quantity Text" class="quantity-text" id="quantity-display">1</div>
+                </div>
+                <div data-layer="Quantity Icon" class="quantity-btn" onclick="changeQuantity(1)">
+                  <div data-layer="Icons black/Plus" style="flex:1 1 0;align-self:stretch;position:relative">
+                    <div data-layer="Plus" style="width:24px;height:24px;left:0px;top:0px;position:absolute">+</div>
+                  </div>
+                </div>
+              </div>
+              <button data-layer="Button Button" class="add-to-cart-btn" type="submit" form="product-form">
+                <div data-layer="Button" class="add-to-cart-text">ADD TO CART</div>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div data-layer="Purchase Button Container" class="PurchaseButtonContainer">
+          <div data-layer="Buy button" class="shop-pay-btn">
+            <button data-layer="Buy button" class="shop-pay-button">
+              <div data-layer="Button" class="shop-pay-text">Buy with Shop</div>
+            </button>
+            <div data-layer="Purchase Button Text" style="padding:3px 6px;left:226px;top:18px;position:absolute;background:white;border-radius:3px;justify-content:center;align-items:center;gap:10px;display:flex">
+              <div data-layer="Pay" style="color:#4F46E5;font-size:15px;font-family:Inter;font-weight:600;word-wrap:break-word">Pay</div>
+            </div>
+            <img data-layer="Screenshot 2025-06-04 at 1.11.18 PM 1" style="width:56.57px;height:24px;left:160px;top:18px;position:absolute" src="https://placehold.co/57x24" />
+          </div>
+          
+          <div data-layer="Shipping Info" class="ShippingInfo">
+            <div data-layer="Artist Info Container" class="ArtistInfoContainer">
+              <div data-layer="Artist Label" class="ArtistLabel">
+                <span class="shipping-text">Shipping</span><span class="shipping-calc"> calculated at checkout.</span>
+              </div>
+            </div>
+            <div data-layer="Installment Info" style="align-self:stretch;position:relative;justify-content:flex-start;align-items:center;display:inline-flex">
+              <div data-layer="Installment Text" style="flex:1 1 0">
+                <span class="installment-text">4 interest-free installments, or from </span>
+                <span class="installment-price">$63.18</span>
+                <span class="installment-text">/mo with </span>
+              </div>
+              <img data-layer="Screenshot 2025-06-04 at 12.45.29 PM 1" style="width:72.72px;height:19px;left:37px;top:19px;position:absolute" src="https://placehold.co/73x19" />
+            </div>
+            <div data-layer="Power Info" style="align-self:stretch;justify-content:center;align-items:center;gap:10px;display:inline-flex">
+              <div data-layer="Power Text" style="flex:1 1 0">
+                <span class="installment-text" style="text-decoration:underline">Check your purchasing power</span>
+                <span class="installment-text"> Your purchasing power is. See plans</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Section-02: Product Description -->
+    <div data-layer="Section-02" style="width:1200px;flex-direction:column;justify-content:flex-start;align-items:flex-start;gap:50px;display:inline-flex">
+      <div data-layer="Product Description" style="align-self:stretch;color:#171717;font-size:18px;font-family:Inter;font-weight:400;line-height:27px;word-wrap:break-word">
+        {{ product.description | default: 'Experience the captivating beauty of abstract art with this stunning limited edition print. Each piece is carefully crafted to bring sophistication and visual interest to any space.' }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden Shopify Form -->
+<form id="product-form" action="/cart/add" method="post" enctype="multipart/form-data" class="hidden">
+  <input type="hidden" name="id" id="variant-id" value="{{ product.selected_or_first_available_variant.id }}">
+  <input type="hidden" name="quantity" id="quantity-input" value="1">
+  <input type="hidden" name="properties[Gallery Wrap]" id="gallery-wrap-input" value="">
+</form>
+
+<div id="error-message" class="hidden" style="color:red;margin-top:10px;"></div>
+
+{% schema %}
+{
+  "name": "Main Product",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Typography Settings"
+    },
+    {
+      "type": "font_picker",
+      "id": "product_font_family",
+      "label": "Product Font Family",
+      "default": "inter_n4",
+      "info": "Choose the font family for all product text"
+    },
+    {
+      "type": "range",
+      "id": "product_title_size",
+      "label": "Product Title Size",
+      "min": 24,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "select",
+      "id": "product_title_weight",
+      "label": "Product Title Weight",
+      "options": [
+        {"value": "300", "label": "Light"},
+        {"value": "400", "label": "Regular"},
+        {"value": "500", "label": "Medium"},
+        {"value": "600", "label": "Semi Bold"},
+        {"value": "700", "label": "Bold"}
+      ],
+      "default": "400"
+    },
+    {
+      "type": "header",
+      "content": "Color Settings"
+    },
+    {
+      "type": "color",
+      "id": "product_title_color",
+      "label": "Primary Text Color",
+      "default": "#171717"
+    },
+    {
+      "type": "color",
+      "id": "collection_text_color",
+      "label": "Secondary Text Color",
+      "default": "#737373"
+    },
+    {
+      "type": "color",
+      "id": "variant_selected_bg",
+      "label": "Selected Variant Background",
+      "default": "#262626"
+    },
+    {
+      "type": "color",
+      "id": "variant_selected_text",
+      "label": "Selected Variant Text Color",
+      "default": "#F5F5F5"
+    },
+    {
+      "type": "color",
+      "id": "primary_button_bg",
+      "label": "Button Background Color",
+      "default": "#262626"
+    },
+    {
+      "type": "color",
+      "id": "primary_button_text",
+      "label": "Button Text Color",
+      "default": "#F5F5F5"
+    },
+    {
+      "type": "header",
+      "content": "Content Settings"
+    },
+    {
+      "type": "text",
+      "id": "collection_name",
+      "label": "Collection Name",
+      "default": "Vivid Layers"
+    },
+    {
+      "type": "text",
+      "id": "artist_name",
+      "label": "Artist Name",
+      "default": "Kingler Bercy"
+    }
+  ]
+}
+{% endschema %}

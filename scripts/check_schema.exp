@@ -1,0 +1,39 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+set passphrase "freedom"
+
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        send "cd /root/vivid_mas\r"
+    }
+}
+
+expect "root@*"
+send "echo 'Checking agents table structure...'\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"\\d agents\"\r"
+
+expect "root@*"
+send "echo 'Checking agent_voice_config table structure...'\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"\\d agent_voice_config\"\r"
+
+expect "root@*"
+send "echo 'Checking all agent tables...'\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres -c \"\\dt agent*\"\r"
+
+expect "root@*"
+send "exit\r"
+
+expect eof

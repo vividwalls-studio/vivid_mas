@@ -1,0 +1,668 @@
+{% comment %}
+  VividWalls Product Page - Figma Design Implementation
+  Based on main-product-section.png design
+{% endcomment %}
+
+<product-info
+  id="MainProduct-{{ section.id }}"
+  class="section-{{ section.id }}-padding gradient color-{{ section.settings.color_scheme }} vw-product-page"
+  data-section="{{ section.id }}"
+  data-product-id="{{ product.id }}"
+  data-update-url="true"
+  data-url="{{ product.url }}"
+>
+  {{ 'vividwalls-product-figma.css' | asset_url | stylesheet_tag }}
+  {{ 'component-price.css' | asset_url | stylesheet_tag }}
+  {{ 'component-product-variant-picker.css' | asset_url | stylesheet_tag }}
+
+  {%- style -%}
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+      padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+    }
+
+    @media screen and (min-width: 750px) {
+      .section-{{ section.id }}-padding {
+        padding-top: {{ section.settings.padding_top }}px;
+        padding-bottom: {{ section.settings.padding_bottom }}px;
+      }
+    }
+  {%- endstyle -%}
+
+  <script src="{{ 'product-info.js' | asset_url }}" defer="defer"></script>
+  <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
+
+  {%- assign product_form_id = 'product-form-' | append: section.id -%}
+
+  <div data-layer="main-product-section" class="MainProductSection" style="width: 100%; max-width: 1200px; margin: 0 auto; background: white; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 59px; display: flex;">
+    <div data-layer="Main Content" class="MainContent" style="width: 100%; justify-content: flex-start; align-items: flex-start; gap: 50px; display: flex;">
+      <div data-layer="Artwork Container" class="ArtworkContainer" style="width: 800px; align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: center; gap: 20px; display: flex;">
+        <div data-layer="Main Artwork Image" class="MainArtworkImage" style="width: 800px; height: 693px; justify-content: flex-start; align-items: flex-start; display: flex;">
+          <div data-layer="Artwork Image/Olive_Weave" class="ArtworkImageOliveWeave" style="flex: 1 1 0; align-self: stretch; background: #F5F5F5; overflow: hidden; border-radius: 5px; justify-content: center; align-items: center; gap: 10px; display: flex">
+            <img
+              id="mainProductImage"
+              class="Img"
+              style="flex: 1 1 0; align-self: stretch; object-fit: cover;"
+              src="{{ product.featured_media | image_url: width: 800 }}"
+              alt="{{ product.featured_media.alt | escape }}"
+              width="800"
+              height="693"
+            />
+          </div>
+        </div>
+        <div data-layer="Thumbnails Container" class="ThumbnailsContainer" style="align-self: stretch; position: relative; overflow: hidden; justify-content: flex-start; align-items: center; gap: 20px; display: flex;">
+          <div data-layer="Thumbnails" class="Thumbnails" style="flex: 1 1 0; justify-content: flex-start; align-items: center; gap: 20px; display: flex;">
+
+            {%- for media in product.media limit: 4 -%}
+              <div class="ThumbnailImage" style="width: 220px; height: 289px; flex-direction: column; justify-content: flex-start; align-items: flex-start; display: flex;">
+                <div class="ThumbnailImageFull{% if forloop.first %} selected{% endif %}"
+                     style="align-self: stretch; flex: 1 1 0; flex-direction: column; justify-content: flex-start; align-items: center; display: flex; cursor: pointer;"
+                     data-media-id="{{ media.id }}"
+                     onclick="switchMainImage('{{ media | image_url: width: 800 }}', this)">
+
+                  {%- if forloop.index == 2 -%}
+                    <!-- Selected indicator for second thumbnail -->
+                    <div class="Seleted" style="width: 150px; height: 5px; position: relative; background: #262626; border-radius: 5px; margin-bottom: 10px;"></div>
+                  {%- endif -%}
+
+                  <img
+                    class="thumbnail-img"
+                    style="width: 220px; height: 289px; border-radius: 5px; object-fit: cover;"
+                    src="{{ media | image_url: width: 220 }}"
+                    alt="{{ media.alt | escape }}"
+                    width="220"
+                    height="289"
+                  />
+                </div>
+              </div>
+            {%- endfor -%}
+
+          </div>
+        </div>
+      </div>
+
+      <div data-layer="Product Info" class="ProductInfo" style="flex: 1 1 0; background: white; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 30px; display: flex;">
+        <div data-layer="Product Info Container" class="ProductInfoContainer" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 16px; display: flex">
+          <div data-layer="Product Info" class="ProductInfo" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex">
+            {%- for block in section.blocks -%}
+              {%- case block.type -%}
+                {%- when 'title' -%}
+                  <div data-layer="Product Name" class="ProductName" style="align-self: stretch; color: #171717; font-size: 40px; font-family: Inter; font-weight: 400; word-wrap: break-word" {{ block.shopify_attributes }}>
+                    <h1>{{ product.title }}</h1>
+                  </div>
+                {%- when 'collection_info' -%}
+                  <div data-layer="Artist Name" class="ArtistName" style="color: #737373; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word" {{ block.shopify_attributes }}>
+                    Collection →  {{ product.collections.first.title | default: "Vivid Layers" }}
+                  </div>
+                {%- when 'artist_info' -%}
+                  <div data-layer="Artist Info Container" class="ArtistInfoContainer" style="justify-content: flex-start; align-items: center; gap: 4px; display: inline-flex" {{ block.shopify_attributes }}>
+                    <div data-layer="Artist Label" class="ArtistLabel" style="color: #737373; font-size: 16px; font-family: Inter; font-style: italic; font-weight: 400; word-wrap: break-word">Original Art Illustrations by </div>
+                    <div data-layer="Artist Name" class="ArtistName" style="color: #737373; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">Kingler Bercy</div>
+                  </div>
+                {%- when 'limited_edition' -%}
+                  <div data-layer="Tag Container" class="TagContainer" style="padding: 10px; background: #262626; border-radius: 5px; justify-content: center; align-items: center; gap: 10px; display: inline-flex" {{ block.shopify_attributes }}>
+                    <div data-layer="Tag" class="Tag" style="color: #E5E5E5; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">Limited Edition Print</div>
+                  </div>
+                {%- when 'description' -%}
+                   {% comment %} Description will be in the Additional Content section below {% endcomment %}
+                {%- when 'sku' -%}
+                   {% comment %} SKU will be in the Shopping Cart Component section below {% endcomment %}
+                {%- when 'custom_liquid' -%}
+                   {% render block %}
+                {%- when 'collapsible_tab' -%}
+                   {% render block %}
+                {%- when 'quantity_selector' -%}
+                   {% comment %} Quantity Selector will be in the Shopping Cart Component section below {% endcomment %}
+                {%- when 'variant_picker' -%}
+                   {% comment %} Variant Picker will be in the Shopping Cart Component section below {% endcomment %}
+                {%- when 'buy_buttons' -%}
+                   {% comment %} Buy Buttons will be in the Shopping Cart Component section below {% endcomment %}
+                {%- when 'rating' -%}
+                   {% render block %}
+                {%- when 'complementary' -%}
+                   {% render block %}
+                {%- when 'icon-with-text' -%}
+                   {% render block %}
+                {%- when 'price' -%}
+                   {% comment %} Price will be in the Shopping Cart Component section below {% endcomment %}
+                {%- when 'gallery_wrap' -%}
+                   {% comment %} Gallery Wrap will be in the Shopping Cart Component section below {% endcomment %}
+                {%- when 'certificate' -%}
+                   {% comment %} Certificate will be in the Shopping Cart Component section below {% endcomment %}
+                {%- when 'popup' -%}
+                   {% render block %}
+                {%- when 'share' -%}
+                   {% render block %}
+              {%- endcase -%}
+            {%- endfor -%}
+          </div>
+        </div>
+        <div data-layer="Shopping Cart Component" class="ShoppingCartComponent" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 20px; display: flex">
+           {%- for block in section.blocks -%}
+              {%- case block.type -%}
+                 {%- when 'price' -%}
+                    <div data-layer="Total Selected Price" class="TotalSelectedPrice" style="align-self: stretch; padding-left: 4px; padding-right: 4px; justify-content: space-between; align-items: center; display: inline-flex" {{ block.shopify_attributes }}>
+                       <div data-layer="Dimensions" class="Dimensions" style="justify-content: flex-start; align-items: center; gap: 3px; display: flex">
+                          <div data-layer="Width" class="Width" data-selected-width style="color: #262626; font-size: 18px; font-family: Inter; font-weight: 500; word-wrap: break-word">
+                             {{ product.selected_or_first_available_variant.option1 | split: 'x' | first | strip }}
+                          </div>
+                          <div data-layer="Separator" class="Separator" style="color: #262626; font-size: 18px; font-family: Inter; font-weight: 500; word-wrap: break-word">X</div>
+                          <div data-layer="Height" class="Height" data-selected-height style="color: #262626; font-size: 18px; font-family: Inter; font-weight: 500; word-wrap: break-word">
+                              {{ product.selected_or_first_available_variant.option1 | split: 'x' | last | strip }}
+                          </div>
+                       </div>
+                       <div data-layer="Total Price" class="TotalPrice" data-selected-price style="color: #262626; font-size: 18px; font-family: Inter; font-weight: 600; word-wrap: break-word">
+                          {{ product.selected_or_first_available_variant.price | money }}
+                       </div>
+                    </div>
+                 {%- when 'variant_picker' -%}
+                    {% render 'vividwalls-custom-variant-picker', product: product %}
+                 {%- when 'gallery_wrap' -%}
+                    <div data-layer="Container" class="Container" style="align-self: stretch; justify-content: flex-start; align-items: center; gap: 10px; display: inline-flex" {{ block.shopify_attributes }}>
+                       <div data-layer="Options/True/False" class="OptionsTrueFalse" style="flex: 1 1 0; height: 54px; padding-left: 20px; padding-right: 20px; padding-top: 10px; padding-bottom: 10px; background: #FAFAFA; border-radius: 5px; flex-direction: column; justify-content: center; align-items: flex-start; gap: 8px; display: inline-flex">
+                          <div data-layer="Gallery Wrapped Canvas - Checkbox" data-state="Checked" class="GalleryWrappedCanvasCheckbox" style="position: relative; justify-content: flex-start; align-items: center; gap: 8px; display: inline-flex">
+                             <input type="checkbox" id="galleryWrapCheckbox" style="width: 16px; height: 16px; background: #262626; border-radius: 4px">
+                             <label for="galleryWrapCheckbox" data-layer="Accept terms and conditions" class="AcceptTermsAndConditions" style="color: #262626; font-size: 14px; font-family: Inter; font-weight: 500; word-wrap: break-word">Gallery Wrapped Canvas</label>
+                             {% comment %} Checkmark icon placeholder {% endcomment %}
+                             <div data-layer="Check" class="Check" style="width: 15px; height: 15px; left: 0px; top: 1px; position: absolute"></div>
+                          </div>
+                          {% comment %} Additional options like size pricing if needed {% endcomment %}
+                          <div data-layer="Container" class="Container" style="justify-content: flex-start; align-items: center; gap: 10px; display: inline-flex">
+                             <div data-layer="Size - Small" class="SizeSmall" style="justify-content: center; align-items: center; display: flex">
+                                <div data-layer="24X36" class="X36" style="color: #737373; font-size: 12px; font-family: Inter; font-weight: 500; word-wrap: break-word">24X36</div>
+                                <div data-layer="+ $75" class="75" style="color: #737373; font-size: 12px; font-family: Inter; font-weight: 500; word-wrap: break-word"> + $75</div>
+                             </div>
+                             <div data-layer="Line" class="Line" style="width: 10px; height: 0px; transform: rotate(90deg); transform-origin: top left; outline: 1px #D4D4D4 solid; outline-offset: -0.50px"></div>
+                             <div data-layer="Size - Medium" class="SizeMedium" style="justify-content: center; align-items: center; display: flex">
+                                <div data-layer="36X48" class="X48" style="color: #737373; font-size: 12px; font-family: Inter; font-weight: 500; word-wrap: break-word">36X48</div>
+                                <div data-layer="+ $75" class="75" style="color: #737373; font-size: 12px; font-family: Inter; font-weight: 500; word-wrap: break-word"> + $75</div>
+                             </div>
+                             <div data-layer="Line" class="Line" style="width: 10px; height: 0px; transform: rotate(90deg); transform-origin: top left; outline: 1px #D4D4D4 solid; outline-offset: -0.50px"></div>
+                             <div data-layer="Size - Large" class="SizeLarge" style="justify-content: center; align-items: center; display: flex">
+                                <div data-layer="53X72" class="X72" style="color: #737373; font-size: 12px; font-family: Inter; font-weight: 500; word-wrap: break-word">53X72</div>
+                                <div data-layer="+ $100" class="100" style="color: #737373; font-size: 12px; font-family: Inter; font-weight: 500; word-wrap: break-word"> + $125</div>
+                             </div>
+                          </div>
+                       </div>
+                    </div>
+                 {%- when 'quantity_selector' -%}
+                    <div data-layer="Quantity Selector" class="QuantitySelector" style="align-self: stretch; height: 60px; justify-content: flex-start; align-items: flex-start; gap: 10px; display: inline-flex" {{ block.shopify_attributes }}>
+                       <div data-layer="Quantity Selector" class="QuantitySelector" style="width: 152px; align-self: stretch; padding-left: 20px; padding-right: 20px; padding-top: 10px; padding-bottom: 10px; overflow: hidden; outline: 1px #D4D4D4 solid; outline-offset: -1px; justify-content: center; align-items: center; gap: 10px; display: flex">
+                          <button type="button" class="quantity__button" onclick="changeQuantity(-1)" style="width: 24px; height: 24px; justify-content: center; align-items: center; gap: 10px; display: flex; background: none; border: none; cursor: pointer;">
+                             {% comment %} Minus icon placeholder {% endcomment %}
+                             <div data-layer="Icons black/Minus" class="IconsBlackMinus" style="flex: 1 1 0; align-self: stretch; position: relative">
+                                <div data-layer="Minus" class="Minus" style="width: 24px; height: 24px; left: 0px; top: 0px; position: absolute"></div>
+                             </div>
+                          </button>
+                          <input
+                             type="number"
+                             id="quantity"
+                             name="quantity"
+                             value="1"
+                             min="1"
+                             style="flex: 1 1 0; justify-content: center; align-items: center; gap: 10px; display: flex; text-align: center; border: none; font-size: 18px; font-weight: 700; color: #171717;"
+                          >
+                          <button type="button" class="quantity__button" onclick="changeQuantity(1)" style="width: 24px; height: 24px; justify-content: center; align-items: center; gap: 10px; display: flex; background: none; border: none; cursor: pointer;">
+                             {% comment %} Plus icon placeholder {% endcomment %}
+                             <div data-layer="Icons black/Plus" class="IconsBlackPlus" style="flex: 1 1 0; align-self: stretch; position: relative">
+                                <div data-layer="Plus" class="Plus" style="width: 24px; height: 24px; left: 0px; top: 0px; position: absolute"></div>
+                             </div>
+                          </button>
+                       </div>
+                       {%- when 'buy_buttons' -%}
+                          <div data-layer="Button Button" data-property-1="Primary" class="ButtonButton" style="flex: 1 1 0; align-self: stretch; padding-left: 16px; padding-right: 16px; padding-top: 12px; padding-bottom: 12px; background: #262626; border-radius: 4px; justify-content: center; align-items: center; gap: 10px; display: flex" {{ block.shopify_attributes }}>
+                             {%- form 'product', product, id: product_form_id, class: 'form', novalidate: 'novalidate', data-type: 'add-to-cart-form' -%}
+                                <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}" class="product-variant-id">
+                                <button
+                                   type="submit"
+                                   name="add"
+                                   class="btn product-form__cart-submit"
+                                   style="color: #F5F5F5; font-size: 16px; font-family: Inter; font-weight: 500; word-wrap: break-word; background: none; border: none; cursor: pointer;"
+                                   {%- if product.selected_or_first_available_variant.available == false -%}disabled{%- endif -%}
+                                >
+                                   {%- if product.selected_or_first_available_variant.available -%}
+                                      ADD TO CART
+                                   {%- else -%}
+                                      SOLD OUT
+                                   {%- endif -%}
+                                </button>
+                             {%- endform -%}
+                          </div>
+                       </div>
+                    </div>
+                 {%- when 'sku' -%}
+                    <div data-layer="SKU" class="Sku" style="color: #737373; font-size: 14px; font-family: Inter; font-weight: 400; word-wrap: break-word" {{ block.shopify_attributes }}>
+                       SKU: {{ product.selected_or_first_available_variant.sku }}
+                    </div>
+                 {%- when 'certificate' -%}
+                    <div data-layer="Frame" class="Frame" style="align-self: stretch; padding-left: 20px; padding-right: 20px; padding-top: 10px; padding-bottom: 10px; background: #FAFAFA; border-radius: 5px; justify-content: flex-start; align-items: center; gap: 20px; display: inline-flex" {{ block.shopify_attributes }}>
+                       {% comment %} Icon Placeholder {% endcomment %}
+                       <div data-layer="Icon Instance" class="IconInstance" style="width: 24px; height: 24px; justify-content: center; align-items: center; gap: 10px; display: flex">
+                          <div data-layer="Vector" class="Vector" style="flex: 1 1 0; align-self: stretch; background: black; outline: 0.50px #171717 solid; outline-offset: -0.25px"></div>
+                       </div>
+                       <div data-layer="Tag" class="Tag" style="flex: 1 1 0; color: #404040; font-size: 14px; font-family: Inter; font-weight: 400; word-wrap: break-word">Each purchased limited print receives a numbered Certificate of Authenticity. Your print will be the next available edition number in the selected size.</div>
+                    </div>
+              {%- endcase -%}
+           {%- endfor -%}
+        </div>
+      </div>
+    </div>
+    <div data-layer="Additional Content" class="AdditionalContent" style="width: 100%; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex;">
+      <div data-layer="Description" class="Description" style="width: 322px; align-self: stretch; position: relative; overflow: hidden; flex-direction: column; justify-content: flex-start; align-items: center; gap: 10px; display: flex;">
+        <div data-layer="Product Description Container" class="ProductDescriptionContainer" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: center; gap: 10px; display: flex">
+          <div data-layer="Product Description" class="ProductDescription" style="align-self: stretch; color: #404040; font-size: 16px; font-family: Inter; font-weight: 400; line-height: 24px; word-wrap: break-word">
+             {{ product.description }}
+          </div>
+        </div>
+        {% comment %} Read More button placeholder {% endcomment %}
+        <div data-layer="Read More Container" class="ReadMoreContainer" style="width: 119px; padding-left: 10px; left: -8px; top: 368px; position: absolute; background: white; justify-content: flex-start; align-items: flex-end; gap: 10px; display: inline-flex">
+           <div data-layer="Read More Text" class="ReadMoreText" style="color: black; font-size: 16px; font-family: Inter; font-weight: 400; text-decoration: underline; line-height: 24px; word-wrap: break-word">read more</div>
+        </div>
+      </div>
+      {% comment %} Image placeholders removed as requested {% endcomment %}
+    </div>
+    {% comment %} Related Products Section {% endcomment %}
+    {%- if section.settings.show_related_products -%}
+      <div data-layer="Related Products" class="RelatedProducts" style="width: 100%; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 32px; display: flex;">
+        <div data-layer="Related Products Title" class="RelatedProductsTitle" style="align-self: stretch; color: black; font-size: 24px; font-family: Inter; font-weight: 700; line-height: 28.80px; word-wrap: break-word;">
+          {{ section.settings.related_products_title | default: "You might also like" }}
+        </div>
+
+        <div data-layer="Related Products Thumbnails" class="RelatedProductsThumbnails" style="align-self: stretch; justify-content: flex-start; align-items: flex-start; gap: 24px; display: flex; flex-wrap: wrap;">
+          {%- assign related_products = product.related_products | default: collections.all.products -%}
+          {%- for related_product in related_products limit: 4 -%}
+            <div class="related-product-card" style="flex: 1 1 0; min-width: 250px; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 16px; display: flex;">
+              <a href="{{ related_product.url }}" style="text-decoration: none; color: inherit;">
+                <img
+                  src="{{ related_product.featured_image | image_url: width: 300 }}"
+                  alt="{{ related_product.featured_image.alt | escape }}"
+                  style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;"
+                />
+                <div style="color: black; font-size: 16px; font-family: Inter; font-weight: 600; line-height: 19.20px; word-wrap: break-word; margin-top: 12px;">
+                  {{ related_product.title }}
+                </div>
+                <div style="color: black; font-size: 18px; font-family: Inter; font-weight: 700; line-height: 21.60px; word-wrap: break-word; margin-top: 8px;">
+                  {{ related_product.price | money }}
+                </div>
+              </a>
+            </div>
+          {%- endfor -%}
+        </div>
+      </div>
+    {%- endif -%}
+
+  </div>
+</product-info>
+
+<script>
+  /**
+   * VividWalls Product Page JavaScript
+   * Handles image switching, quantity controls, and variant selection
+   */
+
+  // Switch main product image when thumbnail is clicked
+  function switchMainImage(imageUrl, thumbnailElement) {
+    const mainImage = document.getElementById('mainProductImage');
+    if (mainImage) {
+      mainImage.src = imageUrl;
+    }
+
+    // Update selected state
+    document.querySelectorAll('.ThumbnailImageFull').forEach(thumb => {
+      thumb.classList.remove('selected');
+      const indicator = thumb.querySelector('.Seleted');
+      if (indicator) {
+        indicator.style.display = 'none';
+      }
+    });
+
+    thumbnailElement.classList.add('selected');
+    const selectedIndicator = thumbnailElement.querySelector('.Seleted');
+    if (selectedIndicator) {
+      selectedIndicator.style.display = 'block';
+    }
+  }
+
+  // Handle quantity changes
+  function changeQuantity(change) {
+    const quantityInput = document.getElementById('quantity');
+    if (quantityInput) {
+      let currentValue = parseInt(quantityInput.value) || 1;
+      let newValue = currentValue + change;
+
+      if (newValue < 1) newValue = 1;
+
+      quantityInput.value = newValue;
+    }
+  }
+
+  // Handle gallery wrap checkbox
+  document.addEventListener('DOMContentLoaded', function() {
+    const galleryWrapCheckbox = document.getElementById('galleryWrapCheckbox');
+    if (galleryWrapCheckbox) {
+      galleryWrapCheckbox.addEventListener('change', function() {
+        // Add logic to update price when gallery wrap is selected
+        console.log('Gallery wrap selected:', this.checked);
+      });
+    }
+  });
+
+  // Custom Variant Picker JavaScript Logic
+  document.addEventListener('DOMContentLoaded', function() {
+    const variantPicker = document.querySelector('.VariantPicker');
+    const mainProductImage = document.getElementById('mainProductImage');
+    const selectedWidth = document.querySelector('[data-selected-width]');
+    const selectedHeight = document.querySelector('[data-selected-height]');
+    const selectedPrice = document.querySelector('[data-selected-price]');
+    const productForm = document.querySelector('form[data-type="add-to-cart-form"]');
+    const variantIdInput = productForm ? productForm.querySelector('.product-variant-id') : null;
+
+    if (!variantPicker || !mainProductImage || !selectedWidth || !selectedHeight || !selectedPrice || !productForm || !variantIdInput) {
+      console.error('Required elements for custom variant picker not found.');
+      return;
+    }
+
+    variantPicker.addEventListener('click', function(event) {
+      const targetOption = event.target.closest('.VariantOption');
+      if (!targetOption || targetOption.classList.contains('sold-out')) {
+        return; // Ignore clicks on non-option elements or sold-out options
+      }
+
+      // Remove 'selected' class from all options
+      variantPicker.querySelectorAll('.VariantOption').forEach(option => {
+        option.classList.remove('selected');
+        // Hide selected indicator if you add one inside the option structure
+      });
+
+      // Add 'selected' class to the clicked option
+      targetOption.classList.add('selected');
+      // Show selected indicator if you add one inside the option structure
+
+      // Update displayed info
+      selectedWidth.textContent = targetOption.dataset.variantWidth;
+      selectedHeight.textContent = targetOption.dataset.variantHeight;
+      selectedPrice.textContent = targetOption.dataset.variantPrice;
+
+      // Update main image if variant has a featured media
+      const variantImage = targetOption.dataset.variantImage;
+      if (variantImage && variantImage !== 'null') { // Check for 'null' string as Liquid might output it
+         mainProductImage.src = variantImage;
+      } else {
+         // Optionally revert to default product image if variant has no specific image
+         // mainProductImage.src = '{{ product.featured_media | image_url: width: 800 }}'; // Example
+      }
+
+
+      // Update the hidden variant ID input in the form
+      const selectedVariantId = targetOption.dataset.variantId;
+      if (variantIdInput) {
+        variantIdInput.value = selectedVariantId;
+
+        // Dispatch a change event on the form input to trigger Shopify's built-in logic
+        variantIdInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+        // You might also need to manually trigger a form update if the above doesn't work
+        // const productInfo = document.querySelector('product-info');
+        // if (productInfo && typeof productInfo.updateOptions === 'function') {
+        //   productInfo.updateOptions();
+        // }
+      }
+
+      console.log('Variant selected:', selectedVariantId);
+    });
+
+    // Optional: Auto-select the first available variant on page load
+    const firstAvailableOption = variantPicker.querySelector('.VariantOption:not(.sold-out)');
+    if (firstAvailableOption) {
+        firstAvailableOption.click();
+    }
+  });
+</script>
+
+{% schema %}
+{
+  "name": "VividWalls Product",
+  "tag": "section",
+  "class": "section",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "scheme-1"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_related_products",
+      "default": true,
+      "label": "Show related products"
+    },
+    {
+      "type": "text",
+      "id": "related_products_title",
+      "default": "You might also like",
+      "label": "Related products title"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 36
+    }
+  ],
+  "blocks": [
+    {
+      "type": "title",
+      "name": "Product Title",
+      "limit": 1,
+      "settings": []
+    },
+    {
+      "type": "collection_info",
+      "name": "Collection Info",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "collection_label",
+          "default": "Collection:",
+          "label": "Collection label"
+        }
+      ]
+    },
+    {
+      "type": "artist_info",
+      "name": "Artist Info",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "artist_label",
+          "default": "Artist:",
+          "label": "Artist label"
+        },
+        {
+          "type": "text",
+          "id": "default_artist",
+          "default": "VividWalls Studio",
+          "label": "Default artist name"
+        }
+      ]
+    },
+    {
+      "type": "limited_edition",
+      "name": "Limited Edition Badge",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "limited_text",
+          "default": "Limited Edition",
+          "label": "Limited edition text"
+        }
+      ]
+    },
+    {
+      "type": "size_selection",
+      "name": "Size Selection",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "size_label",
+          "default": "Size",
+          "label": "Size label"
+        }
+      ]
+    },
+    {
+      "type": "price",
+      "name": "Price",
+      "limit": 1,
+      "settings": []
+    },
+    {
+      "type": "gallery_wrap",
+      "name": "Gallery Wrap Option",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "gallery_wrap_label",
+          "default": "Gallery Wrap Canvas",
+          "label": "Gallery wrap label"
+        },
+        {
+          "type": "text",
+          "id": "gallery_wrap_price",
+          "default": "+$25.00",
+          "label": "Gallery wrap price"
+        }
+      ]
+    },
+    {
+      "type": "quantity_selector",
+      "name": "Quantity Selector",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "quantity_label",
+          "default": "Quantity",
+          "label": "Quantity label"
+        }
+      ]
+    },
+    {
+      "type": "buy_buttons",
+      "name": "Buy Buttons",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "show_dynamic_checkout",
+          "default": true,
+          "label": "t:sections.main-product.blocks.buy_buttons.settings.show_dynamic_checkout.label",
+          "info": "t:sections.main-product.blocks.buy_buttons.settings.show_dynamic_checkout.info"
+        }
+      ]
+    },
+    {
+      "type": "certificate",
+      "name": "Certificate of Authenticity",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "certificate_title",
+          "default": "Certificate of Authenticity",
+          "label": "Certificate title"
+        },
+        {
+          "type": "textarea",
+          "id": "certificate_text",
+          "default": "Each artwork comes with a certificate of authenticity, ensuring the quality and originality of your purchase.",
+          "label": "Certificate description"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "VividWalls Product",
+      "blocks": [
+        {
+          "type": "title"
+        },
+        {
+          "type": "collection_info"
+        },
+        {
+          "type": "artist_info"
+        },
+        {
+          "type": "limited_edition"
+        },
+        {
+          "type": "size_selection"
+        },
+        {
+          "type": "price"
+        },
+        {
+          "type": "gallery_wrap"
+        },
+        {
+          "type": "quantity_selector"
+        },
+        {
+          "type": "buy_buttons"
+        },
+        {
+          "type": "certificate"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
+</final_file_content>
+
+IMPORTANT: For any future changes to this file, use the final_file_content shown above as your reference. This content reflects the current state of the file, including any auto-formatting (e.g., if you used single quotes but the formatter converted them to double quotes). Always base your SEARCH/REPLACE operations on this final version to ensure accuracy.<environment_details>
+# VSCode Visible Files
+services/theme/sections/main-product-figma.liquid
+
+# VSCode Open Tabs
+services/mcp-servers/core/shopify-mcp-server/code-examples/examples-accessible-pagination.md
+services/mcp-servers/core/shopify-mcp-server/code-examples/example-announcement-bar.md
+services/mcp-servers/core/shopify-mcp-server/code-examples/main-product.liquid
+services/theme/snippets/vividwalls-custom-variant-picker.liquid
+services/theme/sections/main-product-figma.liquid
+services/mcp-servers/creative/figma/output/main-product-page.css
+
+# Current Time
+6/8/2025, 5:44:33 PM (America/New_York, UTC-4:00)
+
+# Context Window Usage
+781,008 / 1,048.576K tokens used (74%)
+
+# Current Mode
+ACT MODE
+</environment_details>

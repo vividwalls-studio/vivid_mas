@@ -1,0 +1,123 @@
+#!/usr/bin/expect -f
+
+set timeout 300
+set passphrase "freedom"
+
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        send "cd /root/vivid_mas\r"
+    }
+}
+
+# Create a proper insertion script without escape issues
+expect "root@*"
+send "cat > proper_insert.sql << 'SQLEOF'\r"
+send "TRUNCATE agents CASCADE;\r"
+send "\r"
+send "INSERT INTO agents (id, name, role, type, capabilities, config) VALUES\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Marketing Director Agent', 'Strategic Marketing Leader', 'director', '[]'::jsonb, '{}'::jsonb),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'Analytics Director Agent', 'Data Analytics Leader', 'director', '[]'::jsonb, '{}'::jsonb),\r"
+send "('a9b8c7d6-5e4f-3a2b-1c9d-8e7f6a5b4c3d', 'Customer Experience Director', 'CX Strategy Leader', 'director', '[]'::jsonb, '{}'::jsonb),\r"
+send "('b8d7e6f5-4c3a-2b1a-9c8d-7e6f5a4b3c2d', 'Product Director Agent', 'Product Strategy Leader', 'director', '[]'::jsonb, '{}'::jsonb),\r"
+send "('c9e8f7g6-5d4b-3c2a-ad9e-8f7g6b5c4d3e', 'Finance Director Agent', 'Financial Strategy Leader', 'director', '[]'::jsonb, '{}'::jsonb),\r"
+send "('d0f9g8h7-6e5c-4d3b-be0f-9g8h7c6d5e4f', 'Operations Director Agent', 'Operations Leader', 'director', '[]'::jsonb, '{}'::jsonb),\r"
+send "('e1g0h9i8-7f6d-5e4c-cf1g-0h9i8d7e6f5g', 'Technology Director Agent', 'Technology Leader', 'director', '[]'::jsonb, '{}'::jsonb),\r"
+send "('a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Creative Content Task Agent', 'Content Creation Specialist', 'task', '[]'::jsonb, '{}'::jsonb),\r"
+send "('b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e', 'Campaign Analytics Task Agent', 'Campaign Analysis Specialist', 'task', '[]'::jsonb, '{}'::jsonb),\r"
+send "('c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f', 'Audience Intelligence Task Agent', 'Audience Analysis Specialist', 'task', '[]'::jsonb, '{}'::jsonb),\r"
+send "('d4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9a', 'Budget Intelligence Task Agent', 'Budget Analysis Specialist', 'task', '[]'::jsonb, '{}'::jsonb),\r"
+send "('e5f6a7b8-c9d0-1e2f-3a4b-5c6d7e8f9a0b', 'Art Trend Intelligence Task Agent', 'Art Trend Analyst', 'task', '[]'::jsonb, '{}'::jsonb),\r"
+send "('f6a7b8c9-d0e1-2f3a-4b5c-6d7e8f9a0b1c', 'Product Content Task Agent', 'Product Content Specialist', 'task', '[]'::jsonb, '{}'::jsonb),\r"
+send "('a7b8c9d0-e1f2-3a4b-5c6d-7e8f9a0b1c2d', 'Product Performance Task Agent', 'Product Performance Analyst', 'task', '[]'::jsonb, '{}'::jsonb),\r"
+send "('b8c9d0e1-f2a3-4b5c-6d7e-8f9a0b1c2d3e', 'Customer Sentiment Task Agent', 'Customer Sentiment Analyst', 'task', '[]'::jsonb, '{}'::jsonb);\r"
+send "\r"
+send "SELECT COUNT(*) as agent_count FROM agents;\r"
+send "SQLEOF\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres < proper_insert.sql\r"
+
+expect {
+    "INSERT 0" {
+        puts "\nAgents inserted successfully!"
+    }
+    "agent_count" {
+        puts "\nCounting agents..."
+    }
+}
+
+# Add beliefs
+expect "root@*"
+send "cat > insert_beliefs.sql << 'SQLEOF'\r"
+send "INSERT INTO agent_beliefs (agent_id, belief) VALUES\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Data-driven marketing yields the best ROI'),\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Customer experience is the key differentiator'),\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Brand consistency builds trust'),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'Data quality determines insight accuracy'),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'Real-time analytics enable agile decisions'),\r"
+send "('a9b8c7d6-5e4f-3a2b-1c9d-8e7f6a5b4c3d', 'Customer satisfaction drives business growth'),\r"
+send "('b8d7e6f5-4c3a-2b1a-9c8d-7e6f5a4b3c2d', 'Product innovation requires customer feedback');\r"
+send "SQLEOF\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres < insert_beliefs.sql\r"
+
+# Add goals
+expect "root@*"
+send "cat > insert_goals.sql << 'SQLEOF'\r"
+send "INSERT INTO agent_goals (agent_id, goal, priority) VALUES\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Increase brand awareness by 30%', 9),\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Improve customer acquisition cost', 8),\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'Launch omnichannel marketing strategy', 7),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'Implement real-time analytics dashboard', 9),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'Reduce data processing time by 50%', 8),\r"
+send "('a9b8c7d6-5e4f-3a2b-1c9d-8e7f6a5b4c3d', 'Improve NPS score by 20 points', 9),\r"
+send "('b8d7e6f5-4c3a-2b1a-9c8d-7e6f5a4b3c2d', 'Launch 3 new product lines', 8);\r"
+send "SQLEOF\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres < insert_goals.sql\r"
+
+# Add LLM configs
+expect "root@*"
+send "cat > insert_llm.sql << 'SQLEOF'\r"
+send "INSERT INTO agent_llm_config (agent_id, model, temperature, max_tokens) VALUES\r"
+send "('e18f66d5-ef52-4a6e-aea6-7e693148552b', 'gpt-4', 0.7, 2000),\r"
+send "('f7e4b9c1-6d3a-4e8f-9b2a-8c5d3e4f9a1b', 'gpt-4', 0.3, 2000),\r"
+send "('a9b8c7d6-5e4f-3a2b-1c9d-8e7f6a5b4c3d', 'gpt-4', 0.8, 2000),\r"
+send "('b8d7e6f5-4c3a-2b1a-9c8d-7e6f5a4b3c2d', 'gpt-4', 0.5, 2000),\r"
+send "('c9e8f7g6-5d4b-3c2a-ad9e-8f7g6b5c4d3e', 'gpt-4', 0.2, 2000),\r"
+send "('d0f9g8h7-6e5c-4d3b-be0f-9g8h7c6d5e4f', 'gpt-4', 0.4, 2000),\r"
+send "('e1g0h9i8-7f6d-5e4c-cf1g-0h9i8d7e6f5g', 'gpt-4', 0.3, 2000)\r"
+send "ON CONFLICT (agent_id) DO UPDATE SET model = EXCLUDED.model, temperature = EXCLUDED.temperature;\r"
+send "SQLEOF\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres < insert_llm.sql\r"
+
+# Final verification
+expect "root@*"
+send "echo '===== FINAL VERIFICATION ====='\r"
+
+expect "root@*"
+send "docker exec -i supabase-db psql -U postgres -d postgres << 'EOF'\r"
+send "SELECT 'Total Agents:' as metric, COUNT(*) as count FROM agents\r"
+send "UNION ALL SELECT 'Directors:', COUNT(*) FROM agents WHERE type = 'director'\r"
+send "UNION ALL SELECT 'Task Agents:', COUNT(*) FROM agents WHERE type = 'task'\r"
+send "UNION ALL SELECT 'With Beliefs:', COUNT(DISTINCT agent_id) FROM agent_beliefs\r"
+send "UNION ALL SELECT 'With Goals:', COUNT(DISTINCT agent_id) FROM agent_goals\r"
+send "UNION ALL SELECT 'With LLM Config:', COUNT(DISTINCT agent_id) FROM agent_llm_config;\r"
+send "\r"
+send "SELECT id, name, role, type FROM agents ORDER BY type, name;\r"
+send "EOF\r"
+
+expect "root@*"
+send "exit\r"
+
+expect eof

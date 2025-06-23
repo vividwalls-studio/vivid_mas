@@ -1,0 +1,57 @@
+{
+  "name": "@vividwalls/kpi-dashboard-mcp",
+  "version": "1.0.0",
+  "description": "KPI Dashboard MCP Server for VividWalls Business Manager Agent",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest src/tests/business-manager-kpis.test.ts",
+    "test:integration": "jest src/tests/mcp-server-integration.test.ts",
+    "test:crisis": "jest src/tests/crisis-monitoring.test.ts",
+    "test:report": "jest src/tests/stakeholder-report.test.ts",
+    "lint": "eslint src/**/*.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "fastmcp": "^1.0.0",
+    "zod": "^3.22.0",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.0",
+    "ws": "^8.0.0",
+    "@supabase/supabase-js": "^2.0.0",
+    "chart.js": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/express": "^4.17.0",
+    "@types/ws": "^8.0.0",
+    "@types/jest": "^29.5.0",
+    "@jest/globals": "^29.5.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.0",
+    "tsx": "^4.0.0",
+    "eslint": "^8.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "kpi",
+    "dashboard",
+    "analytics",
+    "business-intelligence",
+    "vividwalls"
+  ],
+  "author": "VividWalls",
+  "license": "MIT"
+}

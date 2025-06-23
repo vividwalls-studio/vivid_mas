@@ -1,0 +1,20 @@
+#!/usr/bin/expect -f
+
+set timeout 300
+set passphrase "freedom"
+
+spawn rsync -avz -e "ssh -i /Users/kinglerbercy/.ssh/digitalocean" ./scripts ./mcp_conversion ./sql_chunks root@157.230.13.13:/root/vivid_mas/
+
+expect {
+    "Enter passphrase for key*" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "Are you sure you want to continue connecting*" {
+        send "yes\r"
+        exp_continue
+    }
+    eof
+}
+
+wait

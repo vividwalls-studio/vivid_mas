@@ -1,0 +1,153 @@
+{
+  "name": "VividWalls Multi-Agent System Workflow Overview",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# VividWalls Multi-Agent System Workflow Overview",
+        "height": 2480,
+        "width": 6340,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -7480,
+        -360
+      ],
+      "typeVersion": 1,
+      "id": "d1cc8e43-db15-4a69-a4b9-842440e2e32e",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "## System Architecture Overview\n\nThis document provides a comprehensive activity diagram showing how all agents interact within the VividWalls Multi-Agent System (MAS).\n\n## Main System Activity Diagram\n\n```mermaid\ngraph TB\n    %% Start and End points\n    Start([System Start])\n    End([System End])\n    \n    %% External Triggers\n    UserRequest[/User Request/]\n    ScheduledTask[/Scheduled Task/]\n    WebhookTrigger[/Webhook Event/]\n    \n    %% Business Manager - Central Orchestrator\n    BMDecision{Business Manager<br/>Decision Engine}\n    BMAnalyze[Analyze Request Type]\n    BMAllocate[Allocate Resources]\n    BMMonitor[Monitor Performance]\n    \n    %% Director Level Agents\n    MarketingDir{Marketing Director}\n    SocialDir{Social Media Director}\n    AnalyticsDir{Analytics Director}\n    \n    %% Execution Agents\n    EmailMarketing[Email Marketing Agent]\n    ShopifyAgent[Shopify Agent]\n    CustomerService[Customer Service Agent]\n    OrdersFulfillment[Orders Fulfillment Agent]\n    \n    %% Content Creation Agents\n    CopyWriter[Copy Writer Agent]\n    CopyEditor[Copy Editor Agent]\n    KeywordAgent[Keyword Agent]\n    \n    %% Social Media Agents\n    FacebookAgent[Facebook Agent]\n    InstagramAgent[Instagram Agent]\n    PinterestAgent[Pinterest Agent]\n    \n    %% MCP Tools Layer\n    subgraph MCP Tools\n        ShopifyMCP[Shopify MCP]\n        FacebookMCP[Facebook Ads MCP]\n        EmailMCP[Email Marketing MCP]\n        SEOMCP[SEO Research MCP]\n        SupabaseMCP[Supabase MCP]\n        Neo4jMCP[Neo4j MCP]\n        ColorMCP[Color Psychology MCP]\n    end\n    \n    %% Data Stores\n    subgraph Data Layer\n        BusinessKB[(Business Knowledge Base)]\n        SharedKB[(Shared Agency Knowledge)]\n        CustomerDB[(Customer Database)]\n        ProductDB[(Product Database)]\n    end\n    \n    %% Main Flow\n    Start --> UserRequest\n    Start --> ScheduledTask\n    Start --> WebhookTrigger\n    \n    UserRequest --> BMAnalyze\n    ScheduledTask --> BMAnalyze\n    WebhookTrigger --> BMAnalyze\n    \n    BMAnalyze --> BMDecision\n    \n    %% Business Manager Decision Branches\n    BMDecision -->|Marketing Task| MarketingDir\n    BMDecision -->|Sales/Support Task| ShopifyAgent\n    BMDecision -->|Order Processing| OrdersFulfillment\n    BMDecision -->|Customer Issue| CustomerService\n    BMDecision -->|Analytics Request| AnalyticsDir\n    \n    %% Marketing Director Flow\n    MarketingDir -->|Email Campaign| EmailMarketing\n    MarketingDir -->|Social Media| SocialDir\n    MarketingDir -->|Content Need| CopyWriter\n    MarketingDir -->|SEO Research| KeywordAgent\n    \n    %% Social Media Director Flow\n    SocialDir -->|Facebook Campaign| FacebookAgent\n    SocialDir -->|Instagram Content| InstagramAgent\n    SocialDir -->|Pinterest Strategy| PinterestAgent\n    \n    %% Content Creation Flow\n    CopyWriter --> CopyEditor\n    CopyEditor -->|Approved| MarketingDir\n    \n    %% MCP Tool Usage\n    EmailMarketing --> EmailMCP\n    EmailMarketing --> ShopifyMCP\n    \n    ShopifyAgent --> ShopifyMCP\n    ShopifyAgent --> SupabaseMCP\n    \n    FacebookAgent --> FacebookMCP\n    InstagramAgent --> FacebookMCP\n    PinterestAgent --> ShopifyMCP\n    \n    KeywordAgent --> SEOMCP\n    \n    %% Data Access\n    BMDecision --> BusinessKB\n    MarketingDir --> SharedKB\n    ShopifyAgent --> CustomerDB\n    ShopifyAgent --> ProductDB\n    \n    %% Performance Monitoring\n    BMDecision --> BMMonitor\n    BMMonitor -->|Performance Data| AnalyticsDir\n    AnalyticsDir -->|Reports| BMDecision\n    \n    %% Completion Flows\n    EmailMarketing -->|Complete| BMMonitor\n    ShopifyAgent -->|Complete| BMMonitor\n    OrdersFulfillment -->|Complete| BMMonitor\n    CustomerService -->|Complete| BMMonitor\n    \n    BMMonitor -->|All Tasks Complete| End\n```",
+        "height": 2200,
+        "width": 680
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -7380,
+        -200
+      ],
+      "typeVersion": 1,
+      "id": "0532732a-b308-4c06-868d-8e90dcbb55da",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "content": "## Inter-Agent Communication Flow\n\n```mermaid\nsequenceDiagram\n    participant User\n    participant BM as Business Manager\n    participant MD as Marketing Director\n    participant EM as Email Marketing\n    participant SM as Social Media Director\n    participant FA as Facebook Agent\n    participant MCP as MCP Servers\n    participant KB as Knowledge Base\n    \n    User->>BM: Marketing Campaign Request\n    BM->>KB: Check Historical Performance\n    KB-->>BM: Past Campaign Data\n    \n    BM->>MD: Create Campaign Strategy\n    Note over BM,MD: Includes budget, timeline, objectives\n    \n    MD->>EM: Email Campaign Component\n    MD->>SM: Social Media Component\n    \n    par Email Execution\n        EM->>MCP: Get Customer Segments\n        MCP-->>EM: Segment Data\n        EM->>MCP: Create Campaign\n        MCP-->>EM: Campaign Created\n    and Social Execution\n        SM->>FA: Facebook Campaign\n        FA->>MCP: Create Ad Sets\n        MCP-->>FA: Ad Sets Created\n    end\n    \n    EM-->>MD: Email Complete\n    FA-->>SM: Facebook Complete\n    SM-->>MD: Social Complete\n    \n    MD-->>BM: Campaign Launched\n    BM->>KB: Store Campaign Data\n    BM-->>User: Campaign Status Update\n```",
+        "height": 740,
+        "width": 680
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -6600,
+        -200
+      ],
+      "typeVersion": 1,
+      "id": "b11aefa6-e645-41f4-85b0-fe4282dc2e15",
+      "name": "Sticky Note12"
+    },
+    {
+      "parameters": {
+        "content": "## Decision Flow Pattern\n\n```mermaid\ngraph TD\n    %% Decision Framework\n    Request[Incoming Request]\n    Analyze{Analyze Request Type}\n    \n    %% Request Types\n    Marketing{Marketing<br/>Request?}\n    Sales{Sales<br/>Request?}\n    Support{Support<br/>Request?}\n    Analytics{Analytics<br/>Request?}\n    \n    %% Priority Assessment\n    Priority{Assess Priority}\n    High[High Priority]\n    Medium[Medium Priority]\n    Low[Low Priority]\n    \n    %% Resource Check\n    Resources{Resources<br/>Available?}\n    Allocate[Allocate Resources]\n    Queue[Queue Request]\n    \n    %% Execution\n    Execute[Execute Task]\n    Monitor[Monitor Progress]\n    Complete[Task Complete]\n    \n    %% Flow\n    Request --> Analyze\n    Analyze --> Marketing\n    Analyze --> Sales\n    Analyze --> Support\n    Analyze --> Analytics\n    \n    Marketing --> Priority\n    Sales --> Priority\n    Support --> Priority\n    Analytics --> Priority\n    \n    Priority --> High\n    Priority --> Medium\n    Priority --> Low\n    \n    High --> Resources\n    Medium --> Resources\n    Low --> Queue\n    \n    Resources -->|Yes| Allocate\n    Resources -->|No| Queue\n    \n    Allocate --> Execute\n    Execute --> Monitor\n    Monitor --> Complete\n    \n    Queue -->|Resources Free| Allocate\n```\n",
+        "height": 1000,
+        "width": 680
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -5820,
+        -200
+      ],
+      "typeVersion": 1,
+      "id": "a20d1764-fced-45d1-94a0-41efe3aa3fb1",
+      "name": "Sticky Note13"
+    },
+    {
+      "parameters": {
+        "content": "## Parallel Processing Pattern\n\n```mermaid\ngraph LR\n    %% Parallel Execution\n    Start[Campaign Start]\n    \n    subgraph Parallel Tasks\n        Email[Email Campaign]\n        Facebook[Facebook Ads]\n        Instagram[Instagram Posts]\n        Pinterest[Pinterest Pins]\n        SEO[SEO Optimization]\n    end\n    \n    Sync{Synchronization<br/>Point}\n    Report[Consolidated Report]\n    Complete[Campaign Complete]\n    \n    %% Flow\n    Start --> Email\n    Start --> Facebook\n    Start --> Instagram\n    Start --> Pinterest\n    Start --> SEO\n    \n    Email --> Sync\n    Facebook --> Sync\n    Instagram --> Sync\n    Pinterest --> Sync\n    SEO --> Sync\n    \n    Sync --> Report\n    Report --> Complete\n```",
+        "height": 620,
+        "width": 680
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -5040,
+        -200
+      ],
+      "typeVersion": 1,
+      "id": "af581abc-1789-46c3-b05e-ba7372e80699",
+      "name": "Sticky Note14"
+    },
+    {
+      "parameters": {
+        "content": "\n## Error Handling Pattern\n\n```mermaid\ngraph TD\n    %% Error Handling\n    Task[Task Execution]\n    Error{Error<br/>Detected?}\n    \n    %% Error Types\n    Retry{Retryable?}\n    RetryCount{Retry Count<br/><3?}\n    \n    %% Actions\n    RetryTask[Retry Task]\n    LogError[Log Error]\n    Escalate[Escalate to BM]\n    Notify[Notify Human]\n    Fallback[Execute Fallback]\n    \n    %% Recovery\n    Recovery[Recovery Process]\n    Resume[Resume Normal Flow]\n    \n    %% Flow\n    Task --> Error\n    Error -->|No| Resume\n    Error -->|Yes| LogError\n    \n    LogError --> Retry\n    Retry -->|Yes| RetryCount\n    Retry -->|No| Escalate\n    \n    RetryCount -->|Yes| RetryTask\n    RetryCount -->|No| Escalate\n    \n    RetryTask --> Task\n    \n    Escalate --> Fallback\n    Escalate --> Notify\n    \n    Fallback --> Recovery\n    Recovery --> Resume\n```",
+        "height": 740,
+        "width": 680
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -4240,
+        -200
+      ],
+      "typeVersion": 1,
+      "id": "2f9a597b-f8bc-4531-a5e4-5095dc5a4efb",
+      "name": "Sticky Note15"
+    },
+    {
+      "parameters": {
+        "content": "## Key Integration Points\n\n### 1. Business Manager Hub\n- Central decision-making and orchestration\n- Resource allocation and monitoring\n- Performance tracking and optimization\n\n### 2. Director-Level Coordination\n- Marketing Director: Campaign strategy\n- Social Media Director: Platform management\n- Analytics Director: Performance insights\n\n### 3. Execution Layer\n- Specialized agents for specific tasks\n- Direct MCP tool integration\n- Autonomous operation within parameters\n\n### 4. MCP Server Layer\n- Tool access for all agents\n- Standardized API interfaces\n- Centralized authentication\n\n### 5. Knowledge Management\n- Business-specific knowledge base\n- Shared agency knowledge\n- Historical performance data",
+        "height": 660,
+        "width": 680
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3460,
+        -200
+      ],
+      "typeVersion": 1,
+      "id": "356b4ab8-1112-46ba-883f-945facbde098",
+      "name": "Sticky Note16"
+    },
+    {
+      "parameters": {
+        "content": "## Performance Monitoring\n\n```mermaid\ngraph TB\n    %% Monitoring Flow\n    Agents[All Agents]\n    Metrics[Performance Metrics]\n    \n    subgraph KPIs\n        Revenue[Revenue Metrics]\n        Engagement[Engagement Rates]\n        Conversion[Conversion Rates]\n        Efficiency[Task Efficiency]\n    end\n    \n    Analytics[Analytics Director]\n    Dashboard[Executive Dashboard]\n    Alerts{Alert<br/>Thresholds?}\n    \n    Notify[Notify Business Manager]\n    Optimize[Optimization Recommendations]\n    \n    %% Flow\n    Agents --> Metrics\n    Metrics --> Revenue\n    Metrics --> Engagement\n    Metrics --> Conversion\n    Metrics --> Efficiency\n    \n    Revenue --> Analytics\n    Engagement --> Analytics\n    Conversion --> Analytics\n    Efficiency --> Analytics\n    \n    Analytics --> Dashboard\n    Analytics --> Alerts\n    \n    Alerts -->|Exceeded| Notify\n    Analytics --> Optimize\n    \n    Notify --> Agents\n    Optimize --> Agents\n```",
+        "height": 740,
+        "width": 680
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2680,
+        -200
+      ],
+      "typeVersion": 1,
+      "id": "eb78ff50-148f-4058-96be-41fa2f27c344",
+      "name": "Sticky Note17"
+    },
+    {
+      "parameters": {
+        "content": "## System States\n\n1. **Idle**: Monitoring for triggers\n2. **Processing**: Active task execution\n3. **Synchronizing**: Inter-agent coordination\n4. **Monitoring**: Performance tracking\n5. **Optimizing**: Strategy adjustment\n6. **Error Recovery**: Handling failures\n\n## Best Practices\n\n1. **Hierarchical Decision Making**: Business Manager → Directors → Execution Agents\n2. **Parallel Processing**: Independent tasks run simultaneously\n3. **Error Resilience**: Retry logic and fallback strategies\n4. **Performance Monitoring**: Continuous KPI tracking\n5. **Knowledge Sharing**: Centralized knowledge bases\n6. **Tool Integration**: Standardized MCP interfaces",
+        "height": 440,
+        "width": 660
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1900,
+        -200
+      ],
+      "typeVersion": 1,
+      "id": "07b724ba-f43c-4c8b-8407-5779fd3b3cca",
+      "name": "Sticky Note18"
+    }
+  ],
+  "pinData": {},
+  "connections": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8b37fdb7-0907-4940-8966-3e6e666897a9",
+  "meta": {
+    "instanceId": "80621a4270e0ac393edfe0b84576ab8588a37d1db0f23bca7018517bcf39d930"
+  },
+  "id": "oETleo2W1DxVgZse",
+  "tags": []
+}
