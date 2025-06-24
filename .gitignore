@@ -70,3 +70,6 @@ archive/backups/
 marketing-creatives/*.psd
 marketing-creatives/geo_intersect_original_018.png
 *.tar.gz
+
+# Task directory
+task/
