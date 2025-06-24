@@ -61,3 +61,12 @@ coverage/
 # Docker volumes (local data)
 docker/volumes/
 !docker/volumes/.gitkeep
+
+# Archive files with secrets
+archive/throwaway-scripts-20250612/
+archive/backups/
+
+# Large image files
+marketing-creatives/*.psd
+marketing-creatives/geo_intersect_original_018.png
+*.tar.gz
