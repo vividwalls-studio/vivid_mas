@@ -95,6 +95,13 @@ The VividWalls MAS follows a hierarchical structure:
 **System Prompt**: [social_media_director_agent.md](prompts/core/social_media_director_agent.md)  
 **n8n Workflow**: [social_media_director_agent.json](workflows/social_media_director_agent.json)
 
+### 10. Creative Director Agent
+**Role**: Chief Creative Officer - Visual Content & Brand Identity  
+**Key Responsibilities**: Oversee image, video, and audio asset creation; define creative briefs; ensure brand identity and design principles; approve AI-generated visuals; maintain Brand Guidelines Knowledge Base  
+**Coordinates With**: Marketing Director, Social Media Director, Content Strategy Agent  
+**System Prompt**: [creative_director_agent_system_prompt.md](prompts/core/creative_director_agent_system_prompt.md)  
+**n8n Workflow**: [creative_director_agent.json](workflows/marketing/creative_director_agent.json)
+
 ## Marketing Department Agents
 
 ### Platform Specialists
