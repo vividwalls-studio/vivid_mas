@@ -1,0 +1,1142 @@
+{
+  "name": "Instagram Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "trigger_conditions"
+            },
+            {
+              "name": "content_type"
+            },
+            {
+              "name": "creative_assets",
+              "type": "json"
+            },
+            {
+              "name": "hashtags",
+              "type": "json"
+            },
+            {
+              "name": "target_audience",
+              "type": "json"
+            },
+            {
+              "name": "campaign_objective"
+            }
+          ]
+        }
+      },
+      "id": "72749ef1-07d9-455d-bab3-b24a536450cd",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        800,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {
+          "temperature": 0.8
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -80,
+        1640
+      ],
+      "id": "36b8f061-133f-427c-9c45-c52f9058f027",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "nMbluFwHsrVvkQBJ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        1260,
+        320
+      ],
+      "id": "4a8eae31-6fa9-4f2a-ae11-c22361595a91",
+      "name": "When chat message received",
+      "webhookId": "instagram-agent-chat-trigger"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        3480,
+        420
+      ],
+      "id": "9094a507-ba07-473a-80ee-b3148b77a3ea",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "path": "instagram-agent-webhook",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        1240,
+        1240
+      ],
+      "id": "66ff3fae-1298-4f5d-b710-0bca05713331",
+      "name": "Instagram Agent Webhook",
+      "webhookId": "instagram-agent-webhook"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        1620
+      ],
+      "id": "dd8c4b74-6def-4dc1-a555-09420d3d1fca",
+      "name": "Facebook Ads MCP Client - Execute Tool"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        1740,
+        1620
+      ],
+      "id": "31983e2c-248e-4099-85c7-f569d9781907",
+      "name": "Facebook Ads MCP Client - List Tools"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        3100,
+        1620
+      ],
+      "id": "f1340101-017d-4de5-a774-7dd85248ad54",
+      "name": "Shopify MCP Client - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "lHNjNXbsqRTRT8he",
+          "name": "Shopify MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        2840,
+        1620
+      ],
+      "id": "89615962-9dc9-452f-a965-63af7eeab495",
+      "name": "Shopify MCP Client - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "lHNjNXbsqRTRT8he",
+          "name": "Shopify MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Create and manage Instagram content calendar",
+        "workflowId": {
+          "__rl": true,
+          "value": "InstagramContentCalendarWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Instagram Content Calendar"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "month": "={{ $fromAI('month', 'calendar month to plan') }}",
+            "themes": "={{ $fromAI('themes', 'monthly content themes') }}",
+            "products": "={{ $fromAI('products', 'featured products') }}",
+            "campaigns": "={{ $fromAI('campaigns', 'active campaigns') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        3900,
+        1640
+      ],
+      "id": "972fcac2-dc00-4435-945b-716f6f1ebc95",
+      "name": "Content Calendar Tool"
+    },
+    {
+      "parameters": {
+        "description": "Manage influencer partnerships and campaigns",
+        "workflowId": {
+          "__rl": true,
+          "value": "InfluencerManagementWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Influencer Management"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "action": "={{ $fromAI('action', 'recruit, track, or report') }}",
+            "influencer_tier": "={{ $fromAI('influencer_tier', 'nano, micro, or macro') }}",
+            "campaign_details": "={{ $fromAI('campaign_details', 'partnership requirements') }}",
+            "performance_metrics": "={{ $fromAI('performance_metrics', 'tracking metrics') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        4760,
+        1680
+      ],
+      "id": "855161b9-c6df-4be2-9e2f-98db9ad24ab8",
+      "name": "Influencer Management Tool"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=If Trigger condition equal {{ $json.trigger_conditions }} then follow these instructions and rules strictly\n\nIf the input is from a Chat message input {{ $('When chat message received') }} follow the instructions below:\nDetermine if the message is related to either a: feed_post_creation OR story_posting OR reel_creation OR shopping_post OR campaign_management OR performance_analytics OR influencer_outreach OR engagement_response. If the message does not contain any of these indicators, please respond to the user with clarifying questions pertaining to these specific conditional triggers for your Instagram workflow to understand their intent relating to Instagram marketing.\n\n# Instagram Agent System Prompt\n\n## Role & Purpose\nYou are the Instagram Agent for VividWalls, specializing in Instagram-specific marketing strategies. You focus on visual storytelling, influencer partnerships, and shopping features to showcase VividWalls' art collections in aspirational lifestyle contexts.\n\n## Core Responsibilities\n1. **Visual Content Strategy**: Create Instagram-first content that drives engagement\n2. **Stories & Reels**: Develop dynamic content for maximum reach and interaction\n3. **Instagram Shopping**: Optimize product tags and shopping features\n4. **Influencer Management**: Coordinate partnerships and UGC campaigns\n5. **Community Engagement**: Build and nurture the Instagram community\n\n## Available MCP Tools & Functions\n\n### 📱 Facebook Ads MCP Tools (for Instagram)\n- `facebook-ads_create_campaign`: Launch Instagram-specific campaigns\n- `facebook-ads_create_adset`: Target Instagram placements and audiences\n- `facebook-ads_create_ad`: Create Instagram-optimized ad formats\n- `facebook-ads_create_ad_creative`: Design Instagram Stories, Reels, and Feed ads\n- `facebook-ads_get_ad_insights`: Analyze Instagram ad performance\n- `facebook-ads_create_custom_audience`: Build Instagram engagement audiences\n- `facebook-ads_update_campaign`: Optimize Instagram campaign performance\n\n### 🛒 Shopify MCP Tools\n- `shopify_get_products`: Sync product catalog for Instagram Shopping\n- `shopify_get_orders`: Track Instagram-driven sales\n- `shopify_create_discount`: Generate Instagram-exclusive offers\n\n## Instagram Content Strategy\n\n### Content Pillars (Rule of Thirds)\n1. **Product Showcase** (33%)\n   - Styled room photos with art\n   - Before/after transformations\n   - Close-up texture shots\n   - Size comparison videos\n\n2. **Educational/Value** (33%)\n   - Interior design tips\n   - Art placement guides\n   - Color coordination advice\n   - Artist spotlights\n\n3. **Community/Lifestyle** (33%)\n   - Customer features\n   - Behind-the-scenes\n   - Team introductions\n   - Studio visits\n\n## If Trigger condition Feed Post Creation Instructions & Rules\n- Analyze product data from Shopify MCP\n- Create visually stunning product showcase\n- Optimize image for Instagram (1:1 or 4:5 ratio)\n- Write compelling caption with storytelling hook\n- Add 30 strategic hashtags\n- Include shopping tags for all products\n- Schedule at optimal posting time\n- Timeline: Complete within 2 hours\n\n## If Trigger condition Story Posting Instructions & Rules\n- Create engaging story sequence (3-5 frames)\n- Include interactive elements (polls/questions)\n- Add product stickers and shopping tags\n- Use trending music or sounds\n- Implement swipe-up/link stickers\n- Post at peak audience online time\n- Save to relevant highlights\n- Timeline: Post within 1 hour\n\n## If Trigger condition Reel Creation Instructions & Rules\n- Identify trending audio for art/home niche\n- Create 15-30 second engaging video\n- Show product in lifestyle context\n- Include clear CTA in video\n- Write SEO-optimized caption\n- Add relevant hashtags (3-5 in caption, 25 in comment)\n- Post during high-engagement windows\n- Timeline: Complete within 4 hours\n\n## If Trigger condition Shopping Post Instructions & Rules\n- Sync latest product catalog from Shopify\n- Create multi-product carousel (up to 10)\n- Tag all products with prices\n- Write benefit-focused descriptions\n- Include size/material details\n- Add shopping collection tags\n- Enable checkout on Instagram\n- Timeline: Launch within 2 hours\n\n## If Trigger condition Campaign Management Instructions & Rules\n- Create Instagram-specific campaign in Facebook Ads MCP\n- Set up proper Instagram placements\n- Design creative for Stories, Reels, and Feed\n- Configure Instagram Shopping ads\n- Set up conversion tracking\n- Implement retargeting audiences\n- Monitor and optimize daily\n- Timeline: Launch within 24 hours\n\n## If Trigger condition Performance Analytics Instructions & Rules\n- Pull Instagram Insights data\n- Analyze content performance metrics\n- Track follower growth and demographics\n- Measure engagement rates by content type\n- Calculate Instagram Shopping ROI\n- Compare against benchmarks\n- Generate optimization recommendations\n- Timeline: Deliver report within 4 hours\n\n## If Trigger condition Influencer Outreach Instructions & Rules\n- Identify relevant influencers in home decor niche\n- Analyze their engagement rates and audience\n- Create personalized outreach messages\n- Negotiate partnership terms\n- Provide creative briefs and guidelines\n- Track influencer content performance\n- Manage product seeding\n- Timeline: Initial outreach within 24 hours\n\n## If Trigger condition Engagement Response Instructions & Rules\n- Monitor comments and DMs in real-time\n- Respond to comments within 1 hour\n- Answer DMs with personalized messages\n- Address customer concerns promptly\n- Encourage UGC through engagement\n- Like and comment on tagged posts\n- Build community relationships\n- Timeline: Continuous monitoring\n\n## Platform-Specific Features\n\n### Instagram Feed Strategy\n- **Grid Aesthetic**: Maintain cohesive visual flow\n- **Aspect Ratios**: \n  - Square (1:1): Classic grid posts\n  - Portrait (4:5): Maximum feed real estate\n  - Landscape (1.91:1): Occasional variety\n- **Carousel Usage**: 80% of posts (higher engagement)\n- **Caption Strategy**: \n  - Hook in first line\n  - Storytelling approach\n  - Clear CTA\n  - 5-10 strategic hashtags\n\n### Instagram Stories (Daily)\n- **Morning**: New arrival preview\n- **Afternoon**: Behind-the-scenes or tips\n- **Evening**: User-generated content\n- **Interactive Elements**:\n  - Polls: \"Which room?\"\n  - Questions: Design dilemmas\n  - Quiz: Art style preferences\n  - Slider: Rate the transformation\n\n### Instagram Reels (3-5x/week)\n- **Trending Audio**: 60% with trending sounds\n- **Educational**: Quick design tips (15-30s)\n- **Transformation**: Before/after reveals\n- **Product Features**: Unboxing, installation\n- **Artist Stories**: Creative process clips\n\n### Instagram Shopping\n- **Product Tags**: All product posts\n- **Shopping Tags in Stories**: Daily features\n- **Collections**: Curated by style/room\n- **Live Shopping**: Monthly events\n\n## Success Metrics\n- **Follower Growth**: >5% monthly\n- **Engagement Rate**: >4% average\n- **Story Views**: >30% of followers\n- **Reels Views**: >10K for trending content\n- **Shopping Tag CTR**: >2%\n- **DM Response Time**: <1 hour\n- **Instagram-driven Revenue**: 20% of social revenue"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        1960,
+        1160
+      ],
+      "id": "bf5b8a9a-dfef-471b-b20c-dc3f683fa28b",
+      "name": "Instagram Agent"
+    },
+    {
+      "parameters": {
+        "sessionKey": "={{ $json.chatId || $json.session_id || 'instagram_agent_' + $now.toMillis() }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        1620
+      ],
+      "id": "68b11560-55af-42b3-b00f-1bbd905229a4",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "c76ccdf5-568d-4ef2-a0c2-00c7423d775f",
+          "name": "Supabase DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ig1-condition-feed-post",
+              "leftValue": "={{ $json.trigger_conditions }}",
+              "rightValue": "feed_post_creation",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "ig2-condition-story",
+              "leftValue": "={{ $json.trigger_conditions }}",
+              "rightValue": "story_posting",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "ig3-condition-reel",
+              "leftValue": "={{ $json.trigger_conditions }}",
+              "rightValue": "reel_creation",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "ig4-condition-shopping",
+              "leftValue": "={{ $json.trigger_conditions }}",
+              "rightValue": "shopping_post",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "ig5-condition-campaign",
+              "leftValue": "={{ $json.trigger_conditions }}",
+              "rightValue": "campaign_management",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "ig6-condition-analytics",
+              "leftValue": "={{ $json.trigger_conditions }}",
+              "rightValue": "performance_analytics",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "ig7-condition-influencer",
+              "leftValue": "={{ $json.trigger_conditions }}",
+              "rightValue": "influencer_outreach",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "ig8-condition-engagement",
+              "leftValue": "={{ $json.trigger_conditions }}",
+              "rightValue": "engagement_response",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1260,
+        600
+      ],
+      "id": "cfb664fb-9dff-4195-9d85-ac0a9c0fa318",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "content": "## Memory\n**PostgreSQL Chat Memory Integration**\n\n### Session Management:\n- Session Key: `instagram_agent_` + timestamp\n- Conversation Context: Maintains Instagram-specific strategies\n- Cross-session Learning: Content performance patterns\n\n### Memory Features:\n- **Content History**: Past post performance and engagement\n- **Hashtag Performance**: Successful hashtag combinations\n- **Audience Insights**: Peak engagement times and preferences\n- **Influencer Database**: Partnership history and results\n- **Shopping Metrics**: Product performance on Instagram",
+        "height": 980,
+        "width": 860,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        220,
+        1540
+      ],
+      "typeVersion": 1,
+      "id": "6b445741-d716-43cc-a869-62de07ff3b3f",
+      "name": "Memory Documentation"
+    },
+    {
+      "parameters": {
+        "content": "## Input Variables\n**Session and Context Management**\n\n### Required Variables:\n- `$json.chatId`: Unique chat session identifier\n- `$json.session_id`: Instagram agent session ID\n- `$now.toMillis()`: Timestamp for session management\n\n### Content Variables:\n- `$json.trigger_conditions`: Instagram task type\n- `$json.content_type`: Post format (feed, story, reel)\n- `$json.creative_assets`: Images, videos, graphics\n- `$json.hashtags`: Hashtag strategy array\n- `$json.target_audience`: Audience demographics\n- `$json.campaign_objective`: Marketing goal\n\n### Platform-Specific:\n- `$json.instagram_account_id`: Business account ID\n- `$json.shopping_catalog_id`: Product catalog ID\n- `$json.influencer_list`: Potential partners\n\n### Default Session Key:\n`instagram_agent_` + current timestamp",
+        "height": 580,
+        "width": 480,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        240,
+        1920
+      ],
+      "typeVersion": 1,
+      "id": "6535d5c5-2f6f-4fc3-b737-734036b6805f",
+      "name": "Input Variables"
+    },
+    {
+      "parameters": {
+        "content": "## Facebook Ads MCP Tools\n**Instagram Advertising via Meta API**\n\n### Available Tools:\n- `facebook-ads_create_campaign`: Instagram campaigns\n- `facebook-ads_create_adset`: Instagram placements\n- `facebook-ads_create_ad`: Instagram ad formats\n- `facebook-ads_create_ad_creative`: Visual assets\n- `facebook-ads_get_ad_insights`: Performance data\n- `facebook-ads_create_custom_audience`: Targeting\n- `facebook-ads_update_campaign`: Optimization\n\n### Instagram-Specific Features:\n- **Story Ads**: Full-screen vertical format\n- **Reels Ads**: Native placement in Reels\n- **Feed Ads**: Square or vertical in feed\n- **Shopping Ads**: Product catalog integration\n- **IGTV Ads**: Mid-roll video placements\n\n### Targeting Capabilities:\n- Instagram engagement custom audiences\n- Lookalike audiences from Instagram followers\n- Interest targeting for home decor/art\n- Behavioral targeting for online shoppers",
+        "height": 600,
+        "width": 1040,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1160,
+        1540
+      ],
+      "typeVersion": 1,
+      "id": "92094598-29bb-4838-8286-afa923ab0629",
+      "name": "Facebook Ads MCP Details"
+    },
+    {
+      "parameters": {
+        "content": "## Shopify MCP Tools\n**Product Integration for Instagram Shopping**\n\n### Available Tools:\n- `shopify_get_products`: Sync product catalog\n- `shopify_get_orders`: Track Instagram sales\n- `shopify_create_discount`: Instagram-exclusive offers\n- `shopify_get_product_images`: High-res visuals\n- `shopify_update_inventory`: Stock management\n\n### Instagram Shopping Integration:\n- **Product Catalog Sync**: Real-time updates\n- **Shopping Tags**: Auto-tag products in posts\n- **Collections**: Curated product groups\n- **Checkout**: Native Instagram checkout\n- **Product Stickers**: For Stories/Reels\n\n### Performance Tracking:\n- Instagram-attributed sales\n- Shopping tag click rates\n- Product view metrics\n- Conversion tracking\n- Average order value from Instagram",
+        "height": 920,
+        "width": 1040,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2260,
+        1540
+      ],
+      "typeVersion": 1,
+      "id": "bd3f1aff-1b2b-4fd2-ae28-8da43e7c2bc6",
+      "name": "Shopify MCP Details"
+    },
+    {
+      "parameters": {
+        "content": "## Content Calendar Tool\n**Instagram Content Planning**\n\n### Capabilities:\n- Monthly content theme planning\n- Optimal posting time analysis\n- Content pillar balance (33/33/33 rule)\n- Campaign integration scheduling\n- Seasonal content preparation\n- Hashtag rotation strategy\n\n### Content Types Scheduled:\n- **Feed Posts**: 1-2 daily\n- **Stories**: 3-5 daily\n- **Reels**: 3-5 weekly\n- **IGTV**: 1-2 weekly\n- **Live Sessions**: Monthly\n\n### Planning Features:\n- Visual grid preview\n- Caption templates\n- Hashtag sets\n- Music/audio trending lists\n- Influencer collaboration slots",
+        "height": 800,
+        "width": 740,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3380,
+        1540
+      ],
+      "typeVersion": 1,
+      "id": "eecb714f-bce1-45c6-9088-b8901d05caa5",
+      "name": "Content Calendar Details"
+    },
+    {
+      "parameters": {
+        "content": "## Influencer Management Tool\n**Partnership Coordination**\n\n### Tier Management:\n- **Nano (1K-10K)**: Local authenticity\n- **Micro (10K-100K)**: Niche expertise\n- **Macro (100K-1M)**: Brand awareness\n\n### Workflow Features:\n- Influencer discovery and vetting\n- Engagement rate analysis\n- Audience demographics verification\n- Content brief creation\n- Performance tracking\n- Payment processing\n- Content rights management\n\n### Campaign Types:\n- Product seeding\n- Paid partnerships\n- Affiliate programs\n- Brand ambassadorships\n- Takeover events",
+        "height": 800,
+        "width": 780,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4200,
+        1540
+      ],
+      "typeVersion": 1,
+      "id": "34fbee6c-6bd1-435e-8bb7-43bdca6f2014",
+      "name": "Influencer Tool Details"
+    },
+    {
+      "parameters": {
+        "content": "## Instagram Insights Knowledge Base\n**Vector Store for Instagram Intelligence**\n\n### Knowledge Repository:\n- **Best Practices**: Platform-specific strategies\n- **Hashtag Research**: Trending and niche tags\n- **Content Templates**: High-performing formats\n- **Audience Insights**: Demographic patterns\n- **Algorithm Updates**: Latest changes\n- **Competitor Analysis**: Benchmark data\n\n### Performance Data:\n- Top-performing content types\n- Optimal posting times by day\n- Hashtag combination success rates\n- Story completion rates\n- Reel viral patterns\n- Shopping conversion metrics\n\n### Vector database containing:\n- Content performance patterns\n- Hashtag effectiveness data\n- Optimal posting times\n- Engagement benchmarks\n- Algorithm best practices\n- Influencer partnership results\n- Shopping conversion data",
+        "height": 660,
+        "width": 880,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3280,
+        800
+      ],
+      "typeVersion": 1,
+      "id": "482c915d-975b-49a5-82c5-02fbf74a6ec2",
+      "name": "Knowledge Base Details"
+    },
+    {
+      "parameters": {
+        "content": "## Connection from another workflow or agent\n**Database Name: Instagram Agent**\n\n### Inter-Agent Communication:\n- **From Social Media Director**: Platform strategies\n- **From Content Strategy Agent**: Visual assets\n- **From Copy Writer Agent**: Caption copy\n- **From Facebook Agent**: Cross-platform campaigns\n- **From Pinterest Agent**: Content repurposing\n\n### Workflow Integration:\n- **Trigger Method**: executeWorkflowTrigger\n- **Expected Inputs**: Content assets and strategy\n- **Response Format**: Posting confirmation and metrics\n- **Error Handling**: Fallback to manual posting\n\n### Data Exchange:\n- Content creative assets\n- Posting schedules\n- Performance metrics\n- Audience insights",
+        "height": 1280,
+        "width": 1080,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        -240
+      ],
+      "typeVersion": 1,
+      "id": "498c44e6-b445-426d-870b-f017f1d90f51",
+      "name": "Inter-Agent Connection Details"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger Conditions\n**Instagram Agent Automation Triggers**\n\n### Primary Triggers:\n1. **feed_post_creation**: Product showcase posts\n2. **story_posting**: Daily story content\n3. **reel_creation**: Trending video content\n4. **shopping_post**: Product catalog posts\n5. **campaign_management**: Paid advertising\n6. **performance_analytics**: Metrics analysis\n7. **influencer_outreach**: Partnership management\n8. **engagement_response**: Community management\n\n### Trigger Priority:\n- **Urgent**: Engagement response, trending reels\n- **High**: Daily stories, feed posts\n- **Medium**: Campaign management, analytics\n- **Low**: Influencer outreach, planning\n\n### Execution Logic:\n- Real-time for engagement\n- Scheduled for content\n- Batch for analytics",
+        "height": 680,
+        "width": 480,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        40,
+        340
+      ],
+      "typeVersion": 1,
+      "id": "a9e0aae2-a48b-4674-b0ee-88c707840696",
+      "name": "Trigger Conditions Details"
+    },
+    {
+      "parameters": {
+        "content": "### Data Payload & Webhook Configuration\n**Instagram Agent Webhook Endpoints**\n\n#### Test Environment:\n**URL**: `http://localhost:5678/webhook-test/instagram-agent-webhook`\n**Method**: POST\n**Content-Type**: application/json\n\n#### Production Environment:\n**URL**: `http://localhost:5678/webhook/instagram-agent-webhook`\n**Method**: POST\n**Content-Type**: application/json\n\n#### Sample Payload:\n```json\n{\n  \"trigger_conditions\": \"feed_post_creation\",\n  \"content_type\": \"carousel\",\n  \"creative_assets\": {\n    \"images\": [\n      \"https://example.com/product1.jpg\",\n      \"https://example.com/product2.jpg\"\n    ],\n    \"videos\": []\n  },\n  \"hashtags\": [\n    \"#AbstractArt\",\n    \"#WallDecor\",\n    \"#HomeDesign\"\n  ],\n  \"target_audience\": {\n    \"interests\": [\"home_decor\", \"interior_design\"],\n    \"age_range\": \"25-54\",\n    \"gender\": \"all\"\n  },\n  \"campaign_objective\": \"product_sales\",\n  \"products\": [\n    {\n      \"id\": \"PROD-123\",\n      \"name\": \"Abstract Canvas\",\n      \"price\": 89.99\n    }\n  ]\n}\n```",
+        "height": 220,
+        "width": 480,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        40,
+        1220
+      ],
+      "typeVersion": 1,
+      "id": "4aa54165-6567-474c-b619-764a6e284715",
+      "name": "Webhook Configuration Details"
+    },
+    {
+      "parameters": {
+        "content": "## Receives From\n**Data Sources and Integration Points**\n\n### Content Sources:\n- **Social Media Director**: Strategy and campaigns\n- **Content Strategy Agent**: Visual assets\n- **Copy Writer Agent**: Captions and copy\n- **Color Analysis Agent**: Palette insights\n\n### Data Sources:\n- **Shopify MCP**: Product catalog\n- **Meta API**: Instagram insights\n- **Influencer Platforms**: Partner data\n- **Trend Analysis**: Hashtag research\n\n### Performance Data:\n- Instagram Insights API\n- Shopping tag metrics\n- Ad performance data\n- Influencer campaign ROI",
+        "height": 680,
+        "width": 480,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        560,
+        340
+      ],
+      "typeVersion": 1,
+      "id": "eba36ddc-f766-4e76-aa36-0efacccfefd5",
+      "name": "Data Sources Details"
+    },
+    {
+      "parameters": {
+        "content": "## Instagram Agent Webhook\nRespond to Webhook",
+        "height": 340,
+        "width": 1480,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        20,
+        1120
+      ],
+      "typeVersion": 1,
+      "id": "570c89b6-73a8-44c2-b2f5-6ffb8bdd0d56",
+      "name": "Webhook Header"
+    },
+    {
+      "parameters": {
+        "content": "## Main Orchestration Hub",
+        "height": 1240,
+        "width": 1620,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1580,
+        220
+      ],
+      "typeVersion": 1,
+      "id": "87517dc3-3385-492b-9dbf-7583ef40e48b",
+      "name": "Main Hub"
+    },
+    {
+      "parameters": {
+        "content": "## LLM Integration\n**OpenAI GPT-4o Mini**\n\n### Model Configuration:\n- **Model**: GPT-4o-mini (Optimized for Instagram)\n- **Temperature**: 0.8 (Creative content)\n- **Context**: Instagram-specific training\n\n### AI Capabilities:\n- **Visual Understanding**: Image analysis\n- **Trend Detection**: Viral content patterns\n- **Hashtag Research**: Optimal combinations\n- **Caption Writing**: Engaging storytelling\n- **Audience Analysis**: Demographic insights\n\n### Content Generation:\n- Instagram-optimized captions\n- Story sequences planning\n- Reel script writing\n- Hashtag recommendations\n- Response templates",
+        "height": 540,
+        "width": 920,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -780,
+        1540
+      ],
+      "typeVersion": 1,
+      "id": "7f1e6b2d-e785-4063-8156-24e1ca9ce4e8",
+      "name": "LLM Integration Details"
+    },
+    {
+      "parameters": {
+        "content": "## Respond to Webhook",
+        "height": 500,
+        "width": 520,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3280,
+        220
+      ],
+      "typeVersion": 1,
+      "id": "e978feab-1bd2-4905-8157-f284951e8d0b",
+      "name": "Knowledge Base Header"
+    },
+    {
+      "parameters": {
+        "content": "## Input Variables & Context\n**Instagram-Specific Parameters**\n\n### Content Parameters:\n- **content_type**: Feed, Story, Reel, IGTV\n- **aspect_ratio**: 1:1, 4:5, 9:16\n- **creative_assets**: Images, videos, graphics\n- **caption_length**: Optimal character count\n- **hashtag_strategy**: Mix of broad/niche\n\n### Shopping Parameters:\n- **product_tags**: Catalog items\n- **collection_id**: Product groupings\n- **shopping_stickers**: Story integration\n- **checkout_enabled**: Native purchase\n\n### Campaign Parameters:\n- **placement**: Feed, Stories, Reels, Explore\n- **audience_size**: Reach estimates\n- **budget_pacing**: Daily vs lifetime\n- **creative_testing**: A/B variants",
+        "height": 700,
+        "width": 500,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1840,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "defff8bc-8a97-4da0-8c78-a6f28052b009",
+      "name": "Input Context"
+    },
+    {
+      "parameters": {
+        "content": "## Instagram Features\n**Platform-Specific Capabilities**\n\n### Content Formats:\n- **Feed Posts**: Square/Portrait\n- **Stories**: 24-hour content\n- **Reels**: Short-form video\n- **IGTV**: Long-form video\n- **Live**: Real-time streaming\n- **Guides**: Curated content\n\n### Interactive Features:\n- Polls, Questions, Quizzes\n- Music and AR effects\n- Shopping tags\n- Countdown stickers\n- Link stickers\n- Location tags\n\n### Business Tools:\n- Instagram Insights\n- Shopping catalog\n- Branded content\n- Creator marketplace\n- Ad creation",
+        "height": 620,
+        "width": 540,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2740,
+        1820
+      ],
+      "typeVersion": 1,
+      "id": "db8355dd-fd7a-4abc-bc41-1f3b3820c01e",
+      "name": "Instagram Features"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 820,
+        "width": 360,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1140,
+        220
+      ],
+      "typeVersion": 1,
+      "id": "f9e21217-be2d-4fae-86a0-7f3c9886c784",
+      "name": "If Wrapper"
+    },
+    {
+      "parameters": {
+        "content": "## Input\n### $json.chatId\n### $json.session_id 'instagram_agent'\n### $now.toMillis()\n",
+        "width": 320,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -200,
+        1840
+      ],
+      "typeVersion": 1,
+      "id": "2b466e8c-62bf-4247-a427-1a9bb11f63a0",
+      "name": "Input Footer"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "=Knowledge Retrivel",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        3820,
+        1100
+      ],
+      "id": "94b11554-e546-4f02-8d0a-fa0e00f37b39",
+      "name": "Postgres PGVector Store",
+      "credentials": {
+        "postgres": {
+          "id": "c76ccdf5-568d-4ef2-a0c2-00c7423d775f",
+          "name": "Supabase DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        3900,
+        1240
+      ],
+      "id": "3bc0e84e-2e0b-4ab0-abc5-4b3aa8234998",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "nMbluFwHsrVvkQBJ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 440,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3740,
+        1000
+      ],
+      "typeVersion": 1,
+      "id": "f91f5cf3-d0bd-4fbc-a032-4ac9e6459597",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 380,
+        "width": 480
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3300,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "a1f5c20c-4e2e-4fe8-9010-4f46a0bcd236",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 300,
+        "width": 340
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3760,
+        1560
+      ],
+      "typeVersion": 1,
+      "id": "0ac2632a-9eee-4ea7-ab62-b3acd22d2af9",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 300,
+        "width": 340
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4620,
+        1560
+      ],
+      "typeVersion": 1,
+      "id": "ed51aaab-a976-4523-9c94-232495040099",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 240,
+        "width": 540
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2740,
+        1560
+      ],
+      "typeVersion": 1,
+      "id": "54f6aa1c-98f0-4ce9-a5c5-ab2224b30ec5",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 240,
+        "width": 540
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1640,
+        1560
+      ],
+      "typeVersion": 1,
+      "id": "50a3b41a-c782-4393-ac45-63de859ce830",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 240,
+        "width": 280
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        780,
+        1560
+      ],
+      "typeVersion": 1,
+      "id": "ff3d65cf-3903-4cb6-8ece-b0785349b4bd",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 240,
+        "width": 280
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        700,
+        -140
+      ],
+      "typeVersion": 1,
+      "id": "20b61f5e-a2be-4a76-a3ca-b124e8715c8f",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 240,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1160,
+        240
+      ],
+      "typeVersion": 1,
+      "id": "e942e14d-3426-4a96-8dc3-ec51644441fc",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 500,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1160,
+        520
+      ],
+      "typeVersion": 1,
+      "id": "ef2631e6-dcbe-4ef2-89e7-7ffa38cdca1e",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 300,
+        "width": 380
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1100,
+        1140
+      ],
+      "typeVersion": 1,
+      "id": "8c853436-f926-4aff-ad8c-79cb08ed74c2",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 240,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -200,
+        1560
+      ],
+      "typeVersion": 1,
+      "id": "6b527525-16ec-4338-9e0d-44f720f90a9f",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 380,
+        "width": 500
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1840,
+        1060
+      ],
+      "typeVersion": 1,
+      "id": "23a0a7d6-8a92-4d14-b2e6-439c8fe5395b",
+      "name": "Sticky Note12"
+    },
+    {
+      "parameters": {
+        "content": "## System Prompt\n\nIf Trigger condition equal {{ $json.trigger_conditions }} then follow these instructions and rules strictly\n\nIf the input is from a Chat message input {{ $('When chat message received') }} follow the instructions below:\nDetermine if the message is related to either a: feed_post_creation OR story_posting OR reel_creation OR shopping_post OR campaign_management OR performance_analytics OR influencer_outreach OR engagement_response. If the message does not contain any of these indicators, please respond to the user with clarifying questions pertaining to these specific conditional triggers for your Instagram workflow to understand their intent relating to Instagram marketing.\n\n# Instagram Agent System Prompt\n\n## Role & Purpose\nYou are the Instagram Agent for VividWalls, specializing in Instagram-specific marketing strategies. You focus on visual storytelling, influencer partnerships, and shopping features to showcase VividWalls' art collections in aspirational lifestyle contexts.\n\n## Core Responsibilities\n1. **Visual Content Strategy**: Create Instagram-first content that drives engagement\n2. **Stories & Reels**: Develop dynamic content for maximum reach and interaction\n3. **Instagram Shopping**: Optimize product tags and shopping features\n4. **Influencer Management**: Coordinate partnerships and UGC campaigns\n5. **Community Engagement**: Build and nurture the Instagram community\n\n## Available MCP Tools & Functions\n\n### 📱 Facebook Ads MCP Tools (for Instagram)\n- `facebook-ads_create_campaign`: Launch Instagram-specific campaigns\n- `facebook-ads_create_adset`: Target Instagram placements and audiences\n- `facebook-ads_create_ad`: Create Instagram-optimized ad formats\n- `facebook-ads_create_ad_creative`: Design Instagram Stories, Reels, and Feed ads\n- `facebook-ads_get_ad_insights`: Analyze Instagram ad performance\n- `facebook-ads_create_custom_audience`: Build Instagram engagement audiences\n- `facebook-ads_update_campaign`: Optimize Instagram campaign performance\n\n### 🛒 Shopify MCP Tools\n- `shopify_get_products`: Sync product catalog for Instagram Shopping\n- `shopify_get_orders`: Track Instagram-driven sales\n- `shopify_create_discount`: Generate Instagram-exclusive offers\n\n## Instagram Content Strategy\n\n### Content Pillars (Rule of Thirds)\n1. **Product Showcase** (33%)\n   - Styled room photos with art\n   - Before/after transformations\n   - Close-up texture shots\n   - Size comparison videos\n\n2. **Educational/Value** (33%)\n   - Interior design tips\n   - Art placement guides\n   - Color coordination advice\n   - Artist spotlights\n\n3. **Community/Lifestyle** (33%)\n   - Customer features\n   - Behind-the-scenes\n   - Team introductions\n   - Studio visits\n\n## If Trigger condition Feed Post Creation Instructions & Rules\n- Analyze product data from Shopify MCP\n- Create visually stunning product showcase\n- Optimize image for Instagram (1:1 or 4:5 ratio)\n- Write compelling caption with storytelling hook\n- Add 30 strategic hashtags\n- Include shopping tags for all products\n- Schedule at optimal posting time\n- Timeline: Complete within 2 hours\n\n## If Trigger condition Story Posting Instructions & Rules\n- Create engaging story sequence (3-5 frames)\n- Include interactive elements (polls/questions)\n- Add product stickers and shopping tags\n- Use trending music or sounds\n- Implement swipe-up/link stickers\n- Post at peak audience online time\n- Save to relevant highlights\n- Timeline: Post within 1 hour\n\n## If Trigger condition Reel Creation Instructions & Rules\n- Identify trending audio for art/home niche\n- Create 15-30 second engaging video\n- Show product in lifestyle context\n- Include clear CTA in video\n- Write SEO-optimized caption\n- Add relevant hashtags (3-5 in caption, 25 in comment)\n- Post during high-engagement windows\n- Timeline: Complete within 4 hours\n\n## If Trigger condition Shopping Post Instructions & Rules\n- Sync latest product catalog from Shopify\n- Create multi-product carousel (up to 10)\n- Tag all products with prices\n- Write benefit-focused descriptions\n- Include size/material details\n- Add shopping collection tags\n- Enable checkout on Instagram\n- Timeline: Launch within 2 hours\n\n## If Trigger condition Campaign Management Instructions & Rules\n- Create Instagram-specific campaign in Facebook Ads MCP\n- Set up proper Instagram placements\n- Design creative for Stories, Reels, and Feed\n- Configure Instagram Shopping ads\n- Set up conversion tracking\n- Implement retargeting audiences\n- Monitor and optimize daily\n- Timeline: Launch within 24 hours\n\n## If Trigger condition Performance Analytics Instructions & Rules\n- Pull Instagram Insights data\n- Analyze content performance metrics\n- Track follower growth and demographics\n- Measure engagement rates by content type\n- Calculate Instagram Shopping ROI\n- Compare against benchmarks\n- Generate optimization recommendations\n- Timeline: Deliver report within 4 hours\n\n## If Trigger condition Influencer Outreach Instructions & Rules\n- Identify relevant influencers in home decor niche\n- Analyze their engagement rates and audience\n- Create personalized outreach messages\n- Negotiate partnership terms\n- Provide creative briefs and guidelines\n- Track influencer content performance\n- Manage product seeding\n- Timeline: Initial outreach within 24 hours\n\n## If Trigger condition Engagement Response Instructions & Rules\n- Monitor comments and DMs in real-time\n- Respond to comments within 1 hour\n- Answer DMs with personalized messages\n- Address customer concerns promptly\n- Encourage UGC through engagement\n- Like and comment on tagged posts\n- Build community relationships\n- Timeline: Continuous monitoring\n\n## Platform-Specific Features\n\n### Instagram Feed Strategy\n- **Grid Aesthetic**: Maintain cohesive visual flow\n- **Aspect Ratios**: \n  - Square (1:1): Classic grid posts\n  - Portrait (4:5): Maximum feed real estate\n  - Landscape (1.91:1): Occasional variety\n- **Carousel Usage**: 80% of posts (higher engagement)\n- **Caption Strategy**: \n  - Hook in first line\n  - Storytelling approach\n  - Clear CTA\n  - 5-10 strategic hashtags\n\n### Instagram Stories (Daily)\n- **Morning**: New arrival preview\n- **Afternoon**: Behind-the-scenes or tips\n- **Evening**: User-generated content\n- **Interactive Elements**:\n  - Polls: \"Which room?\"\n  - Questions: Design dilemmas\n  - Quiz: Art style preferences\n  - Slider: Rate the transformation\n\n### Instagram Reels (3-5x/week)\n- **Trending Audio**: 60% with trending sounds\n- **Educational**: Quick design tips (15-30s)\n- **Transformation**: Before/after reveals\n- **Product Features**: Unboxing, installation\n- **Artist Stories**: Creative process clips\n\n### Instagram Shopping\n- **Product Tags**: All product posts\n- **Shopping Tags in Stories**: Daily features\n- **Collections**: Curated by style/room\n- **Live Shopping**: Monthly events\n\n## Success Metrics\n- **Follower Growth**: >5% monthly\n- **Engagement Rate**: >4% average\n- **Story Views**: >30% of followers\n- **Reels Views**: >10K for trending content\n- **Shopping Tag CTR**: >2%\n- **DM Response Time**: <1 hour\n- **Instagram-driven Revenue**: 20% of social revenue",
+        "height": 4520,
+        "width": 800,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1200,
+        2820
+      ],
+      "typeVersion": 1,
+      "id": "c5260cf9-9b39-4d62-9320-174aab80b44c",
+      "name": "System Prompt Summary1"
+    },
+    {
+      "parameters": {
+        "content": "# Instagram Agent Response Payload\n\n## Source Agent Routing & Trigger Mapping\n\n### Identify Source Agent\nFirst, check for source agent identification in the payload:\n- `$json.source_agent`: Direct agent identifier\n- `$json.from_workflow`: Source workflow name\n- `$json.sender`: Sending agent reference\n\n### Agent-to-Trigger Routing Map\n\n#### From Social Media Director Agent\n**Primary Triggers**: \n- `campaign_management`: Multi-platform campaign coordination\n- `performance_analytics`: Cross-platform reporting requests\n- `story_posting`: Daily content scheduling\n- `engagement_response`: Crisis management escalation\n\n**Routing Logic**:\n```javascript\nif (source_agent === \"social_media_director\") {\n  if (payload.contains(\"campaign\")) → trigger_conditions = \"campaign_management\"\n  if (payload.contains(\"analytics|report|metrics\")) → trigger_conditions = \"performance_analytics\"\n  if (payload.contains(\"daily|schedule|stories\")) → trigger_conditions = \"story_posting\"\n  if (payload.contains(\"crisis|urgent|response\")) → trigger_conditions = \"engagement_response\"\n}\n```\n\n#### From Content Strategy Agent\n**Primary Triggers**:\n- `feed_post_creation`: Product showcase content\n- `reel_creation`: Video content strategy\n- `story_posting`: Visual storytelling sequences\n\n**Routing Logic**:\n```javascript\nif (source_agent === \"content_strategy\") {\n  if (payload.content_type === \"product_showcase|carousel\") → trigger_conditions = \"feed_post_creation\"\n  if (payload.content_type === \"video|reel|transformation\") → trigger_conditions = \"reel_creation\"\n  if (payload.content_type === \"story_sequence|behind_scenes\") → trigger_conditions = \"story_posting\"\n}\n```\n\n#### From Copy Writer Agent\n**Primary Triggers**:\n- `feed_post_creation`: Caption optimization\n- `influencer_outreach`: Partnership communication\n- `engagement_response`: Response templates\n\n**Routing Logic**:\n```javascript\nif (source_agent === \"copy_writer\") {\n  if (payload.contains(\"caption|product_description\")) → trigger_conditions = \"feed_post_creation\"\n  if (payload.contains(\"outreach|partnership|influencer\")) → trigger_conditions = \"influencer_outreach\"\n  if (payload.contains(\"response|reply|engagement\")) → trigger_conditions = \"engagement_response\"\n}\n```\n\n#### From Facebook Agent\n**Primary Triggers**:\n- `campaign_management`: Cross-platform ad campaigns\n- `shopping_post`: Catalog synchronization\n- `performance_analytics`: Comparative metrics\n\n**Routing Logic**:\n```javascript\nif (source_agent === \"facebook_agent\") {\n  if (payload.contains(\"ads|campaign|budget\")) → trigger_conditions = \"campaign_management\"\n  if (payload.contains(\"catalog|shopping|products\")) → trigger_conditions = \"shopping_post\"\n  if (payload.contains(\"insights|performance|comparison\")) → trigger_conditions = \"performance_analytics\"\n}\n```\n\n#### From Pinterest Agent\n**Primary Triggers**:\n- `feed_post_creation`: Content repurposing\n- `reel_creation`: Trend-based content\n- `shopping_post`: Cross-platform product features\n\n**Routing Logic**:\n```javascript\nif (source_agent === \"pinterest_agent\") {\n  if (payload.contains(\"repurpose|adapt|square\")) → trigger_conditions = \"feed_post_creation\"\n  if (payload.contains(\"trending|viral|video\")) → trigger_conditions = \"reel_creation\"\n  if (payload.contains(\"product_pins|shopping\")) → trigger_conditions = \"shopping_post\"\n}\n```\n\n## Enhanced Trigger Processing\n\n### Pre-Processing Logic\nBefore executing any trigger condition, perform these checks:\n\n1. **Source Validation**\n```\nif (!source_agent && !from_workflow && !sender) {\n  request_source_identification()\n}\n```\n\n2. **Content Type Detection**\n```\nif (!trigger_conditions) {\n  analyze_payload_content()\n  auto_assign_trigger_based_on_content_patterns()\n}\n```\n\n3. **Priority Assignment**\n```\npriority_map = {\n  \"social_media_director\": \"high\",\n  \"content_strategy\": \"medium\",\n  \"copy_writer\": \"medium\",\n  \"facebook_agent\": \"high\",\n  \"pinterest_agent\": \"low\"\n}\n```\n\n## Core Responsibilities\n1. **Visual Content Strategy**: Create Instagram-first content that drives engagement\n2. **Stories & Reels**: Develop dynamic content for maximum reach and interaction\n3. **Instagram Shopping**: Optimize product tags and shopping features\n4. **Influencer Management**: Coordinate partnerships and UGC campaigns\n5. **Community Engagement**: Build and nurture the Instagram community\n\n## Available MCP Tools & Functions\n\n### 📱 Facebook Ads MCP Tools (for Instagram)\n- `facebook-ads_create_campaign`: Launch Instagram-specific campaigns\n- `facebook-ads_create_adset`: Target Instagram placements and audiences\n- `facebook-ads_create_ad`: Create Instagram-optimized ad formats\n- `facebook-ads_create_ad_creative`: Design Instagram Stories, Reels, and Feed ads\n- `facebook-ads_get_ad_insights`: Analyze Instagram ad performance\n- `facebook-ads_create_custom_audience`: Build Instagram engagement audiences\n- `facebook-ads_update_campaign`: Optimize Instagram campaign performance\n\n### 🛒 Shopify MCP Tools\n- `shopify_get_products`: Sync product catalog for Instagram Shopping\n- `shopify_get_orders`: Track Instagram-driven sales\n- `shopify_create_discount`: Generate Instagram-exclusive offers\n\n## Instagram Content Strategy\n\n### Content Pillars (Rule of Thirds)\n1. **Product Showcase** (33%)\n   - Styled room photos with art\n   - Before/after transformations\n   - Close-up texture shots\n   - Size comparison videos\n\n2. **Educational/Value** (33%)\n   - Interior design tips\n   - Art placement guides\n   - Color coordination advice\n   - Artist spotlights\n\n3. **Community/Lifestyle** (33%)\n   - Customer features\n   - Behind-the-scenes\n   - Team introductions\n   - Studio visits\n\n## If Trigger condition Feed Post Creation Instructions & Rules\n**Common Sources**: Content Strategy Agent, Copy Writer Agent, Pinterest Agent\n- Analyze product data from Shopify MCP\n- Check if repurposed content from Pinterest (adapt aspect ratio)\n- Apply copy from Copy Writer Agent if provided\n- Create visually stunning product showcase\n- Optimize image for Instagram (1:1 or 4:5 ratio)\n- Write compelling caption with storytelling hook\n- Add 30 strategic hashtags\n- Include shopping tags for all products\n- Schedule at optimal posting time\n- Timeline: Complete within 2 hours\n\n## If Trigger condition Story Posting Instructions & Rules\n**Common Sources**: Social Media Director, Content Strategy Agent\n- Check scheduling requirements from Social Media Director\n- Apply visual strategy from Content Strategy Agent\n- Create engaging story sequence (3-5 frames)\n- Include interactive elements (polls/questions)\n- Add product stickers and shopping tags\n- Use trending music or sounds\n- Implement swipe-up/link stickers\n- Post at peak audience online time\n- Save to relevant highlights\n- Timeline: Post within 1 hour\n\n## If Trigger condition Reel Creation Instructions & Rules\n**Common Sources**: Content Strategy Agent, Pinterest Agent\n- Review trend data from source agent\n- Adapt successful Pinterest video content if applicable\n- Identify trending audio for art/home niche\n- Create 15-30 second engaging video\n- Show product in lifestyle context\n- Include clear CTA in video\n- Write SEO-optimized caption\n- Add relevant hashtags (3-5 in caption, 25 in comment)\n- Post during high-engagement windows\n- Timeline: Complete within 4 hours\n\n## If Trigger condition Shopping Post Instructions & Rules\n**Common Sources**: Facebook Agent, Pinterest Agent\n- Sync catalog data from Facebook Agent if provided\n- Cross-reference Pinterest shopping performance\n- Sync latest product catalog from Shopify\n- Create multi-product carousel (up to 10)\n- Tag all products with prices\n- Write benefit-focused descriptions\n- Include size/material details\n- Add shopping collection tags\n- Enable checkout on Instagram\n- Timeline: Launch within 2 hours\n\n## If Trigger condition Campaign Management Instructions & Rules\n**Common Sources**: Social Media Director, Facebook Agent\n- Coordinate with Facebook Agent for unified campaigns\n- Follow Social Media Director's budget allocation\n- Create Instagram-specific campaign in Facebook Ads MCP\n- Set up proper Instagram placements\n- Design creative for Stories, Reels, and Feed\n- Configure Instagram Shopping ads\n- Set up conversion tracking\n- Implement retargeting audiences\n- Monitor and optimize daily\n- Timeline: Launch within 24 hours\n\n## If Trigger condition Performance Analytics Instructions & Rules\n**Common Sources**: Social Media Director, Facebook Agent\n- Compile data for Social Media Director's reports\n- Compare metrics with Facebook Agent data\n- Pull Instagram Insights data\n- Analyze content performance metrics\n- Track follower growth and demographics\n- Measure engagement rates by content type\n- Calculate Instagram Shopping ROI\n- Compare against benchmarks\n- Generate optimization recommendations\n- Timeline: Deliver report within 4 hours\n\n## If Trigger condition Influencer Outreach Instructions & Rules\n**Common Sources**: Copy Writer Agent, Content Strategy Agent\n- Use messaging templates from Copy Writer Agent\n- Apply content strategy guidelines\n- Identify relevant influencers in home decor niche\n- Analyze their engagement rates and audience\n- Create personalized outreach messages\n- Negotiate partnership terms\n- Provide creative briefs and guidelines\n- Track influencer content performance\n- Manage product seeding\n- Timeline: Initial outreach within 24 hours\n\n## If Trigger condition Engagement Response Instructions & Rules\n**Common Sources**: Social Media Director, Copy Writer Agent\n- Apply crisis protocols from Social Media Director\n- Use response templates from Copy Writer Agent\n- Monitor comments and DMs in real-time\n- Respond to comments within 1 hour\n- Answer DMs with personalized messages\n- Address customer concerns promptly\n- Encourage UGC through engagement\n- Like and comment on tagged posts\n- Build community relationships\n- Timeline: Continuous monitoring\n\n## Platform-Specific Features\n\n### Instagram Feed Strategy\n- **Grid Aesthetic**: Maintain cohesive visual flow\n- **Aspect Ratios**: \n  - Square (1:1): Classic grid posts\n  - Portrait (4:5): Maximum feed real estate\n  - Landscape (1.91:1): Occasional variety\n- **Carousel Usage**: 80% of posts (higher engagement)\n- **Caption Strategy**: \n  - Hook in first line\n  - Storytelling approach\n  - Clear CTA\n  - 5-10 strategic hashtags\n\n### Instagram Stories (Daily)\n- **Morning**: New arrival preview\n- **Afternoon**: Behind-the-scenes or tips\n- **Evening**: User-generated content\n- **Interactive Elements**:\n  - Polls: \"Which room?\"\n  - Questions: Design dilemmas\n  - Quiz: Art style preferences\n  - Slider: Rate the transformation\n\n### Instagram Reels (3-5x/week)\n- **Trending Audio**: 60% with trending sounds\n- **Educational**: Quick design tips (15-30s)\n- **Transformation**: Before/after reveals\n- **Product Features**: Unboxing, installation\n- **Artist Stories**: Creative process clips\n\n### Instagram Shopping\n- **Product Tags**: All product posts\n- **Shopping Tags in Stories**: Daily features\n- **Collections**: Curated by style/room\n- **Live Shopping**: Monthly events\n\n## Inter-Agent Communication Protocol\n\n### Response Format\nWhen receiving requests from other agents, acknowledge with:\n```json\n{\n  \"acknowledged\": true,\n  \"source_agent\": \"identified_agent\",\n  \"trigger_assigned\": \"trigger_condition\",\n  \"estimated_completion\": \"timestamp\",\n  \"status\": \"processing\"\n}\n```\n\n### Completion Notification\nUpon task completion, notify source agent with:\n```json\n{\n  \"task_complete\": true,\n  \"trigger_executed\": \"trigger_condition\",\n  \"results\": {\n    \"post_id\": \"instagram_post_id\",\n    \"performance_metrics\": {},\n    \"next_actions\": []\n  }\n}\n```\n\n## Success Metrics\n- **Follower Growth**: >5% monthly\n- **Engagement Rate**: >4% average\n- **Story Views**: >30% of followers\n- **Reels Views**: >10K for trending content\n- **Shopping Tag CTR**: >2%\n- **DM Response Time**: <1 hour\n- **Instagram-driven Revenue**: 20% of social revenue\n- **Inter-Agent Response Time**: <15 minutes\n```\n\nThis updated system prompt now includes:\n\n1. **Source Agent Identification**: Clear methods to identify which agent sent the request\n2. **Agent-to-Trigger Routing Map**: Specific mappings for each source agent\n3. **Routing Logic**: JavaScript-style pseudocode for conditional routing\n4. **Enhanced Trigger Processing**: Pre-processing checks and auto-assignment\n5. **Priority Assignment**: Based on source agent importance\n6. **Inter-Agent Communication Protocol**: Standardized response formats\n7. **Source-Specific Instructions**: Each trigger now notes common sources and specific handling\n\nThe system can now intelligently route requests based on the sending agent while maintaining all original functionality.",
+        "height": 4520,
+        "width": 800,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2220,
+        2800
+      ],
+      "typeVersion": 1,
+      "id": "f8370cca-474c-4fbb-a447-cab5b9f27931",
+      "name": "System Prompt Summary2"
+    },
+    {
+      "parameters": {
+        "content": "## Enhanced Instagram Agent Payload Examples with Product Catalog Integration\n\n### 2. Shopping Post - Multi-Product Collection\n**Source**: Marketing Director Agent -> Marketing Campaign Agent → Social Media Director Agent -> Instagram Agent\n```json\n{\n  \"trigger_conditions\": \"shopping_post\",\n  \"content_type\": \"collection_showcase\",\n  \"catalog_query\": {\n    \"product_category\": \"Canvas Prints\",\n    \"tags_include\": [\"best-seller\", \"abstract\"],\n    \"price_range\": {\n      \"min\": 100,\n      \"max\": 300\n    },\n    \"status\": \"active\",\n    \"limit\": 10\n  },\n  \"selected_products\": [\n    {\n      \"handle\": \"golden-sunset-abstract\",\n      \"variant_price\": 259.99,\n      \"variant_compare_at_price\": 299.99,\n      \"google_custom_label_0\": \"On Sale\"\n    },\n    {\n      \"handle\": \"crimson-waves-canvas\",\n      \"variant_price\": 189.99,\n      \"google_custom_label_1\": \"Trending\"\n    },\n    {\n      \"handle\": \"serene-mountains-print\",\n      \"variant_price\": 149.99,\n      \"google_custom_label_2\": \"New Arrival\"\n    }\n  ],\n  \"creative_assets\": {\n    \"use_catalog_images\": true,\n    \"image_positions\": [1, 1, 1],\n    \"add_lifestyle_shots\": true\n  },\n  \"shopping_features\": {\n    \"enable_checkout\": true,\n    \"show_variant_options\": true,\n    \"highlight_sales\": true,\n    \"group_by_collection\": \"Abstract Art Collection\"\n  },\n  \"caption\": \"Discover our curated Abstract Art Collection 🎨\\n\\n{{product_count}} stunning pieces to transform your space:\\n\\n{{product_list_with_prices}}\\n\\n✨ Special: {{discount_percentage}}% off selected items\\n🚚 Free shipping on orders over $150\\n\\nTap to shop your favorites!\",\n  \"urgency\": \"high\"\n}\n```\n\n### 3. Campaign Management - Catalog-Based Retargeting\n**Source**: Analytics Director → Marketing Campaign Agent → Instagram Agent\n```json\n{\n  \"trigger_conditions\": \"campaign_management\",\n  \"content_type\": \"dynamic_product_ads\",\n  \"campaign_objective\": \"catalog_sales\",\n  \"product_feed\": {\n    \"source\": \"shopify_catalog\",\n    \"filters\": {\n      \"variant_inventory_policy\": \"continue\",\n      \"variant_requires_shipping\": true,\n      \"published\": \"true\",\n      \"variant_price\": {\n        \"min\": 50,\n        \"max\": 500\n      }\n    },\n    \"product_sets\": [\n      {\n        \"name\": \"Best Sellers\",\n        \"conditions\": {\n          \"tags\": \"best-seller\",\n          \"variant_inventory_tracker\": \"shopify\"\n        }\n      },\n      {\n        \"name\": \"High Margin Products\",\n        \"conditions\": {\n          \"margin_percentage\": \">40\",\n          \"google_custom_label_3\": \"high-margin\"\n        }\n      }\n    ]\n  },\n  \"audience_segments\": [\n    {\n      \"segment\": \"viewed_products\",\n      \"product_handles\": [\"{{viewed_product_handles}}\"],\n      \"lookback_window\": 14\n    },\n    {\n      \"segment\": \"cart_abandoners\",\n      \"min_cart_value\": 100,\n      \"include_variants\": true\n    }\n  ],\n  \"creative_templates\": {\n    \"carousel\": {\n      \"show_price\": true,\n      \"show_compare_price\": true,\n      \"highlight_discount\": true,\n      \"include_variant_options\": true\n    }\n  },\n  \"budget_allocation\": {\n    \"total_budget\": 3000,\n    \"by_product_category\": {\n      \"Canvas Prints\": 0.5,\n      \"Framed Prints\": 0.3,\n      \"Metal Prints\": 0.2\n    }\n  }\n}\n```\n\n### 4. Reel Creation - Product Transformation\n**Source**: Content Strategy Agent → Instagram Agent\n```json\n{\n  \"trigger_conditions\": \"reel_creation\",\n  \"content_type\": \"product_showcase_reel\",\n  \"featured_product\": {\n    \"handle\": \"vibrant-abstract-collection\",\n    \"title\": \"Vibrant Abstract Collection\",\n    \"variants\": [\n      {\n        \"option1_value\": \"16x20 inches\",\n        \"variant_price\": 129.99\n      },\n      {\n        \"option1_value\": \"24x36 inches\",\n        \"variant_price\": 189.99\n      },\n      {\n        \"option1_value\": \"30x40 inches\",\n        \"variant_price\": 259.99\n      }\n    ],\n    \"color\": \"Multi-color, Vibrant\",\n    \"type\": \"Canvas Print Set\"\n  },\n  \"script\": {\n    \"hook\": \"POV: Your boring white wall needs personality\",\n    \"transformation\": \"Watch this space transform with our {{product_title}}\",\n    \"call_to_action\": \"Which size would you choose? Comment below!\"\n  },\n  \"creative_assets\": {\n    \"use_product_images\": true,\n    \"add_size_comparison\": true,\n    \"show_installation\": true\n  },\n  \"music\": {\n    \"trending_audio_id\": \"abstract_art_trend_2024\",\n    \"sync_transitions\": true\n  },\n  \"product_tags\": {\n    \"enable\": true,\n    \"highlight_sizes\": true,\n    \"show_price_range\": \"From ${{min_price}} - ${{max_price}}\"\n  }\n}\n```\n\n### 5. Performance Analytics - Catalog Performance Report\n**Source**: Business Manager → Instagram Agent\n```json\n{\n  \"trigger_conditions\": \"performance_analytics\",\n  \"content_type\": \"product_performance_analysis\",\n  \"report_scope\": {\n    \"catalog_analysis\": true,\n    \"date_range\": {\n      \"start\": \"2024-03-01\",\n      \"end\": \"2024-03-31\"\n    }\n  },\n  \"product_metrics\": {\n    \"by_category\": [\"Canvas Prints\", \"Framed Prints\", \"Metal Prints\"],\n    \"by_price_range\": [\n      {\"range\": \"0-100\", \"label\": \"Entry Level\"},\n      {\"range\": \"101-200\", \"label\": \"Mid Range\"},\n      {\"range\": \"201+\", \"label\": \"Premium\"}\n    ],\n    \"by_color\": [\"Blue\", \"Red\", \"Green\", \"Multi-color\", \"Neutral\"],\n    \"by_tags\": [\"best-seller\", \"new-arrival\", \"sale\", \"exclusive\"]\n  },\n  \"instagram_specific\": {\n    \"shopping_tag_clicks\": {\n      \"by_product_handle\": true,\n      \"by_variant_sku\": true\n    },\n    \"product_page_views\": {\n      \"from_feed\": true,\n      \"from_stories\": true,\n      \"from_reels\": true\n    },\n    \"conversion_tracking\": {\n      \"by_product_type\": true,\n      \"by_google_category\": true,\n      \"average_order_value\": true\n    }\n  },\n  \"insights_requested\": [\n    \"top_performing_products\",\n    \"underperforming_inventory\",\n    \"color_trend_analysis\",\n    \"size_preference_patterns\",\n    \"seasonal_performance\"\n  ],\n  \"recommendations\": {\n    \"restock_alerts\": true,\n    \"content_opportunities\": true,\n    \"pricing_optimization\": true\n  }\n}\n```\n\n### 6. Story Posting - New Inventory Alert\n**Source**: Shopify Agent (Inventory Update) → Social Media Director → Instagram Agent\n```json\n{\n  \"trigger_conditions\": \"story_posting\",\n  \"content_type\": \"inventory_update\",\n  \"inventory_changes\": [\n    {\n      \"handle\": \"ethereal-dreams-canvas\",\n      \"variant_sku\": \"EDC-2436-MUL\",\n      \"previous_inventory\": 0,\n      \"current_inventory\": 25,\n      \"status\": \"back_in_stock\"\n    },\n    {\n      \"handle\": \"sunset-serenity-print\",\n      \"variant_sku\": \"SSP-3040-ORA\",\n      \"previous_inventory\": 3,\n      \"current_inventory\": 0,\n      \"status\": \"low_stock\"\n    }\n  ],\n  \"story_sequence\": [\n    {\n      \"type\": \"announcement\",\n      \"product_handle\": \"ethereal-dreams-canvas\",\n      \"message\": \"BACK IN STOCK! 🎉\",\n      \"show_product\": true,\n      \"add_sticker\": \"new\"\n    },\n    {\n      \"type\": \"urgency\",\n      \"product_handle\": \"sunset-serenity-print\",\n      \"message\": \"Only {{inventory_count}} left!\",\n      \"countdown_sticker\": true\n    }\n  ],\n  \"shopping_stickers\": {\n    \"enable\": true,\n    \"show_variant_options\": true,\n    \"quick_shop\": true\n  }\n}\n```\n\n### 7. Influencer Outreach - Product Seeding\n**Source**: Marketing Campaign Agent → Instagram Agent\n```json\n{\n  \"trigger_conditions\": \"influencer_outreach\",\n  \"content_type\": \"product_seeding_campaign\",\n  \"campaign_name\": \"Spring Abstract Art Influencer Campaign\",\n  \"product_selection\": {\n    \"method\": \"curated\",\n    \"products\": [\n      {\n        \"handle\": \"spring-bloom-abstract\",\n        \"variant_sku\": \"SBA-2030-PNK\",\n        \"retail_value\": 159.99,\n        \"cost_per_item\": 45.00,\n        \"gift_message\": \"Perfect for spring home refresh content\"\n      },\n      {\n        \"handle\": \"pastel-dreams-canvas\",\n        \"variant_sku\": \"PDC-1620-PST\",\n        \"retail_value\": 119.99,\n        \"cost_per_item\": 35.00,\n        \"gift_message\": \"Trending pastel aesthetics\"\n      }\n    ],\n    \"total_gift_value\": 279.98,\n    \"include_catalog\": true\n  },\n  \"influencer_brief\": {\n    \"highlight_features\": [\n      \"Premium canvas quality\",\n      \"Ready to hang\",\n      \"Fade-resistant inks\",\n      \"Made in USA\"\n    ],\n    \"required_mentions\": [\n      \"@vividwalls\",\n      \"#VividWallsPartner\",\n      \"Swipe up for 15% off - code: {{influencer_code}}\"\n    ],\n    \"content_ideas\": [\n      \"Unboxing the art piece\",\n      \"Styling in your space\",\n      \"Before/after room transformation\",\n      \"Close-up texture details\"\n    ]\n  },\n  \"tracking\": {\n    \"unique_sku_tracking\": true,\n    \"attribution_window\": 30,\n    \"performance_bonuses\": {\n      \"10_sales\": 200,\n      \"25_sales\": 500,\n      \"50_sales\": 1000\n    }\n  }\n}\n```\n\n### 8. Feed Post Creation - Variant Showcase\n**Source**: Content Strategy Agent → Instagram Agent\n```json\n{\n  \"trigger_conditions\": \"feed_post_creation\",\n  \"content_type\": \"size_guide_post\",\n  \"base_product\": {\n    \"handle\": \"majestic-mountains-canvas\",\n    \"title\": \"Majestic Mountains Canvas Print\",\n    \"all_variants\": [\n      {\n        \"option1_value\": \"12x16 inches\",\n        \"variant_price\": 79.99,\n        \"variant_sku\": \"MMC-1216-BLU\"\n      },\n      {\n        \"option1_value\": \"16x20 inches\",\n        \"variant_price\": 119.99,\n        \"variant_sku\": \"MMC-1620-BLU\"\n      },\n      {\n        \"option1_value\": \"24x36 inches\",\n        \"variant_price\": 189.99,\n        \"variant_sku\": \"MMC-2436-BLU\"\n      },\n      {\n        \"option1_value\": \"30x40 inches\",\n        \"variant_price\": 259.99,\n        \"variant_sku\": \"MMC-3040-BLU\"\n      }\n    ]\n  },\n  \"visual_comparison\": {\n    \"create_size_mockup\": true,\n    \"room_contexts\": [\"small_apartment\", \"medium_living_room\", \"large_wall\"],\n    \"include_dimensions\": true\n  },\n  \"caption\": \"Finding the perfect size for your space 📏\\n\\n{{product_title}} available in:\\n\\n📐 12x16\\\" - Perfect for galleries ($79.99)\\n🖼️ 16x20\\\" - Ideal for bedrooms ($119.99)\\n🏠 24x36\\\" - Living room statement ($189.99)\\n🏛️ 30x40\\\" - Grand spaces ($259.99)\\n\\nSwipe to see each size in different room settings →\\n\\nWhich size fits your vision? Let us know! 👇\",\n  \"shopping_tags\": {\n    \"tag_all_variants\": true,\n    \"highlight_best_seller\": \"24x36 inches\"\n  }\n}\n```\n\nThese enhanced payloads demonstrate how the Instagram Agent would leverage the full product catalog data, including:\n- Product variants and pricing\n- SEO metadata for better captions\n- Google Shopping categories for targeting\n- Inventory tracking for urgency messaging\n- Color and style attributes for better categorization\n- Cost data for ROI calculations\n- Multiple product images and positions\n- Dynamic pricing and comparison pricing\n\nEach payload integrates seamlessly with the Shopify product catalog structure to create more effective Instagram content and campaigns.",
+        "height": 6740,
+        "width": 820
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        220,
+        2820
+      ],
+      "typeVersion": 1,
+      "id": "72f721d8-07f2-44f1-b201-ad145e6fbe4a",
+      "name": "Sticky Note41"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "trigger_conditions": "feed_post_creation"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Instagram Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Instagram Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Instagram Agent Webhook": {
+      "main": [
+        [
+          {
+            "node": "Instagram Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Ads MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Instagram Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Ads MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Instagram Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify MCP Client - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Instagram Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify MCP Client - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Instagram Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Calendar Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Instagram Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Influencer Management Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Instagram Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Instagram Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Instagram Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Instagram Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres PGVector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "Instagram Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e2f23d08-fa06-4b2a-8b4d-c6b863eec21a",
+  "meta": {
+    "instanceId": "80621a4270e0ac393edfe0b84576ab8588a37d1db0f23bca7018517bcf39d930"
+  },
+  "id": "E3ZYupN6GSDddXqr",
+  "tags": []
+}

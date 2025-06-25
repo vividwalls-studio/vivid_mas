@@ -1,0 +1,917 @@
+{
+  "name": "Operations Director Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"trigger_conditions\": \"operations_alert\",\n  \"trigger_source\": \"inventory_monitoring_system\",\n  \"priority\": \"high\",\n  \"alert_type\": \"inventory_critical\",\n  \"operations_metrics\": {\n    \"current_status\": {\n      \"fulfillment_time_days\": 4.2,\n      \"stockout_rate\": 3.8,\n      \"shipping_accuracy\": 97.2,\n      \"delivery_satisfaction\": 91.5,\n      \"cost_per_shipment\": 12.75,\n      \"pending_orders\": 234\n    },\n    \"target_metrics\": {\n      \"fulfillment_time_days\": 3.0,\n      \"stockout_rate\": 2.0,\n      \"shipping_accuracy\": 99.0,\n      \"delivery_satisfaction\": 95.0,\n      \"cost_per_shipment\": 10.50,\n      \"max_order_backlog\": 100\n    },\n    \"variance\": {\n      \"fulfillment_delay\": 40,\n      \"stockout_increase\": 90,\n      \"accuracy_gap\": -1.8,\n      \"satisfaction_shortfall\": -3.5\n    }\n  },\n  \"inventory_status\": [\n    {\n      \"sku\": \"CANVAS-16x20-ABSTRACT\",\n      \"current_stock\": 12,\n      \"daily_velocity\": 8,\n      \"days_of_supply\": 1.5,\n      \"reorder_point\": 56,\n      \"lead_time_days\": 7\n    },\n    {\n      \"sku\": \"CANVAS-24x36-MODERN\",\n      \"current_stock\": 5,\n      \"daily_velocity\": 4,\n      \"days_of_supply\": 1.25,\n      \"reorder_point\": 28,\n      \"lead_time_days\": 10\n    }\n  ],\n  \"supplier_issues\": {\n    \"quality_concerns\": [\"color_consistency\", \"canvas_warping\"],\n    \"delivery_delays\": [\"supplier_A_backlog\", \"shipping_disruption\"],\n    \"cost_increases\": [\"material_price_surge\", \"freight_rate_hike\"]\n  },\n  \"optimization_urgency\": \"immediate\",\n  \"risk_mitigation\": [\"expedite_reorders\", \"activate_backup_suppliers\", \"implement_quality_checks\"]\n}"
+      },
+      "id": "ops-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -1400,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        -800
+      ],
+      "id": "ops-b2c3d4e5-f6a7-8901-bcde-f23456789012",
+      "name": "When chat message received",
+      "webhookId": "operations-director-chat-trigger"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        2600,
+        640
+      ],
+      "id": "ops-c3d4e5f6-a7b8-9012-cdef-345678901234",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "path": "operations-director-webhook",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        180,
+        1420
+      ],
+      "id": "ops-d4e5f6a7-b8c9-0123-defa-456789012345",
+      "name": "Operations Director Webhook",
+      "webhookId": "operations-director-webhook"
+    },
+    {
+      "parameters": {
+        "description": "Monitor and optimize inventory levels across all SKUs",
+        "workflowId": {
+          "__rl": true,
+          "value": "InventoryManagementWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Inventory Management Tool"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "inventory_action": "={{ $fromAI('inventory_action', 'check, reorder, adjust, or forecast') }}",
+            "sku_list": "={{ $fromAI('sku_list', 'SKUs to manage') }}",
+            "reorder_quantity": "={{ $fromAI('reorder_quantity', 'quantity to reorder') }}",
+            "safety_stock": "={{ $fromAI('safety_stock', 'minimum stock levels') }}",
+            "forecast_period": "={{ $fromAI('forecast_period', 'days to forecast demand') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        460,
+        1840
+      ],
+      "id": "ops-e5f6a7b8-c9d0-1234-efab-567890123456",
+      "name": "Inventory Management Tool"
+    },
+    {
+      "parameters": {
+        "description": "Process orders and manage fulfillment workflow",
+        "workflowId": {
+          "__rl": true,
+          "value": "OrderFulfillmentWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Order Fulfillment Tool"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "order_action": "={{ $fromAI('order_action', 'process, expedite, hold, or cancel') }}",
+            "order_ids": "={{ $fromAI('order_ids', 'orders to process') }}",
+            "priority_level": "={{ $fromAI('priority_level', 'standard, rush, or VIP') }}",
+            "quality_check": "={{ $fromAI('quality_check', 'quality control requirements') }}",
+            "shipping_method": "={{ $fromAI('shipping_method', 'shipping service selection') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        460,
+        2040
+      ],
+      "id": "ops-f6a7b8c9-d0e1-2345-fabc-678901234567",
+      "name": "Order Fulfillment Tool"
+    },
+    {
+      "parameters": {
+        "description": "Manage supplier relationships and coordinate production",
+        "workflowId": {
+          "__rl": true,
+          "value": "SupplierManagementWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Supplier Management Tool"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "supplier_action": "={{ $fromAI('supplier_action', 'communicate, negotiate, evaluate, or switch') }}",
+            "supplier_name": "={{ $fromAI('supplier_name', 'supplier to manage') }}",
+            "order_details": "={{ $fromAI('order_details', 'production order specifications') }}",
+            "quality_standards": "={{ $fromAI('quality_standards', 'quality requirements') }}",
+            "negotiation_terms": "={{ $fromAI('negotiation_terms', 'pricing or terms to negotiate') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        460,
+        2240
+      ],
+      "id": "ops-a7b8c9d0-e1f2-3456-abcd-789012345678",
+      "name": "Supplier Management Tool"
+    },
+    {
+      "parameters": {
+        "description": "Track shipping and delivery performance",
+        "workflowId": {
+          "__rl": true,
+          "value": "ShippingLogisticsWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Shipping Logistics Tool"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tracking_action": "={{ $fromAI('tracking_action', 'track, update, investigate, or report') }}",
+            "tracking_numbers": "={{ $fromAI('tracking_numbers', 'shipments to track') }}",
+            "carrier_selection": "={{ $fromAI('carrier_selection', 'shipping carrier to use') }}",
+            "delivery_issues": "={{ $fromAI('delivery_issues', 'delivery problems to resolve') }}",
+            "cost_optimization": "={{ $fromAI('cost_optimization', 'shipping cost analysis') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        460,
+        2440
+      ],
+      "id": "ops-b8c9d0e1-f2a3-4567-bcde-890123456789",
+      "name": "Shipping Logistics Tool"
+    },
+    {
+      "parameters": {
+        "description": "Generate operational reports and performance metrics",
+        "workflowId": {
+          "__rl": true,
+          "value": "OperationalReportingWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Operational Reporting Tool"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "report_type": "={{ $fromAI('report_type', 'fulfillment, inventory, quality, or cost report') }}",
+            "time_period": "={{ $fromAI('time_period', 'reporting period') }}",
+            "kpi_focus": "={{ $fromAI('kpi_focus', 'key metrics to highlight') }}",
+            "comparison_basis": "={{ $fromAI('comparison_basis', 'benchmark or period comparison') }}",
+            "distribution_list": "={{ $fromAI('distribution_list', 'stakeholders to notify') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        460,
+        2640
+      ],
+      "id": "ops-c9d0e1f2-a3b4-5678-cdef-901234567890",
+      "name": "Operational Reporting Tool"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -100,
+        2040
+      ],
+      "id": "ops-d0e1f2a3-b4c5-6789-defa-012345678901",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "nMbluFwHsrVvkQBJ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "tableId": {
+          "__rl": true,
+          "value": "inventory_data",
+          "mode": "list"
+        },
+        "returnAll": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreAirtableSearch",
+      "typeVersion": 1,
+      "position": [
+        120,
+        2240
+      ],
+      "id": "ops-e1f2a3b4-c5d6-7890-efab-123456789012",
+      "name": "Inventory Data"
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "tableId": {
+          "__rl": true,
+          "value": "fulfillment_metrics",
+          "mode": "list"
+        },
+        "returnAll": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreAirtableSearch",
+      "typeVersion": 1,
+      "position": [
+        120,
+        2440
+      ],
+      "id": "ops-f2a3b4c5-d6e7-8901-fabc-234567890123",
+      "name": "Fulfillment Metrics Data"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.system_prompt }}",
+        "metadata": {
+          "metadataValues": [
+            {
+              "name": "agent_role",
+              "value": "Operations Director"
+            },
+            {
+              "name": "focus_area",
+              "value": "Fulfillment & Supply Chain"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryVectorStore",
+      "typeVersion": 1,
+      "position": [
+        -300,
+        2240
+      ],
+      "id": "ops-a3b4c5d6-e7f8-9012-abcd-345678901234",
+      "name": "Operations Director Memory"
+    },
+    {
+      "parameters": {
+        "systemMessage": "=## Role & Purpose\nYou are the Operations Director Agent for VividWalls, responsible for end-to-end order fulfillment, inventory management, and supply chain optimization. You ensure timely delivery of high-quality canvas prints to customers.\n\n## Core Responsibilities\n- Monitor and optimize inventory levels across all SKUs\n- Coordinate with printing partners for quality control\n- Manage order processing and shipping logistics\n- Track fulfillment metrics and delivery performance\n- Handle supplier relationships and negotiations\n- Implement process improvements for efficiency\n\n## Key Performance Indicators\n- Order fulfillment time < 3 business days\n- Inventory stockout rate < 2%\n- Shipping accuracy rate > 99%\n- Customer delivery satisfaction > 95%\n- Cost per shipment optimization\n\n## Available MCP Tools\n- Shopify MCP: Order management and inventory tracking\n- n8n workflows: Automated fulfillment processes\n- Supplier integration APIs\n- Shipping provider APIs (FedEx, UPS, etc.)\n- Quality control tracking systems\n\n## Decision Framework\n- Automatically reorder when inventory drops below 7-day supply\n- Flag orders for quality review if customer value > $200\n- Escalate shipping delays to Customer Experience Director\n- Report daily operational metrics to Business Manager\n\n## Current Context\n{{ $json.trigger_conditions }}\n{{ $json.operations_metrics }}\n{{ $json.inventory_status }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        1400,
+        2040
+      ],
+      "id": "ops-b4c5d6e7-f8a9-0123-bcde-456789012345",
+      "name": "Operations Director AI Agent"
+    },
+    {
+      "parameters": {
+        "inputType": "chat",
+        "path": "operations-director-chat",
+        "responseMode": "lastNode",
+        "options": {
+          "appendMessagesToOutput": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatOpenWebUi",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        720
+      ],
+      "id": "ops-c5d6e7f8-a9b0-1234-cdef-567890123456",
+      "name": "Chat Interface",
+      "webhookId": "operations-director-chat"
+    },
+    {
+      "parameters": {
+        "mode": "trigger",
+        "values": {
+          "string": [
+            {
+              "name": "action",
+              "value": "={{ $json.action }}"
+            },
+            {
+              "name": "operations_report",
+              "value": "={{ $json.operations_report }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2200,
+        820
+      ],
+      "id": "ops-d6e7f8a9-b0c1-2345-defa-678901234567",
+      "name": "Prepare Response"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        400,
+        -300
+      ],
+      "parameters": {
+        "content": "# \ud83c\udfed Operations Director Agent\n\n**Role**: Supply chain and fulfillment excellence\n\n**Primary Functions**:\n- Supply chain optimization\n- Inventory management\n- Order fulfillment coordination\n- Warehouse operations\n- Logistics and shipping\n\n**Reports to**: Business Manager\n**Direct Reports**: Inventory Management Agent, Fulfillment Agent",
+        "height": 320,
+        "width": 400,
+        "color": 4
+      },
+      "id": "sticky-operations_director-1-1750871198.590371",
+      "name": "Sticky Note 1"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        820,
+        -300
+      ],
+      "parameters": {
+        "content": "## \ud83c\udfaf Key Responsibilities\n\n1. **Strategic Planning**\n   - Department goal setting\n   - Resource optimization\n   - Risk mitigation\n\n2. **Team Coordination**\n   - Agent task delegation\n   - Performance monitoring\n   - Cross-team collaboration\n\n3. **Reporting**\n   - Business Manager updates\n   - Performance dashboards\n   - Strategic recommendations",
+        "height": 320,
+        "width": 380,
+        "color": 5
+      },
+      "id": "sticky-operations_director-2-1750871198.590373",
+      "name": "Sticky Note 2"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1220,
+        -300
+      ],
+      "parameters": {
+        "content": "## \ud83d\udcca Performance Metrics\n\n**Department KPIs**:\n- Order accuracy: 99.2%\n- Fulfillment speed\n- Inventory turnover\n- Stock-out rate\n- Shipping costs\n\n**Updated**: Real-time\n**Reporting**: Daily to Business Manager",
+        "height": 320,
+        "width": 360,
+        "color": 6
+      },
+      "id": "sticky-operations_director-3-1750871198.590374",
+      "name": "Sticky Note 3"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        400,
+        40
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd04 Workflow Triggers\n\n**Business Manager Delegation**:\n- Strategic directives\n- Resource allocation\n- Performance reviews\n\n**Agent Escalations**:\n- Critical issues\n- Resource conflicts\n- Decision requests",
+        "height": 240,
+        "width": 340,
+        "color": 1
+      },
+      "id": "sticky-operations_director-4-1750871198.590375",
+      "name": "Sticky Note 4"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        760,
+        40
+      ],
+      "parameters": {
+        "content": "## \u26a1 Response Standards\n\n**SLA Targets**:\n- Critical: < 30 min\n- High Priority: < 2 hours\n- Normal: < 6 hours\n- Low: < 24 hours\n\n**Escalation to Business Manager**:\n- Budget > threshold\n- Strategic decisions\n- Cross-department conflicts",
+        "height": 240,
+        "width": 340,
+        "color": 2
+      },
+      "id": "sticky-operations_director-5-1750871198.590376",
+      "name": "Sticky Note 5"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1120,
+        40
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd10 Access & Security\n\n**MCP Access**:\n- Domain-specific tools only\n- Encrypted credentials\n- Audit logging enabled\n\n**Data Handling**:\n- Department data isolation\n- Secure API calls\n- Compliance protocols",
+        "height": 240,
+        "width": 320,
+        "color": 3
+      },
+      "id": "sticky-operations_director-6-1750871198.590377",
+      "name": "Sticky Note 6"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4200,
+        1400
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd27 Shopify MCP\n\n**Purpose**: Shopify integration\n\n**Use Cases**:\n- Data retrieval\n- Action execution\n- Status monitoring\n- Report generation\n\n**Authentication**: Secure API",
+        "height": 200,
+        "width": 300,
+        "color": 4
+      },
+      "id": "sticky-operations_director-7-1750871198.590378",
+      "name": "Sticky Note 7"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4520,
+        1400
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd27 ShipStation MCP\n\n**Purpose**: ShipStation integration\n\n**Use Cases**:\n- Data retrieval\n- Action execution\n- Status monitoring\n- Report generation\n\n**Authentication**: Secure API",
+        "height": 200,
+        "width": 300,
+        "color": 5
+      },
+      "id": "sticky-operations_director-8-1750871198.590379",
+      "name": "Sticky Note 8"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4840,
+        1400
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd27 Inventory Manager MCP\n\n**Purpose**: Inventory Manager integration\n\n**Use Cases**:\n- Data retrieval\n- Action execution\n- Status monitoring\n- Report generation\n\n**Authentication**: Secure API",
+        "height": 200,
+        "width": 300,
+        "color": 6
+      },
+      "id": "sticky-operations_director-9-1750871198.59038",
+      "name": "Sticky Note 9"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        5160,
+        1400
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd27 Warehouse MCP\n\n**Purpose**: Warehouse integration\n\n**Use Cases**:\n- Data retrieval\n- Action execution\n- Status monitoring\n- Report generation\n\n**Authentication**: Secure API",
+        "height": 200,
+        "width": 300,
+        "color": 1
+      },
+      "id": "sticky-operations_director-10-1750871198.590382",
+      "name": "Sticky Note 10"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        5480,
+        1400
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd27 Logistics Tracker MCP\n\n**Purpose**: Logistics Tracker integration\n\n**Use Cases**:\n- Data retrieval\n- Action execution\n- Status monitoring\n- Report generation\n\n**Authentication**: Secure API",
+        "height": 200,
+        "width": 300,
+        "color": 2
+      },
+      "id": "sticky-operations_director-11-1750871198.590383",
+      "name": "Sticky Note 11"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1800,
+        800
+      ],
+      "parameters": {
+        "content": "## \ud83e\udd16 AI Agent Configuration\n\n**Model**: GPT-4o\n**Temperature**: 0.7\n**Role**: Operations Director\n\n**Specialized Knowledge**:\n- Domain expertise\n- Industry best practices\n- Strategic planning\n- Team coordination",
+        "height": 200,
+        "width": 300,
+        "color": 4
+      },
+      "id": "sticky-operations_director-12-1750871198.590384",
+      "name": "Sticky Note 12"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2120,
+        800
+      ],
+      "parameters": {
+        "content": "## \ud83d\udcca Decision Framework\n\n1. Analyze request context\n2. Evaluate resources\n3. Consider constraints\n4. Apply domain expertise\n5. Generate solution\n6. Validate approach\n\n**Decision logging**: Enabled",
+        "height": 200,
+        "width": 300,
+        "color": 5
+      },
+      "id": "sticky-operations_director-13-1750871198.590385",
+      "name": "Sticky Note 13"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2440,
+        800
+      ],
+      "parameters": {
+        "content": "## \ud83c\udfaf Delegation Logic\n\n**To Agents**:\n- Task assignment\n- Resource allocation\n- Priority setting\n- Deadline management\n\n**From Business Manager**:\n- Strategic directives\n- Budget constraints\n- Performance targets",
+        "height": 200,
+        "width": 300,
+        "color": 6
+      },
+      "id": "sticky-operations_director-14-1750871198.590386",
+      "name": "Sticky Note 14"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1800,
+        1020
+      ],
+      "parameters": {
+        "content": "## \ud83d\udcdd Output Structure\n\n```json\n{\n  \"action\": \"delegate|execute|report\",\n  \"target\": \"agent_name\",\n  \"task\": \"task_details\",\n  \"priority\": \"high|medium|low\",\n  \"deadline\": \"ISO_date\"\n}\n```",
+        "height": 200,
+        "width": 300,
+        "color": 1
+      },
+      "id": "sticky-operations_director-15-1750871198.590387",
+      "name": "Sticky Note 15"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2120,
+        1020
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd04 Feedback Loops\n\n**Agent Reports**:\n- Task completion\n- Performance metrics\n- Issues/blockers\n\n**Business Manager**:\n- Strategic updates\n- Resource changes\n- Priority shifts",
+        "height": 200,
+        "width": 300,
+        "color": 2
+      },
+      "id": "sticky-operations_director-16-1750871198.590388",
+      "name": "Sticky Note 16"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1200,
+        2200
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd04 Task Delegation Pattern\n\n```javascript\nconst delegation = {\n  agent: 'target_agent',\n  task: {\n    type: 'analysis|execution',\n    details: taskDetails,\n    priority: 'high',\n    deadline: deadline\n  },\n  resources: allocatedResources\n}\n```",
+        "height": 220,
+        "width": 320,
+        "color": 4
+      },
+      "id": "sticky-operations_director-17-1750871198.590389",
+      "name": "Sticky Note 17"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1540,
+        2200
+      ],
+      "parameters": {
+        "content": "## \ud83d\udcca Performance Aggregation\n\n```javascript\n// Collect agent metrics\nconst metrics = await Promise.all([\n  agent1.getMetrics(),\n  agent2.getPerformance()\n]);\n// Report to Business Manager\nreturn consolidateMetrics(metrics);\n```",
+        "height": 220,
+        "width": 320,
+        "color": 5
+      },
+      "id": "sticky-operations_director-18-1750871198.59039",
+      "name": "Sticky Note 18"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1880,
+        2200
+      ],
+      "parameters": {
+        "content": "## \ud83d\udea8 Escalation Handling\n\n**Triggers**:\n- Agent timeout\n- Resource conflict\n- Critical failure\n- Budget exceeded\n\n**Actions**:\n1. Assess severity\n2. Attempt resolution\n3. Escalate if needed",
+        "height": 220,
+        "width": 320,
+        "color": 6
+      },
+      "id": "sticky-operations_director-19-1750871198.590391",
+      "name": "Sticky Note 19"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2220,
+        2200
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd01 Continuous Optimization\n\n1. Monitor performance\n2. Identify bottlenecks\n3. Test improvements\n4. Measure impact\n5. Deploy changes\n\n**Optimization Cycle**: Weekly",
+        "height": 220,
+        "width": 320,
+        "color": 1
+      },
+      "id": "sticky-operations_director-20-1750871198.590392",
+      "name": "Sticky Note 20"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        400,
+        2600
+      ],
+      "parameters": {
+        "content": "## \ud83d\udcda Operations Director Best Practices\n\n**Communication**:\n- Clear task delegation\n- Regular status updates\n- Proactive issue reporting\n- Transparent metrics\n\n**Efficiency**:\n- Batch similar tasks\n- Cache frequent data\n- Optimize API calls",
+        "height": 260,
+        "width": 300,
+        "color": 4
+      },
+      "id": "sticky-operations_director-21-1750871198.590393",
+      "name": "Sticky Note 21"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        720,
+        2600
+      ],
+      "parameters": {
+        "content": "## \u26a0\ufe0f Common Challenges\n\n**Technical**:\n- API rate limits\n- Data synchronization\n- Integration failures\n\n**Operational**:\n- Resource conflicts\n- Priority balancing\n- Cross-team coordination",
+        "height": 260,
+        "width": 300,
+        "color": 5
+      },
+      "id": "sticky-operations_director-22-1750871198.590394",
+      "name": "Sticky Note 22"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1040,
+        2600
+      ],
+      "parameters": {
+        "content": "## \ud83d\udee1\ufe0f Risk Management\n\n**Mitigation Strategies**:\n- Redundant systems\n- Graceful degradation\n- Manual overrides\n- Backup processes\n\n**Monitoring**:\n- Real-time alerts\n- Performance tracking\n- Error logging",
+        "height": 260,
+        "width": 300,
+        "color": 6
+      },
+      "id": "sticky-operations_director-23-1750871198.590395",
+      "name": "Sticky Note 23"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1360,
+        2600
+      ],
+      "parameters": {
+        "content": "## \ud83d\udcc8 Success Metrics\n\n**Department Health**:\n- Task completion: >95%\n- On-time delivery: >90%\n- Quality score: >4.5/5\n- Team efficiency: +10% QoQ\n\n**Review**: Monthly with Business Manager",
+        "height": 260,
+        "width": 300,
+        "color": 1
+      },
+      "id": "sticky-operations_director-24-1750871198.590396",
+      "name": "Sticky Note 24"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "id": "metadata-operations_director-1750871198.590399",
+      "name": "Workflow Metadata",
+      "position": [
+        400,
+        2900
+      ],
+      "parameters": {
+        "content": "## \ud83d\udccb Workflow Metadata\n\n**Director Type**: Operations Director\n**Last Enhanced**: 2025-06-25T13:06:38.590400\n**Node Count**: 16\n**Sticky Notes**: 25\n**Documentation Coverage**: ~68%\n\n**Version**: 2.0 (Enhanced)\n**Compatible with**: n8n v1.0+",
+        "height": 200,
+        "width": 350,
+        "color": 2
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Operations Director AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Chat Interface",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Operations Director Webhook": {
+      "main": [
+        [
+          {
+            "node": "Operations Director AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Interface": {
+      "main": [
+        [
+          {
+            "node": "Operations Director AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Operations Director AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Prepare Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Operations Director AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inventory Management Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Operations Director AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order Fulfillment Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Operations Director AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supplier Management Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Operations Director AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shipping Logistics Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Operations Director AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Operational Reporting Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Operations Director AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inventory Data": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Operations Director AI Agent",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fulfillment Metrics Data": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Operations Director AI Agent",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Operations Director Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Operations Director AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

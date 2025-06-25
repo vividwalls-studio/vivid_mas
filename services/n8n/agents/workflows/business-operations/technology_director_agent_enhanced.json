@@ -1,0 +1,917 @@
+{
+  "name": "Technology Director Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"trigger_conditions\": \"system_performance_alert\",\n  \"trigger_source\": \"monitoring_system\",\n  \"priority\": \"critical\",\n  \"alert_type\": \"technical_issue\",\n  \"affected_systems\": [\n    {\n      \"system_id\": \"SHOPIFY-MAIN\",\n      \"type\": \"ecommerce_platform\",\n      \"name\": \"Main Shopify Store\",\n      \"current_metrics\": {\n        \"uptime_percentage\": 98.2,\n        \"response_time_ms\": 1250,\n        \"error_rate\": 2.3,\n        \"api_success_rate\": 96.5\n      },\n      \"sla_targets\": {\n        \"uptime_percentage\": 99.5,\n        \"response_time_ms\": 500,\n        \"error_rate\": 0.5,\n        \"api_success_rate\": 99.0\n      }\n    },\n    {\n      \"system_id\": \"N8N-AUTOMATION\",\n      \"type\": \"workflow_automation\",\n      \"name\": \"n8n Automation Platform\",\n      \"current_metrics\": {\n        \"workflow_success_rate\": 94.8,\n        \"execution_time_avg\": 3200,\n        \"failed_workflows\": 12,\n        \"queue_backlog\": 45\n      }\n    }\n  ],\n  \"technical_issues\": {\n    \"performance_issues\": [\"slow_api_response\", \"database_bottleneck\", \"cache_miss_rate_high\"],\n    \"integration_issues\": [\"shopify_webhook_failures\", \"payment_gateway_timeout\"],\n    \"security_issues\": [\"outdated_ssl_certificate\", \"suspicious_login_attempts\"]\n  },\n  \"optimization_urgency\": \"immediate\",\n  \"expected_impact\": {\n    \"uptime_improvement\": 1.3,\n    \"performance_gain\": 60,\n    \"cost_reduction\": 2500\n  }\n}"
+      },
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -1400,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        -800
+      ],
+      "id": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
+      "name": "When chat message received",
+      "webhookId": "technology-director-chat-trigger"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        2600,
+        640
+      ],
+      "id": "c3d4e5f6-a7b8-9012-cdef-345678901234",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "path": "technology-director-webhook",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        180,
+        1420
+      ],
+      "id": "d4e5f6a7-b8c9-0123-defa-456789012345",
+      "name": "Technology Director Webhook",
+      "webhookId": "technology-director-webhook"
+    },
+    {
+      "parameters": {
+        "description": "Monitor and optimize Shopify store performance and integrations",
+        "workflowId": {
+          "__rl": true,
+          "value": "ShopifyOptimizationWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Shopify Optimization Tool"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "optimization_type": "={{ $fromAI('optimization_type', 'performance, security, or integration') }}",
+            "target_metrics": "={{ $fromAI('target_metrics', 'specific metrics to optimize') }}",
+            "api_endpoints": "={{ $fromAI('api_endpoints', 'shopify api endpoints to check') }}",
+            "performance_threshold": "={{ $fromAI('performance_threshold', 'minimum performance targets') }}",
+            "urgency_level": "={{ $fromAI('urgency_level', 'low, medium, high, critical') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        460,
+        1840
+      ],
+      "id": "e5f6a7b8-c9d0-1234-efab-567890123456",
+      "name": "Shopify Optimization Tool"
+    },
+    {
+      "parameters": {
+        "description": "Design and manage n8n automation workflows for business processes",
+        "workflowId": {
+          "__rl": true,
+          "value": "N8NAutomationManagerWorkflowId",
+          "mode": "list",
+          "cachedResultName": "n8n Automation Manager"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflow_action": "={{ $fromAI('workflow_action', 'create, update, monitor, or fix') }}",
+            "process_name": "={{ $fromAI('process_name', 'business process to automate') }}",
+            "integration_points": "={{ $fromAI('integration_points', 'systems to connect') }}",
+            "error_handling": "={{ $fromAI('error_handling', 'error handling strategy') }}",
+            "monitoring_rules": "={{ $fromAI('monitoring_rules', 'alerting and monitoring setup') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        460,
+        2040
+      ],
+      "id": "f6a7b8c9-d0e1-2345-fabc-678901234567",
+      "name": "n8n Automation Manager Tool"
+    },
+    {
+      "parameters": {
+        "description": "Manage API integrations and third-party service connections",
+        "workflowId": {
+          "__rl": true,
+          "value": "APIIntegrationManagerWorkflowId",
+          "mode": "list",
+          "cachedResultName": "API Integration Manager"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "service_name": "={{ $fromAI('service_name', 'third-party service to integrate') }}",
+            "integration_type": "={{ $fromAI('integration_type', 'webhook, REST API, or GraphQL') }}",
+            "authentication": "={{ $fromAI('authentication', 'auth method required') }}",
+            "data_mapping": "={{ $fromAI('data_mapping', 'field mappings between systems') }}",
+            "rate_limits": "={{ $fromAI('rate_limits', 'API rate limit considerations') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        460,
+        2240
+      ],
+      "id": "a7b8c9d0-e1f2-3456-abcd-789012345678",
+      "name": "API Integration Manager Tool"
+    },
+    {
+      "parameters": {
+        "description": "Monitor system performance and generate technical reports",
+        "workflowId": {
+          "__rl": true,
+          "value": "SystemMonitoringWorkflowId",
+          "mode": "list",
+          "cachedResultName": "System Monitoring Tool"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "monitoring_scope": "={{ $fromAI('monitoring_scope', 'systems to monitor') }}",
+            "metrics_type": "={{ $fromAI('metrics_type', 'performance, uptime, or security metrics') }}",
+            "alert_thresholds": "={{ $fromAI('alert_thresholds', 'alerting thresholds') }}",
+            "reporting_frequency": "={{ $fromAI('reporting_frequency', 'real-time, hourly, daily, weekly') }}",
+            "stakeholders": "={{ $fromAI('stakeholders', 'who to notify') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        460,
+        2440
+      ],
+      "id": "b8c9d0e1-f2a3-4567-bcde-890123456789",
+      "name": "System Monitoring Tool"
+    },
+    {
+      "parameters": {
+        "description": "Implement security measures and manage data backups",
+        "workflowId": {
+          "__rl": true,
+          "value": "SecurityBackupManagerWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Security & Backup Manager"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "security_action": "={{ $fromAI('security_action', 'audit, update, or implement security') }}",
+            "backup_schedule": "={{ $fromAI('backup_schedule', 'backup frequency and retention') }}",
+            "compliance_requirements": "={{ $fromAI('compliance_requirements', 'PCI, GDPR, etc.') }}",
+            "vulnerability_scan": "={{ $fromAI('vulnerability_scan', 'security scan requirements') }}",
+            "recovery_plan": "={{ $fromAI('recovery_plan', 'disaster recovery procedures') }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        460,
+        2640
+      ],
+      "id": "c9d0e1f2-a3b4-5678-cdef-901234567890",
+      "name": "Security & Backup Manager Tool"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -100,
+        2040
+      ],
+      "id": "d0e1f2a3-b4c5-6789-defa-012345678901",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "nMbluFwHsrVvkQBJ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "tableId": {
+          "__rl": true,
+          "value": "system_performance_metrics",
+          "mode": "list"
+        },
+        "returnAll": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreAirtableSearch",
+      "typeVersion": 1,
+      "position": [
+        120,
+        2240
+      ],
+      "id": "e1f2a3b4-c5d6-7890-efab-123456789012",
+      "name": "System Performance Data"
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "tableId": {
+          "__rl": true,
+          "value": "integration_configurations",
+          "mode": "list"
+        },
+        "returnAll": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreAirtableSearch",
+      "typeVersion": 1,
+      "position": [
+        120,
+        2440
+      ],
+      "id": "f2a3b4c5-d6e7-8901-fabc-234567890123",
+      "name": "Integration Configuration Data"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.system_prompt }}",
+        "metadata": {
+          "metadataValues": [
+            {
+              "name": "agent_role",
+              "value": "Technology Director"
+            },
+            {
+              "name": "focus_area",
+              "value": "System Infrastructure & Automation"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryVectorStore",
+      "typeVersion": 1,
+      "position": [
+        -300,
+        2240
+      ],
+      "id": "a3b4c5d6-e7f8-9012-abcd-345678901234",
+      "name": "Technology Director Memory"
+    },
+    {
+      "parameters": {
+        "systemMessage": "=## Role & Purpose\nYou are the Technology Director Agent for VividWalls, responsible for all technical infrastructure, system integrations, automation workflows, and technology optimization. You ensure all business systems work seamlessly together.\n\n## Core Responsibilities\n- Manage Shopify platform optimization and customization\n- Design and maintain n8n automation workflows\n- Integrate all business systems and APIs\n- Monitor system performance and uptime\n- Implement new tools and technologies\n- Ensure data security and backup procedures\n\n## Key Performance Indicators\n- System uptime > 99.5%\n- Page load speed optimization\n- API integration success rates\n- Automation workflow reliability\n- Security compliance metrics\n\n## Available MCP Tools\n- Shopify development and admin APIs\n- n8n workflow automation platform\n- System monitoring and alerting tools\n- Database management systems\n- API integration platforms\n- Security and backup tools\n\n## Decision Framework\n- Immediately address any system downtime\n- Automate repetitive business processes via n8n\n- Optimize website performance for conversion\n- Report technical metrics weekly to Business Manager\n\n## Current Context\n{{ $json.trigger_conditions }}\n{{ $json.affected_systems }}\n{{ $json.technical_issues }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        1400,
+        2040
+      ],
+      "id": "b4c5d6e7-f8a9-0123-bcde-456789012345",
+      "name": "Technology Director AI Agent"
+    },
+    {
+      "parameters": {
+        "inputType": "chat",
+        "path": "technology-director-chat",
+        "responseMode": "lastNode",
+        "options": {
+          "appendMessagesToOutput": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatOpenWebUi",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        720
+      ],
+      "id": "c5d6e7f8-a9b0-1234-cdef-567890123456",
+      "name": "Chat Interface",
+      "webhookId": "technology-director-chat"
+    },
+    {
+      "parameters": {
+        "mode": "trigger",
+        "values": {
+          "string": [
+            {
+              "name": "action",
+              "value": "={{ $json.action }}"
+            },
+            {
+              "name": "system_report",
+              "value": "={{ $json.system_report }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2200,
+        820
+      ],
+      "id": "d6e7f8a9-b0c1-2345-defa-678901234567",
+      "name": "Prepare Response"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        400,
+        -300
+      ],
+      "parameters": {
+        "content": "# \ud83d\udcbb Technology Director Agent\n\n**Role**: Technical infrastructure and innovation\n\n**Primary Functions**:\n- System architecture oversight\n- Integration management\n- Security and compliance\n- Performance optimization\n- Innovation roadmap\n\n**Reports to**: Business Manager\n**Direct Reports**: System Monitoring Agent, Integration Management Agent",
+        "height": 320,
+        "width": 400,
+        "color": 2
+      },
+      "id": "sticky-technology_director-1-1750871198.591404",
+      "name": "Sticky Note 1"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        820,
+        -300
+      ],
+      "parameters": {
+        "content": "## \ud83c\udfaf Key Responsibilities\n\n1. **Strategic Planning**\n   - Department goal setting\n   - Resource optimization\n   - Risk mitigation\n\n2. **Team Coordination**\n   - Agent task delegation\n   - Performance monitoring\n   - Cross-team collaboration\n\n3. **Reporting**\n   - Business Manager updates\n   - Performance dashboards\n   - Strategic recommendations",
+        "height": 320,
+        "width": 380,
+        "color": 3
+      },
+      "id": "sticky-technology_director-2-1750871198.591406",
+      "name": "Sticky Note 2"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1220,
+        -300
+      ],
+      "parameters": {
+        "content": "## \ud83d\udcca Performance Metrics\n\n**Department KPIs**:\n- System uptime: 99.9%\n- API response time\n- Security incidents: 0\n- Integration success rate\n- Tech debt ratio\n\n**Updated**: Real-time\n**Reporting**: Daily to Business Manager",
+        "height": 320,
+        "width": 360,
+        "color": 4
+      },
+      "id": "sticky-technology_director-3-1750871198.591407",
+      "name": "Sticky Note 3"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        400,
+        40
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd04 Workflow Triggers\n\n**Business Manager Delegation**:\n- Strategic directives\n- Resource allocation\n- Performance reviews\n\n**Agent Escalations**:\n- Critical issues\n- Resource conflicts\n- Decision requests",
+        "height": 240,
+        "width": 340,
+        "color": 5
+      },
+      "id": "sticky-technology_director-4-1750871198.591408",
+      "name": "Sticky Note 4"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        760,
+        40
+      ],
+      "parameters": {
+        "content": "## \u26a1 Response Standards\n\n**SLA Targets**:\n- Critical: < 30 min\n- High Priority: < 2 hours\n- Normal: < 6 hours\n- Low: < 24 hours\n\n**Escalation to Business Manager**:\n- Budget > threshold\n- Strategic decisions\n- Cross-department conflicts",
+        "height": 240,
+        "width": 340,
+        "color": 6
+      },
+      "id": "sticky-technology_director-5-1750871198.591409",
+      "name": "Sticky Note 5"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1120,
+        40
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd10 Access & Security\n\n**MCP Access**:\n- Domain-specific tools only\n- Encrypted credentials\n- Audit logging enabled\n\n**Data Handling**:\n- Department data isolation\n- Secure API calls\n- Compliance protocols",
+        "height": 240,
+        "width": 320,
+        "color": 1
+      },
+      "id": "sticky-technology_director-6-1750871198.59141",
+      "name": "Sticky Note 6"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4200,
+        1400
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd27 n8n MCP\n\n**Purpose**: n8n integration\n\n**Use Cases**:\n- Data retrieval\n- Action execution\n- Status monitoring\n- Report generation\n\n**Authentication**: Secure API",
+        "height": 200,
+        "width": 300,
+        "color": 2
+      },
+      "id": "sticky-technology_director-7-1750871198.591411",
+      "name": "Sticky Note 7"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4520,
+        1400
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd27 GitHub MCP\n\n**Purpose**: GitHub integration\n\n**Use Cases**:\n- Data retrieval\n- Action execution\n- Status monitoring\n- Report generation\n\n**Authentication**: Secure API",
+        "height": 200,
+        "width": 300,
+        "color": 3
+      },
+      "id": "sticky-technology_director-8-1750871198.591412",
+      "name": "Sticky Note 8"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4840,
+        1400
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd27 AWS MCP\n\n**Purpose**: AWS integration\n\n**Use Cases**:\n- Data retrieval\n- Action execution\n- Status monitoring\n- Report generation\n\n**Authentication**: Secure API",
+        "height": 200,
+        "width": 300,
+        "color": 4
+      },
+      "id": "sticky-technology_director-9-1750871198.591413",
+      "name": "Sticky Note 9"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        5160,
+        1400
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd27 Monitoring MCP\n\n**Purpose**: Monitoring integration\n\n**Use Cases**:\n- Data retrieval\n- Action execution\n- Status monitoring\n- Report generation\n\n**Authentication**: Secure API",
+        "height": 200,
+        "width": 300,
+        "color": 5
+      },
+      "id": "sticky-technology_director-10-1750871198.591414",
+      "name": "Sticky Note 10"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        5480,
+        1400
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd27 Security Scanner MCP\n\n**Purpose**: Security Scanner integration\n\n**Use Cases**:\n- Data retrieval\n- Action execution\n- Status monitoring\n- Report generation\n\n**Authentication**: Secure API",
+        "height": 200,
+        "width": 300,
+        "color": 6
+      },
+      "id": "sticky-technology_director-11-1750871198.591415",
+      "name": "Sticky Note 11"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1800,
+        800
+      ],
+      "parameters": {
+        "content": "## \ud83e\udd16 AI Agent Configuration\n\n**Model**: GPT-4o\n**Temperature**: 0.7\n**Role**: Technology Director\n\n**Specialized Knowledge**:\n- Domain expertise\n- Industry best practices\n- Strategic planning\n- Team coordination",
+        "height": 200,
+        "width": 300,
+        "color": 2
+      },
+      "id": "sticky-technology_director-12-1750871198.591416",
+      "name": "Sticky Note 12"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2120,
+        800
+      ],
+      "parameters": {
+        "content": "## \ud83d\udcca Decision Framework\n\n1. Analyze request context\n2. Evaluate resources\n3. Consider constraints\n4. Apply domain expertise\n5. Generate solution\n6. Validate approach\n\n**Decision logging**: Enabled",
+        "height": 200,
+        "width": 300,
+        "color": 3
+      },
+      "id": "sticky-technology_director-13-1750871198.591417",
+      "name": "Sticky Note 13"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2440,
+        800
+      ],
+      "parameters": {
+        "content": "## \ud83c\udfaf Delegation Logic\n\n**To Agents**:\n- Task assignment\n- Resource allocation\n- Priority setting\n- Deadline management\n\n**From Business Manager**:\n- Strategic directives\n- Budget constraints\n- Performance targets",
+        "height": 200,
+        "width": 300,
+        "color": 4
+      },
+      "id": "sticky-technology_director-14-1750871198.591418",
+      "name": "Sticky Note 14"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1800,
+        1020
+      ],
+      "parameters": {
+        "content": "## \ud83d\udcdd Output Structure\n\n```json\n{\n  \"action\": \"delegate|execute|report\",\n  \"target\": \"agent_name\",\n  \"task\": \"task_details\",\n  \"priority\": \"high|medium|low\",\n  \"deadline\": \"ISO_date\"\n}\n```",
+        "height": 200,
+        "width": 300,
+        "color": 5
+      },
+      "id": "sticky-technology_director-15-1750871198.591419",
+      "name": "Sticky Note 15"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2120,
+        1020
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd04 Feedback Loops\n\n**Agent Reports**:\n- Task completion\n- Performance metrics\n- Issues/blockers\n\n**Business Manager**:\n- Strategic updates\n- Resource changes\n- Priority shifts",
+        "height": 200,
+        "width": 300,
+        "color": 6
+      },
+      "id": "sticky-technology_director-16-1750871198.59142",
+      "name": "Sticky Note 16"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1200,
+        2200
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd04 Task Delegation Pattern\n\n```javascript\nconst delegation = {\n  agent: 'target_agent',\n  task: {\n    type: 'analysis|execution',\n    details: taskDetails,\n    priority: 'high',\n    deadline: deadline\n  },\n  resources: allocatedResources\n}\n```",
+        "height": 220,
+        "width": 320,
+        "color": 2
+      },
+      "id": "sticky-technology_director-17-1750871198.591421",
+      "name": "Sticky Note 17"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1540,
+        2200
+      ],
+      "parameters": {
+        "content": "## \ud83d\udcca Performance Aggregation\n\n```javascript\n// Collect agent metrics\nconst metrics = await Promise.all([\n  agent1.getMetrics(),\n  agent2.getPerformance()\n]);\n// Report to Business Manager\nreturn consolidateMetrics(metrics);\n```",
+        "height": 220,
+        "width": 320,
+        "color": 3
+      },
+      "id": "sticky-technology_director-18-1750871198.591422",
+      "name": "Sticky Note 18"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1880,
+        2200
+      ],
+      "parameters": {
+        "content": "## \ud83d\udea8 Escalation Handling\n\n**Triggers**:\n- Agent timeout\n- Resource conflict\n- Critical failure\n- Budget exceeded\n\n**Actions**:\n1. Assess severity\n2. Attempt resolution\n3. Escalate if needed",
+        "height": 220,
+        "width": 320,
+        "color": 4
+      },
+      "id": "sticky-technology_director-19-1750871198.591423",
+      "name": "Sticky Note 19"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2220,
+        2200
+      ],
+      "parameters": {
+        "content": "## \ud83d\udd01 Continuous Optimization\n\n1. Monitor performance\n2. Identify bottlenecks\n3. Test improvements\n4. Measure impact\n5. Deploy changes\n\n**Optimization Cycle**: Weekly",
+        "height": 220,
+        "width": 320,
+        "color": 5
+      },
+      "id": "sticky-technology_director-20-1750871198.591424",
+      "name": "Sticky Note 20"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        400,
+        2600
+      ],
+      "parameters": {
+        "content": "## \ud83d\udcda Technology Director Best Practices\n\n**Communication**:\n- Clear task delegation\n- Regular status updates\n- Proactive issue reporting\n- Transparent metrics\n\n**Efficiency**:\n- Batch similar tasks\n- Cache frequent data\n- Optimize API calls",
+        "height": 260,
+        "width": 300,
+        "color": 2
+      },
+      "id": "sticky-technology_director-21-1750871198.591425",
+      "name": "Sticky Note 21"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        720,
+        2600
+      ],
+      "parameters": {
+        "content": "## \u26a0\ufe0f Common Challenges\n\n**Technical**:\n- API rate limits\n- Data synchronization\n- Integration failures\n\n**Operational**:\n- Resource conflicts\n- Priority balancing\n- Cross-team coordination",
+        "height": 260,
+        "width": 300,
+        "color": 3
+      },
+      "id": "sticky-technology_director-22-1750871198.591426",
+      "name": "Sticky Note 22"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1040,
+        2600
+      ],
+      "parameters": {
+        "content": "## \ud83d\udee1\ufe0f Risk Management\n\n**Mitigation Strategies**:\n- Redundant systems\n- Graceful degradation\n- Manual overrides\n- Backup processes\n\n**Monitoring**:\n- Real-time alerts\n- Performance tracking\n- Error logging",
+        "height": 260,
+        "width": 300,
+        "color": 4
+      },
+      "id": "sticky-technology_director-23-1750871198.591427",
+      "name": "Sticky Note 23"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1360,
+        2600
+      ],
+      "parameters": {
+        "content": "## \ud83d\udcc8 Success Metrics\n\n**Department Health**:\n- Task completion: >95%\n- On-time delivery: >90%\n- Quality score: >4.5/5\n- Team efficiency: +10% QoQ\n\n**Review**: Monthly with Business Manager",
+        "height": 260,
+        "width": 300,
+        "color": 5
+      },
+      "id": "sticky-technology_director-24-1750871198.591428",
+      "name": "Sticky Note 24"
+    },
+    {
+      "type": "n8n-nodes-base.stickyNote",
+      "id": "metadata-technology_director-1750871198.591431",
+      "name": "Workflow Metadata",
+      "position": [
+        400,
+        2900
+      ],
+      "parameters": {
+        "content": "## \ud83d\udccb Workflow Metadata\n\n**Director Type**: Technology Director\n**Last Enhanced**: 2025-06-25T13:06:38.591432\n**Node Count**: 16\n**Sticky Notes**: 25\n**Documentation Coverage**: ~68%\n\n**Version**: 2.0 (Enhanced)\n**Compatible with**: n8n v1.0+",
+        "height": 200,
+        "width": 350,
+        "color": 2
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Technology Director AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Chat Interface",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Technology Director Webhook": {
+      "main": [
+        [
+          {
+            "node": "Technology Director AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Interface": {
+      "main": [
+        [
+          {
+            "node": "Technology Director AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Technology Director AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Prepare Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Technology Director AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify Optimization Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Technology Director AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n Automation Manager Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Technology Director AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API Integration Manager Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Technology Director AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "System Monitoring Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Technology Director AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Security & Backup Manager Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Technology Director AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "System Performance Data": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Technology Director AI Agent",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Integration Configuration Data": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Technology Director AI Agent",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Technology Director Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Technology Director AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

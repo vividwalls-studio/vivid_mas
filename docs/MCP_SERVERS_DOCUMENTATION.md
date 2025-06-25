@@ -9,11 +9,14 @@ This document provides a comprehensive listing of all Model Context Protocol (MC
 ### 1. Core Services
 
 #### Shopify MCP Server
+
 **Location**: `/services/mcp-servers/core/shopify-mcp-server`  
 **Purpose**: Shopify store administration and management through GraphQL API
 
 **Available Tools**:
+
 - **Product Management**:
+
   - `get-products` - Get all products or search by title
   - `get-products-by-collection` - Get products from a specific collection
   - `get-products-by-ids` - Get products by their IDs
@@ -64,6 +67,7 @@ This document provides a comprehensive listing of all Model Context Protocol (MC
   - `custom-graphql-query` - Execute custom GraphQL queries against Shopify Admin API
 
 #### Neo4j MCP Servers
+
 **Location**: `/services/mcp-servers/core/neo4j-mcp-server`  
 **Purpose**: Neo4j graph database management and knowledge graph operations
 
@@ -91,10 +95,12 @@ This document provides a comprehensive listing of all Model Context Protocol (MC
    - Enable features
 
 #### Stripe MCP Server
+
 **Location**: `/services/mcp-servers/core/stripe-mcp-server`  
 **Purpose**: Stripe payment processing and management
 
 **Features**:
+
 - Payment link creation
 - Customer management
 - Subscription handling
@@ -103,10 +109,12 @@ This document provides a comprehensive listing of all Model Context Protocol (MC
 - Integration with multiple agent frameworks (OpenAI, LangChain, CrewAI)
 
 #### SendGrid MCP Server
+
 **Location**: `/services/mcp-servers/core/sendgrid-mcp-server`  
 **Purpose**: Email marketing and SMS messaging through SendGrid and Twilio
 
 **Email Tools (SendGrid)**:
+
 - Contact Management:
   - `list_contacts` - List all contacts
   - `add_contact` - Add a contact
@@ -120,16 +128,19 @@ This document provides a comprehensive listing of all Model Context Protocol (MC
 - Suppression group handling
 
 **SMS Tools (Twilio)**:
+
 - Send individual and bulk SMS
 - MMS support
 - Delivery tracking
 - Message history
 
 #### Supabase MCP Server
+
 **Location**: `/services/mcp-servers/core/supabase-mcp-server`  
 **Purpose**: Supabase database operations
 
 **Tools**:
+
 - `check-connection` - Verify database connection
 - `query-table` - Query database tables
 - `insert-data` - Insert data into tables
@@ -137,10 +148,12 @@ This document provides a comprehensive listing of all Model Context Protocol (MC
 - `delete-data` - Delete data from tables
 
 #### n8n MCP Server
+
 **Location**: `/services/mcp-servers/core/n8n-mcp-server`  
 **Purpose**: n8n workflow automation management
 
 **Tools**:
+
 - Workflow Management:
   - `list_workflows` - List all workflows
   - `get_workflow` - Get specific workflow
@@ -161,10 +174,12 @@ This document provides a comprehensive listing of all Model Context Protocol (MC
   - `delete_credential` - Delete credential
 
 #### WordPress MCP Server
+
 **Location**: `/services/mcp-servers/core/wordpress-mcp-server`  
 **Purpose**: WordPress content management
 
 **Tools**:
+
 - `get_posts` - Get posts
 - `create_post` - Create new post
 - `update_post` - Update post
@@ -179,10 +194,12 @@ This document provides a comprehensive listing of all Model Context Protocol (MC
 ### 2. Social Media Services
 
 #### Facebook Ads MCP Server
+
 **Location**: `/services/mcp-servers/social-media/facebook-ads-mcp-server`  
 **Purpose**: Facebook Ads management and analytics
 
 **Tools**:
+
 - Account Management:
   - `list_ad_accounts` - List ad accounts
   - `get_details_of_ad_account` - Get account details
@@ -216,10 +233,12 @@ This document provides a comprehensive listing of all Model Context Protocol (MC
   - `create_instagram_ad_creative` - Create Instagram ad
 
 #### Pinterest MCP Server
+
 **Location**: `/services/mcp-servers/social-media/pinterest-mcp-server`  
 **Purpose**: Pinterest marketing and content management
 
 **Tools**:
+
 - `get_user_profile` - Get user profile
 - `get_boards` - Get boards
 - `create_board` - Create board
@@ -230,20 +249,25 @@ This document provides a comprehensive listing of all Model Context Protocol (MC
 - `board_management` - Board management
 
 #### Instagram MCP Server
-**Location**: `/services/mcp-servers/social-media/instagram-mcp-server`  
+
+**Location**: `/services/
+cp-servers/social-media/instagram-mcp-server`  
 **Purpose**: Instagram content and account management
 
 #### WhatsApp Business MCP Server
+
 **Location**: `/services/mcp-servers/social-media/whatsapp-business-mcp-server`  
 **Purpose**: WhatsApp Business API integration
 
 ### 3. Creative Services
 
 #### Figma MCP Server
+
 **Location**: `/services/mcp-servers/creative/figma`  
 **Purpose**: Figma design system integration
 
 **Tools**:
+
 - File Operations:
   - `get-file` - Get file details
   - `get-file-nodes` - Get file nodes
@@ -264,10 +288,12 @@ This document provides a comprehensive listing of all Model Context Protocol (MC
   - `analyze-design-system` - Analyze design system
 
 #### Pictorem MCP Server
+
 **Location**: `/services/mcp-servers/creative/pictorem-mcp-server`  
 **Purpose**: Print-on-demand product management
 
 **Tools**:
+
 - `get_products` - Get products
 - `get_product` - Get specific product
 - `search_products` - Search products
@@ -278,11 +304,14 @@ This document provides a comprehensive listing of all Model Context Protocol (MC
 - `manage_inventory` - Manage inventory
 
 #### Visual Harmony MCP Server (Color Psychology)
+
 **Location**: `/services/mcp-servers/creative/visual-harmony-mcp-server`  
 **Purpose**: Color psychology analysis for design
 
 **Tools**:
-- `analyze_color_palette` - Analyze color palette
+
+- `analyze
+lor_palette` - Analyze color palette
 - `get_color_emotions` - Get color emotions
 - `generate_color_scheme` - Generate color scheme
 - `get_room_recommendations` - Get room recommendations
@@ -293,10 +322,12 @@ This document provides a comprehensive listing of all Model Context Protocol (MC
 ### 4. Research & Analytics
 
 #### SEO Research MCP Server
+
 **Location**: `/services/mcp-servers/research/seo-research-mcp`  
 **Purpose**: SEO research and analysis
 
 **Tools**:
+
 - `keyword_research` - Keyword research
 - `competitor_analysis` - Competitor analysis
 - `backlink_analysis` - Backlink analysis
@@ -306,10 +337,12 @@ This document provides a comprehensive listing of all Model Context Protocol (MC
 - `serp_analysis` - SERP analysis
 
 #### Tavily MCP Server
+
 **Location**: `/services/mcp-servers/research/tavily-mcp`  
 **Purpose**: Advanced web search and research
 
 **Tools**:
+
 - `search` - General web search
 - `extract` - Extract content from URLs
 - `qna_search` - Question-answering search
@@ -318,10 +351,12 @@ This document provides a comprehensive listing of all Model Context Protocol (MC
 - `academic_search` - Academic search
 
 #### Analytics MCP Server
+
 **Location**: `/services/mcp-servers/analytics`  
 **Purpose**: Business analytics and insights
 
 **Tools**:
+
 - `get_business_metrics` - Get business metrics
 - `generate_insights` - Generate insights
 - `predict_trends` - Predict trends
@@ -333,25 +368,166 @@ This document provides a comprehensive listing of all Model Context Protocol (MC
 - `customer_lifetime_value` - Customer lifetime value
 - `predictive_modeling` - Predictive modeling
 
-### 5. Development & Infrastructure
+#### KPI Dashboard MCP Server
+
+**Location**: `/services/mcp-servers/analytics/kpi-dashboard`  
+**Purpose**: Key Performance Indicator monitoring and visualization
+
+**Features**:
+
+- Real-time KPI tracking
+- Business metric dashboards
+- Performance monitoring
+- Stakeholder reporting
+- Crisis monitoring capabilities
+
+#### Business Scorecard MCP Server
+
+**Location**: `/services/mcp-servers/analytics/business-scorecard`  
+**Purpose**: Business performance scorecard management
+
+**Features**:
+
+- Balanced scorecard metrics
+- Performance tracking
+- Strategic alignment monitoring
+- Business health indicators
+
+### 5. Agent Support Services
+
+#### Business Manager Prompts MCP Server
+
+**Location**: `/services/mcp-servers/business-manager-prompts`  
+**Purpose**: Prompt templates and management for business manager agents
+
+**Features**:
+
+- Pre-defined prompt templates for business operations
+- Dynamic prompt generation
+- Prompt optimization for business contexts
+
+#### Business Manager Resource MCP Server
+
+**Location**: `/services/mcp-servers/business-manager-resource`  
+**Purpose**: Resource management for business manager agents
+
+**Features**:
+
+- Business document templates
+- Resource allocation management
+- Business data access patterns
+
+#### Creative Director Prompts MCP Server
+
+**Location**: `/services/mcp-servers/creative-director-prompts`  
+**Purpose**: Creative prompt templates and inspiration tools
+
+**Features**:
+
+- Creative brief templates
+- Design concept prompts
+- Creative workflow management
+
+#### Creative Director Resource MCP Server
+
+**Location**: `/services/mcp-servers/creative-director-resource`  
+**Purpose**: Creative asset and resource management
+
+**Features**:
+
+- Creative asset library access
+- Design resource management
+- Creative project templates
+
+#### Marketing Director Prompts MCP Server
+
+**Location**: `/services/mcp-servers/marketing-director-prompts`  
+**Purpose**: Marketing strategy prompt templates
+
+**Features**:
+
+- Marketing campaign prompts
+- Strategy template library
+- Marketing brief generation
+
+#### Marketing Director Resource MCP Server
+
+**Location**: `/services/mcp-servers/marketing-director-resource`  
+**Purpose**: Marketing resource and asset management
+
+**Features**:
+
+- Marketing asset library
+- Campaign resource management
+- Marketing data access
+
+#### Marketing Research Prompts MCP Server
+
+**Location**: `/services/mcp-servers/marketing-research-prompts`  
+**Purpose**: Market research prompt templates and tools
+
+**Features**:
+
+- Research questionnaire templates
+- Analysis prompt frameworks
+- Research methodology prompts
+
+#### Marketing Research Resource MCP Server
+
+**Location**: `/services/mcp-servers/marketing-research-resource`  
+**Purpose**: Market research data and resource management
+
+**Features**:
+
+- Research data repository
+- Market analysis resources
+- Research template library
+
+#### Newsletter Agent Prompts MCP Server
+
+**Location**: `/services/mcp-servers/newsletter-agent-prompts`  
+**Purpose**: Newsletter content generation prompts
+
+**Features**:
+
+- Newsletter template prompts
+- Content curation prompts
+- Email campaign templates
+
+#### Image Picker Resource MCP Server
+
+**Location**: `/services/mcp-servers/image-picker-resource`  
+**Purpose**: Image selection and management resource server
+
+**Features**:
+
+- Image repository access
+- Visual asset selection tools
+- Image metadata management
+
+### 6. Development & Infrastructure
 
 #### Crawl4AI RAG MCP Server
+
 **Location**: `/services/mcp-servers/mcp-crawl4ai-rag`  
 **Purpose**: Web crawling and RAG (Retrieval-Augmented Generation) capabilities
 
 **Core Tools**:
+
 - `crawl_single_page` - Crawl a single web page
 - `smart_crawl_url` - Intelligently crawl a website
 - `get_available_sources` - Get available sources
 - `perform_rag_query` - Perform RAG query
 
 **Conditional Tools** (when enabled):
+
 - `search_code_examples` - Search for code examples (requires USE_AGENTIC_RAG=true)
 - `parse_github_repository` - Parse GitHub repo into knowledge graph (requires USE_KNOWLEDGE_GRAPH=true)
 - `check_ai_script_hallucinations` - Check for AI hallucinations (requires USE_KNOWLEDGE_GRAPH=true)
 - `query_knowledge_graph` - Query knowledge graph (requires USE_KNOWLEDGE_GRAPH=true)
 
 **Advanced Features**:
+
 - Contextual embeddings
 - Hybrid search (vector + keyword)
 - Agentic RAG for code examples
@@ -359,10 +535,12 @@ This document provides a comprehensive listing of all Model Context Protocol (MC
 - Knowledge graph for hallucination detection
 
 #### Email Marketing MCP Server
+
 **Location**: `/services/mcp-servers/core/email-marketing-mcp-server`  
 **Purpose**: Email marketing automation
 
 **Tools**:
+
 - `send_email` - Send email
 - `create_campaign` - Create campaign
 - `manage_subscribers` - Manage subscribers
@@ -371,9 +549,34 @@ This document provides a comprehensive listing of all Model Context Protocol (MC
 - `segment_audience` - Segment audience
 - `a_b_test` - A/B testing
 
+#### CodeContextor MCP Server
+
+**Location**: `/services/mcp-servers/development/codecontextor-mcp-server`  
+**Purpose**: Code context analysis and understanding
+
+**Features**:
+
+- Code context extraction
+- Dependency analysis
+- Code structure understanding
+- Documentation generation
+
+#### Knowledge Reasoning MCP Server
+
+**Location**: `/services/mcp-servers/knowledge-reasoning-mcp-server`  
+**Purpose**: Knowledge graph reasoning and inference
+
+**Features**:
+
+- Knowledge graph operations
+- Logical reasoning capabilities
+- Inference engine
+- Knowledge validation
+
 ## Configuration Examples
 
 ### Claude Desktop Configuration
+
 Add servers to your `claude_desktop_config.json`:
 
 ```json
@@ -400,6 +603,7 @@ Add servers to your `claude_desktop_config.json`:
 ```
 
 ### Remote Server Configuration (SSH)
+
 For servers running on remote hosts:
 
 ```json
@@ -420,6 +624,7 @@ For servers running on remote hosts:
 ```
 
 ### SSE Transport Configuration
+
 For servers using Server-Sent Events:
 
 ```json

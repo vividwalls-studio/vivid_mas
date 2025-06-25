@@ -163,6 +163,9 @@
   },
   "active": "b166bb5ae43e6ad5",
   "lastOpenFiles": [
+    "services/n8n/agents/workflows/social-media/Social Media Director Agent (1).json",
+    "services/n8n/agents/prompts/marketing/creative_execution_agent_system_prompt.md",
+    "services/n8n/agents/prompts/marketing/content_strategy_agent_system_prompt.md",
     "marketing-creatives/Rolled-Canvas-Mockup-Noir_Weave-03b_tmp1443309101",
     "marketing-creatives/Rolled-Canvas-Mockup-Noir_Weave-03b.png",
     "marketing-creatives/Rolled-Canvas-Mockup-Noir_Weave-03a_tmp1412204961",
@@ -183,7 +186,6 @@
     "marketing-creatives/HomeSceneLivingRoom_Artworks-Landscape-Recovered-Recovered.png",
     "marketing-creatives/HomeSceneLivingRoom_Artworksvivid-geometric_intersection_prisma_tmp174403446",
     "marketing-creatives/Rolled-Canvas-Mockup-Vivid-Prismatic_warmth-05c_tmp1198576938",
-    "marketing-creatives/Rolled-Canvas-Mockup-vivid-geometric_intersection_prismatic_warmth_n04a_tmp1424645901",
     "services/mcp-servers/creative-director-prompts/node_modules/typescript/SECURITY.md",
     "services/mcp-servers/creative-director-prompts/node_modules/typescript/README.md",
     "services/mcp-servers/creative-director-prompts/node_modules/@modelcontextprotocol/sdk/README.md",
@@ -206,8 +208,6 @@
     "services/mcp-servers/creative-director-prompts/node_modules/minimist/README.md",
     "services/mcp-servers/creative-director-prompts/node_modules/minimist/CHANGELOG.md",
     "services/mcp-servers/creative-director-prompts/node_modules/eventsource-parser/README.md",
-    "services/mcp-servers/creative-director-prompts/node_modules/express/Readme.md",
-    "services/mcp-servers/creative-director-prompts/node_modules/math-intrinsics/README.md",
-    "services/mcp-servers/creative-director-prompts/node_modules/math-intrinsics/CHANGELOG.md"
+    "services/mcp-servers/creative-director-prompts/node_modules/express/Readme.md"
   ]
 }
