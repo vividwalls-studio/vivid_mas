@@ -55,6 +55,7 @@ SUPABASE_DB_URL=postgresql://user:password@host:port/database
 ### Getting the Database URL
 
 You can find your database URL in the Supabase dashboard:
+
 1. Go to Settings → Database
 2. Find the Connection String section
 3. Copy the URI (make sure to use the correct password)
@@ -116,6 +117,79 @@ The server can be integrated with n8n workflows for automation.
     "table": "users",
     "schema": "public"
   }
+}
+```
+
+### Lead Management Tools
+
+#### Batch Upsert Leads
+```javascript
+{
+  "tool": "upsert-leads",
+  "arguments": {
+    "leads": [
+      {
+        "twenty_id": "person-123",
+        "first_name": "John",
+        "last_name": "Doe",
+        "email": "john@example.com",
+        "company_name": "Acme Corp",
+        "job_title": "Interior Designer"
+      }
+    ],
+    "conflictColumn": "twenty_id",
+    "updateColumns": ["first_name", "last_name", "email", "updated_at"]
+  }
+}
+```
+
+#### Get Leads for Sync
+```javascript
+{
+  "tool": "get-leads-for-sync",
+  "arguments": {
+    "direction": "supabase_to_twenty",
+    "limit": 50
+  }
+}
+```
+
+#### Update Sync Status
+```javascript
+{
+  "tool": "update-sync-status",
+  "arguments": {
+    "leadIds": ["uuid-1", "uuid-2"],
+    "status": "synced"
+  }
+}
+```
+
+#### Calculate Lead Scores
+```javascript
+{
+  "tool": "calculate-lead-scores",
+  "arguments": {
+    "leadIds": ["uuid-1", "uuid-2"]  // Leave empty to score all leads
+  }
+}
+```
+
+#### Classify Lead Segments
+```javascript
+{
+  "tool": "classify-lead-segments",
+  "arguments": {
+    "leadIds": ["uuid-1", "uuid-2"]
+  }
+}
+```
+
+#### Get Sync Metrics
+```javascript
+{
+  "tool": "get-sync-metrics",
+  "arguments": {}
 }
 ```
 

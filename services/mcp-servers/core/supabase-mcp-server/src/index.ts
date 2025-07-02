@@ -253,6 +253,122 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ['table']
         }
+      },
+      // Lead Management Tools
+      {
+        name: 'upsert-leads',
+        description: 'Batch upsert leads with conflict handling',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            leads: {
+              type: 'array',
+              description: 'Array of lead objects to upsert',
+              items: {
+                type: 'object',
+                properties: {
+                  twenty_id: { type: 'string' },
+                  first_name: { type: 'string' },
+                  last_name: { type: 'string' },
+                  email: { type: 'string' },
+                  phone: { type: 'string' },
+                  company_name: { type: 'string' },
+                  job_title: { type: 'string' }
+                }
+              }
+            },
+            conflictColumn: {
+              type: 'string',
+              description: 'Column to use for conflict detection (default: twenty_id)',
+              default: 'twenty_id'
+            },
+            updateColumns: {
+              type: 'array',
+              description: 'Columns to update on conflict',
+              items: { type: 'string' }
+            }
+          },
+          required: ['leads']
+        }
+      },
+      {
+        name: 'get-leads-for-sync',
+        description: 'Get leads that need to be synced',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            direction: {
+              type: 'string',
+              enum: ['twenty_to_supabase', 'supabase_to_twenty', 'bidirectional'],
+              description: 'Sync direction'
+            },
+            limit: {
+              type: 'number',
+              description: 'Maximum number of leads to return',
+              default: 100
+            }
+          }
+        }
+      },
+      {
+        name: 'update-sync-status',
+        description: 'Update sync status for leads',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            leadIds: {
+              type: 'array',
+              description: 'Array of lead IDs',
+              items: { type: 'string' }
+            },
+            status: {
+              type: 'string',
+              enum: ['pending', 'syncing', 'synced', 'error', 'conflict'],
+              description: 'New sync status'
+            },
+            errorMessage: {
+              type: 'string',
+              description: 'Error message if status is error'
+            }
+          },
+          required: ['leadIds', 'status']
+        }
+      },
+      {
+        name: 'calculate-lead-scores',
+        description: 'Calculate scores for leads based on rules',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            leadIds: {
+              type: 'array',
+              description: 'Array of lead IDs to score (if empty, scores all)',
+              items: { type: 'string' }
+            }
+          }
+        }
+      },
+      {
+        name: 'classify-lead-segments',
+        description: 'Classify leads into customer segments',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            leadIds: {
+              type: 'array',
+              description: 'Array of lead IDs to classify',
+              items: { type: 'string' }
+            }
+          }
+        }
+      },
+      {
+        name: 'get-sync-metrics',
+        description: 'Get lead sync metrics and monitoring data',
+        inputSchema: {
+          type: 'object',
+          properties: {}
+        }
       }
     ]
   };
@@ -749,6 +865,264 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           schema,
           columns,
           constraints: constraintsError ? [] : constraints
+        });
+      }
+
+      // Lead Management Operations
+      case 'upsert-leads': {
+        const { leads, conflictColumn = 'twenty_id', updateColumns } = args as any;
+        
+        if (!leads || leads.length === 0) {
+          return formatToolResult({
+            error: 'No leads provided for upsert'
+          });
+        }
+
+        // Prepare leads with sync metadata
+        const leadsWithMetadata = leads.map((lead: any) => ({
+          ...lead,
+          sync_status: 'synced',
+          last_synced_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }));
+
+        // Build upsert query
+        let query = supabaseClient
+          .from('leads')
+          .upsert(leadsWithMetadata, {
+            onConflict: conflictColumn,
+            ignoreDuplicates: false
+          });
+
+        // If specific update columns are provided, use them
+        if (updateColumns && updateColumns.length > 0) {
+          query = query.select(updateColumns.join(','));
+        } else {
+          query = query.select();
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+          return formatToolResult({
+            error: `Upsert failed: ${error.message}`,
+            details: error
+          });
+        }
+
+        return formatToolResult({
+          success: true,
+          upserted: data?.length || leads.length,
+          data
+        });
+      }
+
+      case 'get-leads-for-sync': {
+        const { direction, limit = 100 } = args as any;
+        
+        let query = supabaseClient
+          .from('leads')
+          .select('*')
+          .or('sync_status.eq.pending,sync_status.eq.error,last_synced_at.is.null')
+          .order('last_synced_at', { ascending: true, nullsFirst: true })
+          .limit(limit);
+
+        // Filter by sync direction if specified
+        if (direction) {
+          query = query.or(`sync_direction.eq.${direction},sync_direction.is.null`);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+          return formatToolResult({
+            error: `Failed to get leads for sync: ${error.message}`
+          });
+        }
+
+        return formatToolResult({
+          leads: data,
+          count: data?.length || 0,
+          direction
+        });
+      }
+
+      case 'update-sync-status': {
+        const { leadIds, status, errorMessage } = args as any;
+        
+        if (!leadIds || leadIds.length === 0) {
+          return formatToolResult({
+            error: 'No lead IDs provided'
+          });
+        }
+
+        const updateData: any = {
+          sync_status: status,
+          updated_at: new Date().toISOString()
+        };
+
+        if (status === 'synced') {
+          updateData.last_synced_at = new Date().toISOString();
+          updateData.sync_error_count = 0;
+          updateData.sync_error_message = null;
+        } else if (status === 'error' && errorMessage) {
+          updateData.sync_error_message = errorMessage;
+          // Increment error count using raw SQL
+          const { error: incrementError } = await supabaseClient.rpc('increment', {
+            table_name: 'leads',
+            column_name: 'sync_error_count',
+            row_ids: leadIds
+          }).select();
+          
+          if (!incrementError) {
+            // If RPC doesn't exist, do it manually
+            for (const id of leadIds) {
+              await supabaseClient
+                .from('leads')
+                .update({ sync_error_count: supabaseClient.rpc('increment', { x: 1 }) })
+                .eq('id', id);
+            }
+          }
+        }
+
+        const { data, error } = await supabaseClient
+          .from('leads')
+          .update(updateData)
+          .in('id', leadIds)
+          .select();
+
+        if (error) {
+          return formatToolResult({
+            error: `Failed to update sync status: ${error.message}`
+          });
+        }
+
+        return formatToolResult({
+          success: true,
+          updated: data?.length || leadIds.length,
+          status
+        });
+      }
+
+      case 'calculate-lead-scores': {
+        const { leadIds } = args as any;
+        
+        // Call the calculate_lead_score function for each lead
+        if (leadIds && leadIds.length > 0) {
+          const results = [];
+          for (const leadId of leadIds) {
+            const { data, error } = await supabaseClient.rpc('calculate_lead_score', {
+              lead_uuid: leadId
+            });
+            
+            if (!error) {
+              results.push({ leadId, score: data });
+            } else {
+              results.push({ leadId, error: error.message });
+            }
+          }
+          
+          return formatToolResult({
+            success: true,
+            results
+          });
+        } else {
+          // Score all leads
+          const { data: leads, error: fetchError } = await supabaseClient
+            .from('leads')
+            .select('id');
+            
+          if (fetchError) {
+            return formatToolResult({
+              error: `Failed to fetch leads: ${fetchError.message}`
+            });
+          }
+          
+          const results = [];
+          for (const lead of leads || []) {
+            const { data, error } = await supabaseClient.rpc('calculate_lead_score', {
+              lead_uuid: lead.id
+            });
+            
+            if (!error) {
+              results.push({ leadId: lead.id, score: data });
+            }
+          }
+          
+          return formatToolResult({
+            success: true,
+            totalScored: results.length,
+            results: results.slice(0, 10) // Return sample
+          });
+        }
+      }
+
+      case 'classify-lead-segments': {
+        const { leadIds } = args as any;
+        
+        if (!leadIds || leadIds.length === 0) {
+          return formatToolResult({
+            error: 'Lead IDs required for classification'
+          });
+        }
+        
+        const results = [];
+        for (const leadId of leadIds) {
+          const { data, error } = await supabaseClient.rpc('infer_lead_segment', {
+            lead_uuid: leadId
+          });
+          
+          if (!error) {
+            // Get the updated lead with segment info
+            const { data: lead } = await supabaseClient
+              .from('leads')
+              .select('id, inferred_segment, segment_confidence, segment_id')
+              .eq('id', leadId)
+              .single();
+              
+            results.push(lead);
+          } else {
+            results.push({ leadId, error: error.message });
+          }
+        }
+        
+        return formatToolResult({
+          success: true,
+          classified: results.length,
+          results
+        });
+      }
+
+      case 'get-sync-metrics': {
+        // Get sync monitoring view data
+        const { data: metrics, error: metricsError } = await supabaseClient
+          .from('sync_monitoring')
+          .select('*');
+          
+        if (metricsError) {
+          return formatToolResult({
+            error: `Failed to get sync metrics: ${metricsError.message}`
+          });
+        }
+        
+        // Get recent sync history
+        const { data: recentSyncs, error: historyError } = await supabaseClient
+          .from('lead_sync_history')
+          .select('*')
+          .order('synced_at', { ascending: false })
+          .limit(10);
+          
+        // Get lead analytics
+        const { data: analytics, error: analyticsError } = await supabaseClient
+          .from('lead_analytics')
+          .select('*')
+          .limit(7); // Last 7 days
+          
+        return formatToolResult({
+          metrics: metricsError ? [] : metrics,
+          recentSyncs: historyError ? [] : recentSyncs,
+          analytics: analyticsError ? [] : analytics,
+          timestamp: new Date().toISOString()
         });
       }
 

@@ -110,7 +110,9 @@ services:
       - "-c"
       - "n8n import:credentials --separate --input=/backup/credentials && n8n import:workflow --separate --input=/backup/workflows"
     volumes:
-      - ./n8n/backup:/backup  
+      - ./n8n/backup:/backup
+    networks:
+      - vivid_mas
 
   n8n:
     <<: *service-n8n
@@ -122,6 +124,8 @@ services:
       - n8n_storage:/home/node/.n8n
       - ./n8n/backup:/backup
       - ./shared:/data/shared
+    networks:
+      - vivid_mas
     depends_on:
       n8n-import:
         condition: service_completed_successfully
@@ -299,7 +303,7 @@ services:
     ports:
       - 127.0.0.1:5433:5432
     volumes:
-      - langfuse_postgres_data:/var/lib/postgresql/data              
+      - langfuse_postgres_data:/var/lib/postgresql/data
 
   redis:
     container_name: redis

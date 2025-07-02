@@ -98,3 +98,18 @@
         header_up Connection "close"
     }
 }
+
+# ListMonk
+listmonk.vividwalls.blog {
+    reverse_proxy localhost:9003
+}
+
+# Crawl4AI
+crawl4ai.vividwalls.blog {
+    reverse_proxy localhost:11235
+}
+
+# Neo4j
+neo4j.vividwalls.blog {
+    reverse_proxy localhost:7474
+}

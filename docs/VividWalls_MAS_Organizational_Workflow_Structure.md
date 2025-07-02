@@ -29,6 +29,7 @@ graph TD
     
     subgraph Directors Layer
         MD[Marketing Director]:::director
+        SD[Sales Director]:::director
         OD[Operations Director]:::director
         CED[Customer Experience Director]:::director
         PD[Product Director]:::director
@@ -40,6 +41,7 @@ graph TD
     
     subgraph Departments
         MKT[Marketing Department<br/>13 Agents]:::department
+        SLS[Sales Department<br/>12 Agents]:::department
         OPS[Operations Department<br/>6 Agents]:::department
         CEX[Customer Experience<br/>6 Agents]:::department
         PRD[Product Department<br/>4 Agents]:::department
@@ -53,6 +55,7 @@ graph TD
     end
     
     BM --> MD
+    BM --> SD
     BM --> OD
     BM --> CED
     BM --> PD
@@ -62,6 +65,7 @@ graph TD
     BM --> SMD
     
     MD --> MKT
+    SD --> SLS
     OD --> OPS
     CED --> CEX
     PD --> PRD
@@ -71,6 +75,7 @@ graph TD
     SMD --> MKT
     
     MKT --> EXT
+    SLS --> EXT
     OPS --> EXT
     CEX --> EXT
     PRD --> EXT
@@ -82,8 +87,8 @@ graph TD
 **Key Components:**
 
 - **Business Manager Agent**: Central orchestrator overseeing all operations
-- **8 Director / Orchestrator Agents**: Department heads who own end-to-end workflows
-- **≈ 45 Total Agents**: 8 Directors (orchestrators) + ~37 Action / Task-oriented agents
+- **9 Director / Orchestrator Agents**: Department heads who own end-to-end workflows
+- **≈ 57 Total Agents**: 9 Directors (orchestrators) + ~48 Action / Task-oriented agents (includes 12 sales sub-agents)
 - **MCP Server Integration**: External tools accessed via `n8n-nodes-mcp` **List / Execute Tool** nodes
 
 ## Hierarchical Structure
@@ -642,5 +647,23 @@ The VividWalls MAS architecture enables:
 - **Efficiency**: Automated workflows reducing manual intervention
 - **Intelligence**: Data-driven decision making across all operations
 - **Flexibility**: Modular design allowing easy addition of new agents
+- **Resilience**: Comprehensive failure prevention based on MAS research
+
+## Resilience Framework
+
+The system implements advanced resilience patterns to address the 14 failure modes identified in multi-agent system research:
+
+### Failure Prevention
+- **Specification Issues (41.77%)**: Clear termination conditions, role specifications
+- **Inter-Agent Misalignment (36.94%)**: Message acknowledgments, clarification protocols  
+- **Task Verification (21.30%)**: Multi-level verification, consensus mechanisms
+
+### Key Enhancements
+1. **Circuit Breakers**: Prevent cascading failures with configurable thresholds
+2. **Message Queuing**: Redis/RabbitMQ for reliable communication
+3. **Context Management**: Sliding window summarization to prevent information loss
+4. **Automated Recovery**: Checkpointing, rollback, and self-healing workflows
+
+For the complete resilience implementation plan, see [PLAN.md](./PLAN.md)
 
 This multi-agent system represents a sophisticated approach to e-commerce automation, leveraging AI agents to handle complex business operations while maintaining human oversight through the Business Manager Agent

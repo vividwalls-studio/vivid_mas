@@ -7,7 +7,7 @@
 Business Manager Agent (Central Orchestrator)
     │
     ├── Purpose: Strategic oversight and coordination
-    ├── Direct Reports: All 8 Directors
+    ├── Direct Reports: All 9 Directors
     └── Tools: Director Agent Tools + Executive MCPs only
 ```
 
@@ -42,10 +42,27 @@ Directors (Department Heads)
     │   ├── Product Strategy Agent
     │   └── Market Research Agent
     │
-    └── Technology Director
-        ├── System Monitoring Agent
-        ├── Integration Management Agent
-        └── n8n Automation (MCP)
+    ├── Technology Director
+    │   ├── System Monitoring Agent
+    │   ├── Integration Management Agent
+    │   └── n8n Automation (MCP)
+    │
+    └── Sales Director
+        ├── Commercial Buyers Team
+        │   ├── Hospitality Sales Agent
+        │   ├── Corporate Sales Agent
+        │   ├── Healthcare Sales Agent
+        │   ├── Retail Sales Agent
+        │   └── Real Estate Sales Agent
+        ├── Residential Buyers Team
+        │   ├── Homeowner Sales Agent
+        │   ├── Renter Sales Agent
+        │   ├── Interior Designer Sales Agent
+        │   ├── Art Collector Sales Agent
+        │   └── Gift Buyer Sales Agent
+        └── Online Shoppers Team
+            ├── Millennial/Gen Z Sales Agent
+            └── Global Customer Sales Agent
 ```
 
 ### Platform Agent Level
@@ -84,6 +101,7 @@ Platform-Specific Agents (Execution Layer)
 
 ### Director-Level MCPs
 - **Marketing Director**: Facebook Ads MCP, Google Ads MCP
+- **Sales Director**: Sales CRM MCP, Shopify MCP, Linear MCP
 - **Operations Director**: Shopify MCP, Inventory MCP
 - **Finance Director**: Accounting MCP, Payment Processing MCP
 - **Technology Director**: n8n MCP, Monitoring MCPs
@@ -109,4 +127,16 @@ Platform-Specific Agents (Execution Layer)
 - MCPs are assigned based on functional responsibility
 - All communication follows the hierarchical structure
 
-Last Updated: 2025-06-25T12:12:10.859495
+## Resilience & Reliability
+
+The VividWalls MAS implements comprehensive resilience patterns based on multi-agent system failure research:
+
+- **Message Acknowledgments**: All inter-agent communications use ACK/NACK protocols
+- **Circuit Breakers**: Prevent cascading failures across agent dependencies
+- **Context Management**: Sliding window summarization prevents information loss
+- **Clarification Protocols**: Agents request clarification when ambiguity detected
+- **Multi-Level Verification**: Syntax, logic, and semantic validation layers
+
+For detailed implementation plan, see [PLAN.md](./PLAN.md)
+
+Last Updated: 2025-06-26

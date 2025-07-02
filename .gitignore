@@ -41,6 +41,8 @@ Thumbs.db
 # MCP configuration (contains API keys)
 mcp.json
 !mcp.json.example
+services/mcp-servers/MCP_CLIENT_CONFIGURATION_GUIDE.md
+docs/MCP_SERVERS_COMPLETE_DOCUMENTATION_UPDATED.md
 
 # Temporary files
 *.tmp
