@@ -194,6 +194,130 @@ docker compose up -d n8n
 2. **Never change key** without re-entering all credentials in n8n UI
 3. **Webhooks return 404** may indicate workflow is inactive, not key issue
 
+## Critical: Docker Network Configuration
+
+**CRITICAL**: All containers MUST be on the `vivid_mas` network. Network misconfigurations have caused multiple service failures.
+
+### Network Rules:
+
+1. **ONLY ONE NETWORK**: All containers must use `vivid_mas` network
+2. **NO DEFAULT NETWORKS**: Never use `bridge`, `default`, or create new networks
+3. **CHECK BEFORE CHANGES**: Always verify network status before modifying containers
+4. **NETWORK DEFINITION**: docker-compose.yml MUST include:
+   ```yaml
+   networks:
+     default:
+       name: vivid_mas
+       external: true
+   ```
+
+### Network Verification:
+```bash
+# Check container networks
+docker ps -a --format 'table {{.Names}}\t{{.Networks}}'
+
+# Move container to correct network
+docker network connect vivid_mas <container_name>
+docker network disconnect <wrong_network> <container_name>
+
+# Remove unused networks (ONLY after moving all containers)
+docker network rm <unused_network>
+```
+
+## Critical: n8n Database Configuration
+
+**CRITICAL**: n8n MUST connect to the main PostgreSQL container named `postgres` which contains 97 workflows.
+
+### Database Connection Rules:
+
+1. **CORRECT HOST**: n8n must use `DB_POSTGRESDB_HOST=postgres` (NOT `db`)
+2. **MAIN POSTGRES**: The container named `postgres` (port 5433) contains production workflows
+3. **PASSWORD**: Uses `${POSTGRES_PASSWORD}` from .env: `myqP9lSMLobnuIfkUpXQzZg07`
+4. **NEVER USE**: Do not use supabase-db, twenty-db, or listmonk-postgres for n8n
+
+### Database Verification:
+```bash
+# Verify workflows exist in correct database
+docker exec postgres psql -U postgres -d postgres -c 'SELECT COUNT(*) FROM workflow_entity;'
+# Should return: 97
+
+# Check n8n connection
+docker exec n8n printenv | grep DB_POSTGRESDB_HOST
+# Must show: DB_POSTGRESDB_HOST=postgres
+```
+
+### n8n Service Definition:
+```yaml
+x-n8n: &service-n8n
+  image: n8nio/n8n:latest
+  environment:
+    - DB_TYPE=postgresdb
+    - DB_POSTGRESDB_HOST=postgres  # CRITICAL: Must be 'postgres' not 'db'
+    - DB_POSTGRESDB_USER=postgres
+    - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+    - DB_POSTGRESDB_DATABASE=postgres
+    - N8N_ENCRYPTION_KEY
+```
+
+## Critical: Docker Compose Configuration
+
+**CRITICAL**: A working backup exists at `docker-compose.yml.working.backup`. Key requirements:
+
+### Docker Compose Rules:
+
+1. **NO INCLUDES**: Remove any `include:` statements for non-existent files
+2. **VOLUME MOUNTS**: n8n MUST have MCP servers mounted:
+   ```yaml
+   volumes:
+     - n8n_storage:/home/node/.n8n
+     - /opt/mcp-servers:/opt/mcp-servers:ro
+     - ./n8n/backup:/backup
+     - ./shared:/data/shared
+   ```
+3. **PROJECT NAME**: Use default project name (directory name) or specify explicitly
+4. **STARTUP ORDER**: n8n depends on n8n-import completion (but skip if import fails)
+
+## Critical: Service Recovery Procedures
+
+### When n8n Cannot Access MCP Servers:
+
+1. **CHECK CONTAINER STATUS**: `docker ps | grep n8n`
+2. **VERIFY NETWORK**: Container must be on `vivid_mas` network
+3. **CHECK VOLUME MOUNT**: `docker exec n8n ls /opt/mcp-servers`
+4. **NEVER CREATE NEW NETWORKS**: Fix existing network issues instead
+
+### When n8n Shows Wrong/No Workflows:
+
+1. **VERIFY DATABASE**: Check which PostgreSQL n8n is connected to
+2. **COUNT WORKFLOWS**: `docker exec postgres psql -U postgres -d postgres -c 'SELECT COUNT(*) FROM workflow_entity;'`
+3. **CHECK HOST CONFIG**: Must be `DB_POSTGRESDB_HOST=postgres`
+4. **RESTART WITH CORRECT CONFIG**: Update docker-compose.yml then restart
+
+### Emergency Recovery:
+
+```bash
+# If services were stopped incorrectly
+cd /root/vivid_mas
+docker-compose up -d  # This will restart all services
+
+# If n8n is on wrong network
+docker rm n8n
+docker-compose up -d n8n --no-deps
+
+# If database connection is wrong
+sed -i 's/DB_POSTGRESDB_HOST=db/DB_POSTGRESDB_HOST=postgres/' docker-compose.yml
+docker-compose up -d n8n --no-deps
+```
+
+## Critical: What NOT to Do
+
+1. **NEVER run containers with docker run** - Always use docker-compose
+2. **NEVER create new networks** - All containers use `vivid_mas`
+3. **NEVER remove postgres container** - It contains production workflows
+4. **NEVER change encryption key** - Will lose access to credentials
+5. **NEVER ignore network errors** - Fix them immediately
+6. **NEVER assume default values** - Always verify actual configuration
+
 ## Important Patterns
 
 1. **Orchestrator-Workers**: Directors delegate to specialized agents
