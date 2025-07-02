@@ -142,6 +142,13 @@ ssh -i ~/.ssh/digitalocean root@157.230.13.13
 # Passphrase: freedom
 ```
 
+GitHub SSH key:
+```bash
+# SSH key location: ~/.ssh/vividwalls_github
+# Passphrase: freedom
+# Add to SSH agent: ssh-add ~/.ssh/vividwalls_github
+```
+
 ## Critical: n8n Encryption Key Management
 
 **CRITICAL**: n8n encryption key issues have occurred 12+ times. The root cause is n8n auto-generating keys when environment variable is not properly set.
