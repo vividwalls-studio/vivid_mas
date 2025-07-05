@@ -1,0 +1,29 @@
+{
+  "name": "analytics-director-resource",
+  "version": "1.0.0",
+  "description": "Resource provider for Analytics Director agent - real-time analytics data and insights",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "jest"
+  },
+  "keywords": ["mcp", "analytics", "resources"],
+  "author": "VividWalls",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@supabase/supabase-js": "^2.39.8",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "@types/jest": "^29.5.14",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "tsx": "^4.7.0",
+    "typescript": "^5.5.4"
+  }
+}
