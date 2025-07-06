@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "postiz": {
+      "transport": "sse",
+      "url": "https://postiz.vividwalls.blog/api/mcp/adaa4e67565cb571955ce71918a52b4eb69fb1bb6d0713e20dbdc9c553efa6d8/sse"
+    }
+  }
+}
