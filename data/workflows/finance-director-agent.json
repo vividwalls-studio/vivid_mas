@@ -1,0 +1,844 @@
+{
+  "name": "Finance Director Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"directive_type\": \"financial_analysis\",\n  \"directive_id\": \"dir_20250118_001\",\n  \"source\": \"business_manager\",\n  \"target\": \"finance_director\",\n  \"priority\": \"high\",\n  \"deadline\": \"2025-01-31T23:59:59Z\",\n  \"analysis_request\": {\n    \"analysis_type\": \"revenue_report\",\n    \"time_period\": \"monthly\",\n    \"categories\": [\"products\", \"channels\", \"customers\"],\n    \"metrics_focus\": [\"revenue\", \"margins\", \"cac\", \"ltv\"],\n    \"comparison\": \"period_over_period\",\n    \"budget_allocation\": {\n      \"marketing\": 5000,\n      \"operations\": 3000,\n      \"technology\": 2000,\n      \"contingency\": 1000\n    },\n    \"financial_targets\": {\n      \"gross_margin\": 0.6,\n      \"monthly_revenue\": 50000,\n      \"cac_payback_months\": 3,\n      \"operating_margin\": 0.25\n    }\n  },\n  \"action_required\": {\n    \"urgency\": \"immediate\",\n    \"deliverables\": [\"report\", \"recommendations\", \"approval\"],\n    \"escalation_threshold\": {\n      \"budget_overrun\": 0.1,\n      \"revenue_shortfall\": 0.05\n    }\n  }\n}"
+      },
+      "id": "trigger-001",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [320, 240]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "finance-director-agent",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-001",
+      "name": "Finance Director Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [320, 448],
+      "webhookId": "finance-director-webhook-001"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "allowedOrigins": "*",
+          "allowFileUploads": true
+        }
+      },
+      "id": "chat-trigger-001",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [320, 640],
+      "webhookId": "finance-director-chat-001"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prep-001",
+              "name": "input_type",
+              "value": "={{ $json.chatInput ? 'chat' : ($json.directive_type ? 'directive' : 'unknown') }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-002",
+              "name": "agent_input",
+              "value": "={{ $json.chatInput || JSON.stringify($json) }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-003",
+              "name": "session_id",
+              "value": "={{ $json.sessionId || $json.directive_id || 'session_' + Date.now() }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-004",
+              "name": "analysis_type",
+              "value": "={{ $json.analysis_request?.analysis_type || 'general' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prep-input-001",
+      "name": "Prepare Agent Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [640, 448]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "llm-001",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [432, 832],
+      "credentials": {
+        "openAiApi": {
+          "id": "ktM70nRxsXMA9jQA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $input.item.json.sessionId || $input.item.json.session_id || 'session_' + Date.now() + '_' + Math.random().toString(36).substring(7) }}"
+      },
+      "id": "memory-001",
+      "name": "Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [576, 832],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "finance_knowledge",
+        "toolDescription": "Access comprehensive financial data, historical metrics, budget templates, and VividWalls financial context",
+        "options": {}
+      },
+      "id": "kb-001",
+      "name": "Finance Knowledge Base",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.1,
+      "position": [1984, 880],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "embed-001",
+      "name": "Embeddings OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [2080, 1056],
+      "credentials": {
+        "openAiApi": {
+          "id": "ktM70nRxsXMA9jQA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://shopify-mcp-server:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-shopify-001",
+      "name": "Shopify MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [768, 1000]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://stripe-mcp-server:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-stripe-001",
+      "name": "Stripe MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [960, 1000]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://supabase-mcp-server:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-supabase-001",
+      "name": "Supabase MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [1152, 1000]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://kpi-dashboard:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-kpi-001",
+      "name": "KPI Dashboard MCP",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [1344, 1000]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://finance-agent-prompts:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-prompts-001",
+      "name": "Finance Agent Prompts MCP",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [768, 832]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://finance-agent-resource:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-resources-001",
+      "name": "Finance Agent Resources MCP",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [960, 832]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://finance-director-prompts:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-director-prompts-001",
+      "name": "Finance Director Prompts MCP",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [1152, 832]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Marketing Director for budget allocation and ROI analysis",
+        "workflowId": {
+          "__rl": true,
+          "value": "at1EQMQgpxKNNXBD",
+          "mode": "list",
+          "cachedResultName": "Marketing Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'budget analysis: marketing spend ROI') }}",
+            "budget_analysis": "={{ $fromAI('budget_analysis', 'marketing budget allocation and performance') }}",
+            "metrics_requested": "={{ $fromAI('metrics_requested', 'CAC, LTV, ROAS by channel') }}",
+            "time_period": "={{ $fromAI('time_period', 'analysis time frame') }}",
+            "recommendations_needed": "={{ $fromAI('recommendations_needed', 'budget optimization suggestions') }}"
+          }
+        }
+      },
+      "id": "marketing-tool-001",
+      "name": "Marketing Director Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1344, 848]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Operations Director for operational cost analysis",
+        "workflowId": {
+          "__rl": true,
+          "value": "OperationsDirectorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Operations Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'operational cost analysis') }}",
+            "cost_categories": "={{ $fromAI('cost_categories', 'fulfillment, logistics, production costs') }}",
+            "efficiency_metrics": "={{ $fromAI('efficiency_metrics', 'cost per unit, processing time') }}",
+            "optimization_areas": "={{ $fromAI('optimization_areas', 'areas for cost reduction') }}"
+          }
+        }
+      },
+      "id": "operations-tool-001",
+      "name": "Operations Director Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1504, 848]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Analytics Director for advanced data analysis",
+        "workflowId": {
+          "__rl": true,
+          "value": "AnalyticsDirectorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Analytics Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'financial analytics: predictive modeling, trend analysis') }}",
+            "analysis_scope": "={{ $fromAI('analysis_scope', 'revenue forecasting, trend identification') }}",
+            "data_sources": "={{ $fromAI('data_sources', 'historical financial data sources') }}",
+            "output_format": "={{ $fromAI('output_format', 'charts, tables, insights') }}"
+          }
+        }
+      },
+      "id": "analytics-tool-001",
+      "name": "Analytics Director Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1664, 848]
+    },
+    {
+      "parameters": {
+        "description": "Generate financial reports and forecasts",
+        "workflowId": {
+          "__rl": true,
+          "value": "FinancialReportingWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Financial Reporting Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "report_type": "={{ $fromAI('report_type', 'P&L, cash flow, balance sheet') }}",
+            "period": "={{ $fromAI('period', 'reporting period') }}",
+            "format": "={{ $fromAI('format', 'executive summary, detailed report') }}",
+            "distribution": "={{ $fromAI('distribution', 'stakeholder list') }}"
+          }
+        }
+      },
+      "id": "reporting-tool-001",
+      "name": "Financial Reporting Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1824, 848]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.agent_input }}",
+        "options": {
+          "systemMessage": "# Finance Director System Prompt\n\nYou are the Finance Director for VividWalls, the Chief Financial Officer responsible for financial oversight, budgeting, pricing strategy, and profitability analysis. You ensure the business maintains healthy margins and cash flow.\n\n## Communication Mode Detection\n\nYou are handling: {{ $json.input_type }} mode\n- **Chat Mode**: Respond conversationally to financial queries while maintaining your CFO authority\n- **Directive Mode**: Process formal financial directives with comprehensive analysis and recommendations\n\n## Core Responsibilities\n\n### Financial Management & Analytics\n- Monitor daily revenue, costs, and profitability across all channels\n- Manage marketing budget allocation and ROI optimization\n- Analyze unit economics and customer lifetime value (CLV)\n- Develop pricing strategies and margin optimization\n- Generate financial forecasts and P&L statements\n- Track key financial KPIs and ratios\n- Ensure financial compliance and risk management\n\n### Budget Planning & Allocation\n- Allocate and monitor budgets for all departments\n- Optimize marketing spend based on ROI > 3x requirement\n- Evaluate capital expenditure and technology investments\n- Control operational expenses across departments\n- Approve budget increases based on performance metrics\n\n## Key Performance Indicators\n\n### Profitability Metrics\n- Gross Margin > 60%\n- Operating Margin > 25%\n- Monthly Recurring Revenue (MRR) growth > 10%\n- Customer Acquisition Cost payback < 3 months\n- CAC:LTV ratio < 1:3\n\n### Financial Health Metrics\n- Cash runway > 6 months\n- Budget variance < 5%\n- Working capital optimization\n- ROI by department tracking\n- Revenue growth rate (MoM and YoY)\n\n## Available MCP Tools\n\n### Financial Data Sources\n- **Shopify MCP Server**: Sales revenue, customer data, product profitability\n- **Stripe MCP Server**: Payment processing, transaction fees, cash flow\n- **Supabase MCP Server**: Financial analytics, historical data, custom queries\n- **KPI Dashboard MCP**: Real-time metrics, business intelligence, predictive analytics\n\n### Specialized Finance Tools\n- **Finance Agent Prompts MCP**: Financial analysis frameworks and methodologies\n- **Finance Agent Resources MCP**: Financial templates and best practices\n- **Finance Director Prompts MCP**: Executive financial strategies and decision frameworks\n\n## Decision Framework\n\n### Financial Alert Thresholds\n- Alert Business Manager if daily revenue drops >20%\n- Escalate if budget overrun >10%\n- Flag revenue shortfall >5%\n- Immediate action if cash flow negative\n\n### Budget Allocation Rules\n- Marketing: 40% of operational budget (ROI > 3x required)\n- Operations: 30% of operational budget\n- Technology: 20% of operational budget\n- Contingency: 10% reserve fund\n\n### Investment Approval Criteria\n1. ROI projection > 25% annually\n2. Payback period < 12 months\n3. Strategic alignment with growth goals\n4. Risk assessment favorable\n5. Budget availability confirmed\n\n## Reporting Requirements\n\n### Daily Monitoring\n- Revenue tracking by channel\n- Expense monitoring\n- Cash position updates\n- Key metric alerts\n\n### Weekly Reports\n- Financial performance summary\n- Budget vs. actual analysis\n- Department spending review\n- Cash flow projections\n\n### Monthly Analysis\n- Comprehensive P&L statement\n- Financial forecast updates\n- Strategic recommendations\n- Board-ready presentations\n\n## Agent Hierarchy\n\n**Reports to:** Business Manager Agent\n\n**Direct Reports:**\n- Financial Reporting Agent\n- Budget Analytics Agent\n- Revenue Optimization Agent\n\n**Key Collaborations:**\n- Marketing Director (budget allocation and ROI)\n- Operations Director (cost management)\n- Analytics Director (data analysis and forecasting)\n- Sales Director (revenue performance)\n- Technology Director (infrastructure investments)\n\n## Escalation Protocols\n\n### Immediate Escalation\n- Budget overruns >10%\n- Revenue shortfalls >5%\n- Cash flow issues\n- Compliance violations\n- Critical financial risks\n\n### Strategic Escalation\n- Major investment decisions >$10,000\n- Pricing strategy changes\n- Department restructuring\n- Financial policy updates\n\n## Quality Assurance\n\n### Financial Accuracy Standards\n- >99% accuracy in financial reporting\n- Real-time data validation\n- Cross-reference multiple data sources\n- Audit trail maintenance\n- Regular reconciliation processes\n\n### Analysis Requirements\n- Data-driven recommendations\n- Scenario modeling for decisions\n- Risk assessment inclusion\n- Confidence intervals provided\n- Alternative strategies presented\n\n**Remember**: You are the financial steward of VividWalls. Every decision must be backed by data, focused on profitability, and aligned with sustainable growth objectives. Maintain fiscal discipline while enabling strategic investments that drive business value."
+        }
+      },
+      "id": "agent-001",
+      "name": "Finance Director Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [960, 448]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "chat-check",
+                    "leftValue": "={{ $('Prepare Agent Input').item.json.input_type }}",
+                    "rightValue": "chat",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Chat Response"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "directive-check",
+                    "leftValue": "={{ $('Prepare Agent Input').item.json.input_type }}",
+                    "rightValue": "directive",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Directive Response"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "router-001",
+      "name": "Route Response Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [1328, 432]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "msg-001",
+              "name": "output",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-002",
+              "name": "content",
+              "value": "={{ $json.output || $json.text || $json.response || $json.message || 'Processing your financial analysis...' }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-003",
+              "name": "timestamp",
+              "value": "={{ new Date().toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-004",
+              "name": "agentName",
+              "value": "Finance Director",
+              "type": "string"
+            },
+            {
+              "id": "msg-005",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-chat-001",
+      "name": "Format Chat Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1968, 240]
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {
+          "responseData": "passThrough",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "webhookSuffix": "approval"
+        }
+      },
+      "id": "wait-approval-001",
+      "name": "Wait for CFO Approval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1696, 448],
+      "webhookId": "finance-approval-001"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "response-001",
+              "name": "response_type",
+              "value": "financial_analysis_report",
+              "type": "string"
+            },
+            {
+              "id": "response-002",
+              "name": "response_id",
+              "value": "={{ 'fin_resp_' + $now.format('yyyyMMdd') + '_' + Math.floor(Math.random() * 1000).toString().padStart(3, '0') }}",
+              "type": "string"
+            },
+            {
+              "id": "response-003",
+              "name": "directive_id",
+              "value": "={{ $json.directive_id }}",
+              "type": "string"
+            },
+            {
+              "id": "response-004",
+              "name": "status",
+              "value": "analysis_complete",
+              "type": "string"
+            },
+            {
+              "id": "response-005",
+              "name": "financial_output",
+              "value": "={{ $json }}",
+              "type": "object"
+            },
+            {
+              "id": "response-006",
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "response-007",
+              "name": "recommendations",
+              "value": "={{ $json.recommendations || [] }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prep-response-001",
+      "name": "Prepare Financial Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1968, 448]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "respond-001",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [2240, 448]
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finance Director Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Agent Input": {
+      "main": [
+        [
+          {
+            "node": "Finance Director Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Finance Director Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Finance Director Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finance Knowledge Base": {
+      "ai_tool": [
+        [
+          {
+            "node": "Finance Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Finance Knowledge Base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify MCP Server": {
+      "ai_tool": [
+        [
+          {
+            "node": "Finance Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stripe MCP Server": {
+      "ai_tool": [
+        [
+          {
+            "node": "Finance Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase MCP Server": {
+      "ai_tool": [
+        [
+          {
+            "node": "Finance Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KPI Dashboard MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Finance Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finance Agent Prompts MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Finance Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finance Agent Resources MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Finance Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finance Director Prompts MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Finance Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Director Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Finance Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Operations Director Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Finance Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analytics Director Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Finance Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Financial Reporting Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Finance Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finance Director Agent": {
+      "main": [
+        [
+          {
+            "node": "Route Response Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Response Type": {
+      "main": [
+        [
+          {
+            "node": "Format Chat Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait for CFO Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Chat Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for CFO Approval": {
+      "main": [
+        [
+          {
+            "node": "Prepare Financial Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Financial Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "tags": [
+    {
+      "id": "mcp-agent",
+      "name": "Agent"
+    },
+    {
+      "id": "finance",
+      "name": "Finance"
+    },
+    {
+      "id": "director",
+      "name": "Director"
+    }
+  ],
+  "triggerCount": 3,
+  "updatedAt": "2025-08-18T19:02:23.998Z",
+  "id": "XETZxpv3meNxooGE"
+}

@@ -1,0 +1,62 @@
+#!/usr/bin/expect -f
+
+set timeout 180
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== GIT VERSION HISTORY ==='\r"
+        expect "root@*"
+        
+        send "cd /root/vivid_mas && git log --oneline -20\r"
+        expect "root@*"
+        
+        send "echo '\n=== RECENT GIT CHANGES ==='\r"
+        expect "root@*"
+        
+        send "git diff HEAD~5 docker-compose.yml | head -100\r"
+        expect "root@*"
+        
+        send "echo '\n=== SYSTEM LOGS - Docker Daemon ==='\r"
+        expect "root@*"
+        
+        send "journalctl -u docker -n 50 --no-pager | tail -30\r"
+        expect "root@*"
+        
+        send "echo '\n=== SYSTEM LOGS - Recent Reboots ==='\r"
+        expect "root@*"
+        
+        send "last reboot | head -10\r"
+        expect "root@*"
+        
+        send "echo '\n=== Docker Compose ENV Check ==='\r"
+        expect "root@*"
+        
+        send "grep -E 'ports:|PORT|5432|5433|8080' /root/vivid_mas/docker-compose.yml | head -50\r"
+        expect "root@*"
+        
+        send "echo '\n=== Check .env file ==='\r"
+        expect "root@*"
+        
+        send "grep -E 'PORT|5432|5433|8080' /root/vivid_mas/.env | head -20\r"
+        expect "root@*"
+        
+        send "echo '\n=== Recent Docker Compose Commands ==='\r"
+        expect "root@*"
+        
+        send "history | grep -E 'docker-compose|docker compose' | tail -20\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

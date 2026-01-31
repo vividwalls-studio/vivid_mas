@@ -1,0 +1,92 @@
+{
+  "workflowId": "Z7LpwNUaOiMiB2Zy",
+  "name": "Lead Generations Workflow Agent - Enhanced",
+  "nodes": [
+    {
+      "id": "236d3656-505e-4f22-94d1-d37f8d94b66d",
+      "name": "Route by Platform", 
+      "type": "n8n-nodes-base.switch",
+      "position": [-7480, 220],
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.platform }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "google_maps"
+            },
+            {
+              "value2": "linkedin"
+            }
+          ]
+        }
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "6b778905-e68b-4c6f-b2e8-83266402f5aa",
+      "name": "Search LinkedIn with query",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [-7220, 360],
+      "parameters": {
+        "url": "=https://www.google.com/search?q={{ encodeURIComponent($json.query) }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "typeVersion": 4.2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "extract-linkedin-urls",
+      "name": "Extract LinkedIn URLs",
+      "type": "n8n-nodes-base.code",
+      "position": [-6940, 360],
+      "parameters": {
+        "jsCode": "// Extract LinkedIn profile URLs from Google search results\nconst html = $json.data || '';\n\n// Regular expression to find LinkedIn profile URLs\nconst linkedInRegex = /https?:\\/\\/(www\\.)?linkedin\\.com\\/in\\/[a-zA-Z0-9-]+/g;\nconst urls = html.match(linkedInRegex) || [];\n\n// Remove duplicates and clean URLs\nconst uniqueUrls = [...new Set(urls)].map(url => {\n  // Clean up URL - remove any trailing characters\n  return url.split(/[\"'\\s<>]/)[0];\n});\n\n// Add metadata for each URL\nreturn uniqueUrls.map(url => ({ \n  json: { \n    url: url,\n    source: 'linkedin',\n    segment: $json.segment,\n    location: $json.location,\n    query: $json.query\n  } \n}));"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "merge-all-urls",
+      "name": "Merge All URLs",
+      "type": "n8n-nodes-base.merge",
+      "position": [-6720, 220],
+      "parameters": {
+        "mode": "append"
+      },
+      "typeVersion": 2.1
+    }
+  ],
+  "connections": {
+    "Query Generator": {
+      "main": [[{"node": "Route by Platform", "type": "main", "index": 0}]]
+    },
+    "Route by Platform": {
+      "main": [
+        [{"node": "Search Google Maps with query", "type": "main", "index": 0}],
+        [{"node": "Search LinkedIn with query", "type": "main", "index": 0}]
+      ]
+    },
+    "Search LinkedIn with query": {
+      "main": [[{"node": "Extract LinkedIn URLs", "type": "main", "index": 0}]]
+    },
+    "Extract LinkedIn URLs": {
+      "main": [[{"node": "Merge All URLs", "type": "main", "index": 1}]]
+    },
+    "Scrape URLs from results": {
+      "main": [[{"node": "Merge All URLs", "type": "main", "index": 0}]]
+    },
+    "Merge All URLs": {
+      "main": [[{"node": "Filter irrelevant URLs", "type": "main", "index": 0}]]
+    },
+    "Starts scraper workflow": {
+      "main": [[{"node": "Query Generator", "type": "main", "index": 0}]]
+    }
+  }
+}

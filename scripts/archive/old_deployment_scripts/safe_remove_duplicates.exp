@@ -1,0 +1,66 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== SAFETY CHECK: Listing working containers first ==='\r"
+        expect "root@*"
+        
+        send "docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' | grep -E 'Up|NAMES'\r"
+        expect "root@*"
+        
+        send "echo '\n=== Containers to be removed (NOT running, causing conflicts) ==='\r"
+        expect "root@*"
+        
+        # Show what we're going to remove
+        send "docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.ID}}' | grep -E 'vivid_mas-postgres-1|^searxng|^twenty-caddy' | grep -v 'Up'\r"
+        expect "root@*"
+        
+        send "echo '\n=== Removing ONLY duplicate/conflicting containers ==='\r"
+        expect "root@*"
+        
+        # Remove vivid_mas-postgres-1 (Created state, port conflict)
+        send "echo 'Removing vivid_mas-postgres-1 (duplicate, port 5433 conflict)...'\r"
+        expect "root@*"
+        send "docker rm vivid_mas-postgres-1 2>&1\r"
+        expect "root@*"
+        
+        # Remove searxng (Created state, port 8080 conflict)
+        send "echo '\nRemoving searxng (port 8080 conflict with wordpress)...'\r"
+        expect "root@*"
+        send "docker rm searxng 2>&1\r"
+        expect "root@*"
+        
+        # Remove twenty-caddy (Created state, unused)
+        send "echo '\nRemoving twenty-caddy (unused, in Created state)...'\r"
+        expect "root@*"
+        send "docker rm twenty-caddy 2>&1\r"
+        expect "root@*"
+        
+        send "echo '\n=== Verification: Checking critical services are still running ==='\r"
+        expect "root@*"
+        
+        send "docker ps | grep -E 'n8n|postgres|supabase|neo4j|wordpress' | grep -v grep\r"
+        expect "root@*"
+        
+        send "echo '\n=== Port 5433 and 8080 usage after cleanup ==='\r"
+        expect "root@*"
+        
+        send "docker ps --format '{{.Names}}: {{.Ports}}' | grep -E '5433|8080'\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

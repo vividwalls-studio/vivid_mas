@@ -1,0 +1,73 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Final container status check
+send "echo '=== FINAL CONTAINER STATUS CHECK ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo '\nTotal running containers:'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker ps -q | wc -l\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo '\n=== Services Status from DNS File ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo '✅ n8n (5678) - RUNNING'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo '❌ Open WebUI (3000) - NOT RUNNING (port used by Twenty CRM)'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo '❌ Flowise (3001) - NOT RUNNING (has profile)'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo '✅ Supabase (8000) - RUNNING (via supabase-kong)'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo '❌ Langfuse (3030) - NOT RUNNING (has profile)'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo '❌ SearXNG (8080) - NOT RUNNING'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo '❌ Ollama (11434) - NOT RUNNING (has profile)'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo '✅ WordPress (8080) - RUNNING'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo '✅ ListMonk (9003) - RUNNING (FIXED TODAY)'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo '✅ Crawl4AI (11235) - RUNNING'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo '✅ Neo4j (7474) - RUNNING'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo '✅ Caddy (80/443) - RUNNING'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo '\n✅ Twenty CRM (3000) - RUNNING (not in DNS file)'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

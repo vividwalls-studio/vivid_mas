@@ -1,0 +1,56 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Check current status
+send "echo '=== Current n8n status ==='\r"
+expect "# "
+send "docker ps -a | grep n8n\r"
+expect "# "
+
+# Check last error
+send "echo '\n=== Last error from n8n ==='\r"
+expect "# "
+send "docker logs n8n --tail 10 2>&1\r"
+expect "# "
+
+# Simple restart without full recreate
+send "echo '\n=== Simple restart ==='\r"
+expect "# "
+send "docker restart n8n\r"
+expect "# "
+
+# Wait and check
+send "sleep 15\r"
+expect "# "
+send "echo '\n=== Status after restart ==='\r"
+expect "# "
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

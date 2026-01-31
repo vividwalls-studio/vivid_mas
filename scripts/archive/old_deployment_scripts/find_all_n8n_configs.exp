@@ -1,0 +1,72 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Find all n8n-related config files in all volumes
+send "echo '=== Finding all n8n config files across all volumes ==='\r"
+expect "# "
+send "docker volume ls | grep -E 'n8n|N8N' | awk '{print \$2}' | while read vol; do echo \"\\nVolume: \$vol\"; docker run --rm -v \$vol:/data alpine find /data -name '*config*' -o -name '*.n8n' -o -name 'settings' -o -name 'encryption*' 2>&1 | head -10; done\r"
+expect "# "
+
+# Check for .n8n directory in volumes
+send "echo '\\n=== Checking for .n8n directories ==='\r"
+expect "# "
+send "docker volume ls | grep -E 'n8n|N8N' | awk '{print \$2}' | while read vol; do echo \"\\nVolume: \$vol\"; docker run --rm -v \$vol:/data alpine find /data -type d -name '.n8n' 2>&1; done\r"
+expect "# "
+
+# Check localai_n8n_storage volume for config files
+send "echo '\\n=== Checking localai_n8n_storage for all config files ==='\r"
+expect "# "
+send "docker run --rm -v localai_n8n_storage:/data alpine find /data -name '*config*' -o -name 'settings' -o -name '.n8n' 2>&1\r"
+expect "# "
+
+# Look for any files containing encryption keys
+send "echo '\\n=== Looking for files containing encryption keys ==='\r"
+expect "# "
+send "docker run --rm -v localai_n8n_storage:/data alpine grep -r 'pAyfxPn9h2yqv32GtzSLA73h2IdZ1n88' /data 2>&1 | head -5\r"
+expect "# "
+
+# Check n8n container's home directory
+send "echo '\\n=== Checking n8n container home directory ==='\r"
+expect "# "
+send "docker exec n8n ls -la /home/node/.n8n/ 2>&1 | head -20\r"
+expect "# "
+
+# Check for config in the n8n container
+send "echo '\\n=== Checking for config file in n8n container ==='\r"
+expect "# "
+send "docker exec n8n cat /home/node/.n8n/config 2>&1 || echo 'No config file found'\r"
+expect "# "
+
+# Check all mounted volumes on n8n container
+send "echo '\\n=== All volumes mounted to n8n container ==='\r"
+expect "# "
+send "docker inspect n8n | grep -A5 -B5 'Mounts' | grep -E 'Source|Destination|Type' | head -20\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

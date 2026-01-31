@@ -1,0 +1,64 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Verify N8N_HOSTNAME is set
+send "grep N8N_HOSTNAME .env | grep -v '#'\r"
+expect "# "
+
+# Completely stop n8n
+send "docker compose stop n8n\r"
+expect "# "
+
+# Remove the n8n container (preserves data)
+send "docker compose rm -f n8n\r"
+expect "# "
+
+# Start n8n fresh with new environment
+send "docker compose up -d n8n\r"
+expect "# "
+
+# Wait for n8n to fully start
+send "echo 'Waiting for n8n to start...'\r"
+expect "# "
+send "sleep 20\r"
+expect "# "
+
+# Check n8n logs for the webhook URL
+send "docker logs n8n --tail 30 | grep -E '(Webhook|webhook|URL|url|Initializing)' || echo 'Checking container...'\r"
+expect "# "
+
+# Verify n8n is running
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Check if n8n picked up the correct environment
+send "docker exec n8n printenv | grep -E '(N8N_HOSTNAME|WEBHOOK_URL)'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

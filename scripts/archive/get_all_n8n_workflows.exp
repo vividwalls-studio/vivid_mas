@@ -1,0 +1,113 @@
+#!/usr/bin/expect -f
+
+# Script to get detailed list of all n8n workflows on droplet
+set timeout 60
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase for key" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "Are you sure you want to continue connecting" {
+        send "yes\r"
+        exp_continue
+    }
+    "root@*" {
+        send_user "\n✅ Connected to droplet\n"
+    }
+    timeout {
+        send_user "\n❌ SSH connection timeout\n"
+        exit 1
+    }
+}
+
+# Navigate to vivid_mas directory
+send "cd /root/vivid_mas\r"
+expect "root@*"
+
+# Get all workflow names and status
+send_user "\n📋 Getting all workflow details...\n"
+send "docker exec postgres psql -U postgres -d postgres -t -A -c \"SELECT id || '|' || name || '|' || active FROM workflow_entity ORDER BY name;\" > /tmp/workflows_list.txt\r"
+expect "root@*"
+
+# Display the list
+send "cat /tmp/workflows_list.txt\r"
+expect "root@*"
+
+# Count workflows by keyword patterns
+send_user "\n\n📊 Workflow Analysis:\n"
+send_user "==================\n"
+
+# Campaign related
+send "echo -n 'Campaign workflows: ' && grep -i campaign /tmp/workflows_list.txt | wc -l\r"
+expect "root@*"
+
+# Marketing related
+send "echo -n 'Marketing workflows: ' && grep -i marketing /tmp/workflows_list.txt | wc -l\r"
+expect "root@*"
+
+# Sales related
+send "echo -n 'Sales workflows: ' && grep -i sales /tmp/workflows_list.txt | wc -l\r"
+expect "root@*"
+
+# Customer related
+send "echo -n 'Customer workflows: ' && grep -i customer /tmp/workflows_list.txt | wc -l\r"
+expect "root@*"
+
+# Product related
+send "echo -n 'Product workflows: ' && grep -i product /tmp/workflows_list.txt | wc -l\r"
+expect "root@*"
+
+# Social Media related
+send "echo -n 'Social Media workflows: ' && grep -iE '(facebook|instagram|pinterest|twitter|linkedin|tiktok|youtube|social)' /tmp/workflows_list.txt | wc -l\r"
+expect "root@*"
+
+# Test/Demo workflows
+send "echo -n 'Test/Demo workflows: ' && grep -iE '(test|demo|example|backup)' /tmp/workflows_list.txt | wc -l\r"
+expect "root@*"
+
+# Check for workflows matching data flow definitions
+send_user "\n\n🎯 Data Flow Definition Matches:\n"
+send_user "================================\n"
+
+send "echo 'Campaign Agent:' && grep -i 'campaign.*agent' /tmp/workflows_list.txt\r"
+expect "root@*"
+
+send "echo 'Campaign Manager:' && grep -i 'campaign.*manager' /tmp/workflows_list.txt\r"
+expect "root@*"
+
+send "echo 'Content Strategy:' && grep -i 'content.*strategy' /tmp/workflows_list.txt\r"
+expect "root@*"
+
+send "echo 'Copy Writer:' && grep -i 'copy.*writer' /tmp/workflows_list.txt\r"
+expect "root@*"
+
+send "echo 'Email Marketing:' && grep -i 'email.*marketing' /tmp/workflows_list.txt\r"
+expect "root@*"
+
+send "echo 'Marketing Director:' && grep -i 'marketing.*director' /tmp/workflows_list.txt\r"
+expect "root@*"
+
+send "echo 'Marketing Research:' && grep -i 'marketing.*research' /tmp/workflows_list.txt\r"
+expect "root@*"
+
+send "echo 'Sales Director:' && grep -i 'sales.*director' /tmp/workflows_list.txt\r"
+expect "root@*"
+
+send "echo 'Social Media:' && grep -i 'social.*media' /tmp/workflows_list.txt\r"
+expect "root@*"
+
+# Exit
+send_user "\n✅ Analysis complete\n"
+send "exit\r"
+expect eof

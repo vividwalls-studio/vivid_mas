@@ -1,0 +1,154 @@
+{
+  "summary": {
+    "total_rows": 5728,
+    "valid_emails": 1157,
+    "invalid_emails": 23,
+    "missing_emails": 4502,
+    "duplicates": 46,
+    "unique_valid_emails": 1111,
+    "data_quality_score": "40.5%"
+  },
+  "completeness": {
+    "with_business_name": 987,
+    "with_contact_person": 657,
+    "business_name_percentage": "85.3%",
+    "contact_person_percentage": "56.8%"
+  },
+  "top_email_domains": [
+    [
+      "gmail.com",
+      440
+    ],
+    [
+      "yahoo.com",
+      241
+    ],
+    [
+      "aol.com",
+      56
+    ],
+    [
+      "bellsouth.net",
+      42
+    ],
+    [
+      "hotmail.com",
+      33
+    ],
+    [
+      "comcast.net",
+      18
+    ],
+    [
+      "att.net",
+      17
+    ],
+    [
+      "live.com",
+      12
+    ],
+    [
+      "ymail.com",
+      8
+    ],
+    [
+      "icloud.com",
+      7
+    ],
+    [
+      "outlook.com",
+      5
+    ],
+    [
+      "me.com",
+      4
+    ],
+    [
+      "windstream.net",
+      3
+    ],
+    [
+      "msn.com",
+      3
+    ],
+    [
+      "mail.com",
+      3
+    ],
+    [
+      "charter.net",
+      2
+    ],
+    [
+      "cityofstockbridge-ga.gov",
+      2
+    ],
+    [
+      "mac.com",
+      2
+    ],
+    [
+      "rocketmail.com",
+      2
+    ],
+    [
+      "earthlink.net",
+      2
+    ]
+  ],
+  "invalid_email_examples": [
+    {
+      "email": "harris",
+      "business": "Capers",
+      "row": 972
+    },
+    {
+      "email": "jayeunn",
+      "business": "Cunningham Investment Group",
+      "row": 1420
+    },
+    {
+      "email": "mathews",
+      "business": "Divia's Delites",
+      "row": 1609
+    },
+    {
+      "email": "404-696-4670",
+      "business": "Do Drop Inn Market and Beauty Supply",
+      "row": 1623
+    },
+    {
+      "email": "gryansims@gmai",
+      "business": "Donna Changs",
+      "row": 1649
+    },
+    {
+      "email": "bob@eddiesattic",
+      "business": "Eddies Attic",
+      "row": 1734
+    },
+    {
+      "email": "floyd.roberts!@brgeneral.org",
+      "business": "Floyd Roberts",
+      "row": 2015
+    },
+    {
+      "email": "russell2fridayscoffee.com",
+      "business": "Friday's Coffee",
+      "row": 2076
+    },
+    {
+      "email": "michael paul",
+      "business": "Habanos",
+      "row": 2301
+    },
+    {
+      "email": "404-957-1659",
+      "business": "",
+      "row": 2806
+    }
+  ],
+  "recommendations": [
+    "Data quality is low. Consider additional data sources."
+  ]
+}

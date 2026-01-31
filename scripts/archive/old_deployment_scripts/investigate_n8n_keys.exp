@@ -1,0 +1,80 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Check the N8N_ENCRYPTION_KEY in .env file
+send "echo '=== Checking N8N_ENCRYPTION_KEY in .env file ==='\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env | head -1\r"
+expect "# "
+
+# Check if there's an encryption key in docker-compose.yml (there shouldn't be)
+send "echo '=== Checking if encryption key is in docker-compose.yml ==='\r"
+expect "# "
+send "grep -i encryption docker-compose.yml || echo 'No encryption key in docker-compose.yml (good)'\r"
+expect "# "
+
+# Check what environment variables n8n container is seeing
+send "echo '=== Checking environment in running container ==='\r"
+expect "# "
+send "docker exec n8n printenv | grep N8N_ENCRYPTION_KEY || echo 'Container not running or key not set'\r"
+expect "# "
+
+# Check if there's a config file with a different key
+send "echo '=== Checking n8n config file ==='\r"
+expect "# "
+send "ls -la n8n_data/.n8n/ 2>/dev/null || echo 'No n8n_data directory'\r"
+expect "# "
+
+# Check if config file exists and its content
+send "cat n8n_data/.n8n/config 2>/dev/null || echo 'No config file found'\r"
+expect "# "
+
+# Check the docker volume
+send "echo '=== Checking docker volumes ==='\r"
+expect "# "
+send "docker volume ls | grep n8n\r"
+expect "# "
+
+# Try to see what's in the n8n storage volume
+send "echo '=== Checking n8n storage volume content ==='\r"
+expect "# "
+send "docker run --rm -v n8n_storage:/data alpine ls -la /data/.n8n/ 2>/dev/null || echo 'Could not access volume'\r"
+expect "# "
+
+# Check if there's a config in the volume
+send "docker run --rm -v n8n_storage:/data alpine cat /data/.n8n/config 2>/dev/null || echo 'No config in volume'\r"
+expect "# "
+
+# Let's also check the exact error from n8n logs
+send "echo '=== Recent n8n logs showing the error ==='\r"
+expect "# "
+send "docker logs n8n 2>&1 | grep -A2 -B2 'encryption key' | tail -20\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

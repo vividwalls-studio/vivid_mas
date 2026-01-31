@@ -1,0 +1,80 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Check root .n8n directory
+send "echo '=== Checking /root/.n8n directory ==='\r"
+expect "# "
+send "ls -la /root/.n8n/ | head -20\r"
+expect "# "
+
+# Check for database in root .n8n
+send "echo '\\n=== Checking for database in /root/.n8n ==='\r"
+expect "# "
+send "ls -lh /root/.n8n/database.sqlite 2>&1 || echo 'No database found'\r"
+expect "# "
+
+# Check n8n backups
+send "echo '\\n=== Checking n8n backup directories ==='\r"
+expect "# "
+send "ls -la /root/n8n_backup/\r"
+expect "# "
+
+# Check n8n backup content
+send "echo '\\n=== Checking n8n backup content ==='\r"
+expect "# "
+send "tar -tzf /root/n8n_backup/n8n_data_backup_20250531_121550.tar.gz | grep -E 'database|sqlite' | head -10\r"
+expect "# "
+
+# Check vivid_mas n8n backups
+send "echo '\\n=== Checking vivid_mas n8n backups ==='\r"
+expect "# "
+send "ls -la /root/vivid_mas/n8n-backups/20250617-131106/\r"
+expect "# "
+
+# Check the SQL backup
+send "echo '\\n=== Checking SQL backup size ==='\r"
+expect "# "
+send "ls -lh /root/vivid_mas/n8n-backups/20250617-131106/n8n-database.sql\r"
+expect "# "
+
+# Check SQL backup content for workflow count
+send "echo '\\n=== Counting workflows in SQL backup ==='\r"
+expect "# "
+send "grep -c 'INSERT INTO.*workflow' /root/vivid_mas/n8n-backups/20250617-131106/n8n-database.sql || echo '0'\r"
+expect "# "
+
+# Check n8n-workflows.tar.gz
+send "echo '\\n=== Checking n8n-workflows.tar.gz ==='\r"
+expect "# "
+send "tar -tzf /root/n8n-workflows.tar.gz 2>&1 | head -10 || echo 'Cannot read archive'\r"
+expect "# "
+
+# Check for all docker volume databases
+send "echo '\\n=== Finding all databases in docker volumes ==='\r"
+expect "# "
+send "find /var/lib/docker/volumes -name 'database.sqlite' -exec ls -lh {} \\; 2>/dev/null\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

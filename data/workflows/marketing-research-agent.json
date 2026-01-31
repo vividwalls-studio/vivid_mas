@@ -1,0 +1,1068 @@
+{
+  "name": "VividWalls Marketing Research Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "trigger-001",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [200, 100]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "marketing-research-agent",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-001",
+      "name": "Marketing Research Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 260],
+      "webhookId": "marketing-research-agent-webhook"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "allowedOrigins": "*",
+          "allowFileUploads": true
+        }
+      },
+      "id": "chat-trigger-001",
+      "name": "When Chat Message Received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [200, 420],
+      "webhookId": "marketing-research-chat-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prep-001",
+              "name": "trigger_source",
+              "value": "={{ $json.trigger_source || 'webhook' }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-002",
+              "name": "research_type",
+              "value": "={{ $json.research_request?.type || 'market_analysis' }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-003",
+              "name": "research_scope",
+              "value": "={{ $json.research_request?.scope || 'general_market' }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-004",
+              "name": "urgency",
+              "value": "={{ $json.research_request?.urgency || 'standard' }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-005",
+              "name": "session_id",
+              "value": "={{ $json.sessionId || $json.report_id || 'research_' + Date.now() }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-006",
+              "name": "research_parameters",
+              "value": "={{ $json.research_parameters || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "prep-007",
+              "name": "analysis_focus",
+              "value": "={{ $json.analysis_focus || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "prep-008",
+              "name": "strategic_questions",
+              "value": "={{ $json.strategic_questions || [] }}",
+              "type": "object"
+            },
+            {
+              "id": "prep-009",
+              "name": "agent_input",
+              "value": "={{ $json.chatInput || JSON.stringify($json) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prep-input-001",
+      "name": "Prepare Research Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 260]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "route-001",
+              "leftValue": "={{ $json.research_type }}",
+              "rightValue": "market_analysis",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "route-002",
+              "leftValue": "={{ $json.research_type }}",
+              "rightValue": "competitor_research",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "route-003",
+              "leftValue": "={{ $json.research_type }}",
+              "rightValue": "consumer_study",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "route-004",
+              "leftValue": "={{ $json.research_type }}",
+              "rightValue": "trend_analysis",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        }
+      },
+      "id": "route-research-001",
+      "name": "Route by Research Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [700, 260]
+    },
+    {
+      "parameters": {
+        "operation": "executeRpc",
+        "functionName": "create_research_report",
+        "parameters": {
+          "p_report_type": "={{ $json.research_type }}",
+          "p_report_scope": "={{ $json.research_scope }}",
+          "p_source_agent": "marketing_research_agent",
+          "p_executive_summary": "Research initiated for {{ $json.research_type }} - {{ $json.research_scope }}",
+          "p_full_report": "",
+          "p_research_parameters": "={{ JSON.stringify($json.research_parameters) }}",
+          "p_target_market": "={{ JSON.stringify($json.research_parameters.target_market || {}) }}",
+          "p_competitors": "={{ JSON.stringify($json.research_parameters.competitors || {}) }}",
+          "p_strategic_questions": "={{ $json.strategic_questions }}",
+          "p_urgency": "={{ $json.urgency }}",
+          "p_tags": "={{ ['research', $json.research_type, new Date().toISOString().split('T')[0]] }}"
+        }
+      },
+      "id": "create-report-001",
+      "name": "Create Research Report",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [900, 260],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-credentials",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "execute",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "text": "={{ $json.agent_input }}",
+        "systemPromptEnabled": true,
+        "systemPrompt": "## Role & Purpose\nYou are the Marketing Research Agent for VividWalls, gathering and analyzing market intelligence to inform strategic decisions. You track consumer trends, analyze competitor strategies, identify market opportunities, and provide data-driven insights for growth.\n\n## Core Responsibilities\n- Conduct market and consumer research\n- Analyze competitor strategies and positioning\n- Identify emerging art and design trends\n- Monitor industry developments and innovations\n- Generate consumer insight reports\n- Recommend market opportunities\n\n## Key Performance Indicators\n- Trend prediction accuracy\n- Competitive intelligence quality\n- Research ROI (impact on decisions)\n- Market opportunity identification\n- Consumer insight actionability\n- Research turnaround time\n\n## Decision Framework\n- Monitor top 5 competitors weekly\n- Analyze trending art styles monthly\n- Survey customers quarterly\n- Report market opportunities within 48 hours\n- Validate trends with 3+ data sources\n\n## Research Methodology\n1. Define research objectives clearly\n2. Gather data from multiple sources\n3. Validate findings with cross-references\n4. Analyze patterns and correlations\n5. Generate actionable recommendations\n6. Present findings with confidence levels",
+        "maxTokens": 2000,
+        "temperature": 0.3
+      },
+      "id": "ai-agent-001",
+      "name": "Marketing Research AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [1300, 260]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "llm-001",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [1140, 500],
+      "credentials": {
+        "openAiApi": {
+          "id": "ktM70nRxsXMA9jQA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $input.item.json.session_id }}"
+      },
+      "id": "memory-001",
+      "name": "Research Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [1300, 500],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "market_research_knowledge",
+        "toolDescription": "Access market research methodologies, industry reports, and historical VividWalls research",
+        "options": {}
+      },
+      "id": "kb-001",
+      "name": "Market Research Knowledge Base",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.1,
+      "position": [1460, 500],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "embed-001",
+      "name": "Embeddings OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [1460, 660],
+      "credentials": {
+        "openAiApi": {
+          "id": "ktM70nRxsXMA9jQA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "tavily_search",
+        "description": "Search the web for market research data and insights",
+        "workflowId": {
+          "__rl": true,
+          "value": "tavily-mcp-workflow",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "action": "search",
+            "query": "={{ $fromAI('search_query', 'Research query for web search') }}",
+            "search_depth": "={{ $fromAI('search_depth', 'basic or advanced') }}",
+            "include_domains": "={{ $fromAI('include_domains', 'Optional: specific domains to search') }}",
+            "exclude_domains": "={{ $fromAI('exclude_domains', 'Optional: domains to exclude') }}",
+            "max_results": "={{ $fromAI('max_results', 'Number of results, default 10') }}"
+          }
+        },
+        "responsePropertyName": "search_results"
+      },
+      "id": "tool-tavily-001",
+      "name": "Tavily Web Search",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1.1,
+      "position": [1620, 500]
+    },
+    {
+      "parameters": {
+        "name": "competitor_analysis",
+        "description": "Analyze competitor websites and strategies",
+        "workflowId": {
+          "__rl": true,
+          "value": "tavily-mcp-workflow",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "action": "crawl",
+            "url": "={{ $fromAI('competitor_url', 'Competitor website URL') }}",
+            "max_depth": "={{ $fromAI('max_depth', 'Crawl depth, default 2') }}",
+            "extract_content": true
+          }
+        },
+        "responsePropertyName": "competitor_data"
+      },
+      "id": "tool-tavily-002",
+      "name": "Competitor Website Crawl",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1.1,
+      "position": [1780, 500]
+    },
+    {
+      "parameters": {
+        "name": "seo_keyword_research",
+        "description": "Perform SEO and keyword research for art market",
+        "workflowId": {
+          "__rl": true,
+          "value": "seo-research-mcp-workflow",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "action": "keyword_research",
+            "keywords": "={{ $fromAI('keywords', 'Array of keywords to research') }}",
+            "domain": "vividwalls.co",
+            "location": "={{ $fromAI('location', 'Target location for research') }}",
+            "language": "={{ $fromAI('language', 'Language code, default en') }}"
+          }
+        },
+        "responsePropertyName": "seo_insights"
+      },
+      "id": "tool-seo-001",
+      "name": "SEO Keyword Research",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1.1,
+      "position": [1940, 500]
+    },
+    {
+      "parameters": {
+        "name": "shopify_data_analysis",
+        "description": "Get sales and customer data from Shopify for market analysis",
+        "workflowId": {
+          "__rl": true,
+          "value": "shopify-mcp-workflow",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "action": "get_analytics",
+            "metric_type": "={{ $fromAI('metric', 'sales, customers, products, or traffic') }}",
+            "time_period": "={{ $fromAI('period', 'Time period for analysis') }}",
+            "segment": "={{ $fromAI('segment', 'Optional customer segment') }}"
+          }
+        },
+        "responsePropertyName": "shopify_data"
+      },
+      "id": "tool-shopify-001",
+      "name": "Shopify Analytics",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1.1,
+      "position": [2100, 500]
+    },
+    {
+      "parameters": {
+        "name": "supabase_historical_data",
+        "description": "Query historical research reports and market data",
+        "workflowId": {
+          "__rl": true,
+          "value": "supabase-mcp-workflow",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "action": "search_research_reports",
+            "search_query": "={{ $fromAI('search_terms', 'Keywords to search in reports') }}",
+            "report_types": "={{ $fromAI('types', 'Array of report types to search') }}",
+            "min_confidence": "={{ $fromAI('confidence', 'Minimum confidence level 0-1') }}"
+          }
+        },
+        "responsePropertyName": "historical_reports"
+      },
+      "id": "tool-supabase-001",
+      "name": "Historical Research Data",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1.1,
+      "position": [2260, 500]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Process and structure research findings\nconst researchData = items[0].json;\nconst findings = [];\nconst recommendations = [];\nconst actionItems = [];\n\n// Extract key findings from AI agent analysis\nif (researchData.search_results) {\n  researchData.search_results.forEach(result => {\n    findings.push({\n      finding: result.title,\n      evidence: result.content,\n      confidence: result.score || 0.7,\n      impact: result.score > 0.8 ? 'high' : result.score > 0.6 ? 'medium' : 'low',\n      source: result.url\n    });\n  });\n}\n\n// Process competitor insights\nif (researchData.competitor_data) {\n  const competitorInsights = {\n    competitor: researchData.competitor_data.base_url,\n    observations: [],\n    threat_level: 'medium'\n  };\n  findings.push({\n    finding: 'Competitor Analysis Completed',\n    evidence: JSON.stringify(competitorInsights),\n    confidence: 0.85,\n    impact: 'high'\n  });\n}\n\n// Generate recommendations based on findings\nif (findings.length > 0) {\n  recommendations.push({\n    recommendation: 'Implement findings from market research',\n    priority: researchData.urgency === 'immediate' ? 'high' : 'medium',\n    estimated_impact: 'Based on research confidence levels',\n    resources_needed: ['Marketing team', 'Budget allocation']\n  });\n  \n  actionItems.push({\n    action: 'Review research findings with Marketing Director',\n    deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),\n    owner: 'Marketing Research Agent',\n    status: 'pending'\n  });\n}\n\n// Calculate confidence and quality scores\nconst avgConfidence = findings.reduce((sum, f) => sum + (f.confidence || 0), 0) / (findings.length || 1);\nconst dataQuality = researchData.search_results ? 0.9 : 0.7;\n\nreturn [{\n  json: {\n    report_id: researchData.session_id,\n    report_type: researchData.research_type,\n    report_scope: researchData.research_scope,\n    key_findings: {\n      primary_insights: findings.slice(0, 5),\n      market_trends: [],\n      competitive_insights: []\n    },\n    recommendations: {\n      immediate_actions: recommendations.filter(r => r.priority === 'high'),\n      strategic_initiatives: recommendations.filter(r => r.priority !== 'high')\n    },\n    action_items: actionItems,\n    confidence_level: avgConfidence,\n    data_quality_score: dataQuality,\n    executive_summary: `Research completed for ${researchData.research_type} with ${findings.length} key findings identified.`,\n    full_report: JSON.stringify({\n      findings,\n      recommendations,\n      raw_data: researchData\n    })\n  }\n}];"
+      },
+      "id": "process-findings-001",
+      "name": "Process Research Findings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1600, 260]
+    },
+    {
+      "parameters": {
+        "operation": "executeRpc",
+        "functionName": "complete_research_report",
+        "parameters": {
+          "p_report_id": "={{ $json.report_id }}",
+          "p_full_report": "={{ $json.full_report }}",
+          "p_key_findings": "={{ JSON.stringify($json.key_findings) }}",
+          "p_recommendations": "={{ JSON.stringify($json.recommendations) }}",
+          "p_action_items": "={{ JSON.stringify($json.action_items) }}",
+          "p_confidence_level": "={{ $json.confidence_level }}",
+          "p_data_quality_score": "={{ $json.data_quality_score }}"
+        }
+      },
+      "id": "update-report-001",
+      "name": "Update Research Report",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1800, 260],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-credentials",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "response-001",
+              "name": "response_type",
+              "value": "research_report_completed",
+              "type": "string"
+            },
+            {
+              "id": "response-002",
+              "name": "response_id",
+              "value": "={{ 'resp_research_' + Date.now() }}",
+              "type": "string"
+            },
+            {
+              "id": "response-003",
+              "name": "report_id",
+              "value": "={{ $json.report_id }}",
+              "type": "string"
+            },
+            {
+              "id": "response-004",
+              "name": "status",
+              "value": "completed",
+              "type": "string"
+            },
+            {
+              "id": "response-005",
+              "name": "research_type",
+              "value": "={{ $json.report_type }}",
+              "type": "string"
+            },
+            {
+              "id": "response-006",
+              "name": "executive_summary",
+              "value": "={{ $json.executive_summary }}",
+              "type": "string"
+            },
+            {
+              "id": "response-007",
+              "name": "key_findings",
+              "value": "={{ $json.key_findings }}",
+              "type": "object"
+            },
+            {
+              "id": "response-008",
+              "name": "recommendations",
+              "value": "={{ $json.recommendations }}",
+              "type": "object"
+            },
+            {
+              "id": "response-009",
+              "name": "confidence_level",
+              "value": "={{ $json.confidence_level }}",
+              "type": "number"
+            },
+            {
+              "id": "response-010",
+              "name": "next_steps",
+              "value": "={{ $json.action_items }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-response-001",
+      "name": "Format Research Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2000, 260]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "check-001",
+              "leftValue": "={{ $json.confidence_level }}",
+              "rightValue": 0.8,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "check-confidence-001",
+      "name": "High Confidence Research?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2200, 260]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.vividwalls.blog/webhook/marketing-director",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "directive_type",
+              "value": "research_report_ready"
+            },
+            {
+              "name": "report_id",
+              "value": "={{ $json.report_id }}"
+            },
+            {
+              "name": "research_type",
+              "value": "={{ $json.research_type }}"
+            },
+            {
+              "name": "confidence_level",
+              "value": "={{ $json.confidence_level }}"
+            },
+            {
+              "name": "key_findings",
+              "value": "={{ JSON.stringify($json.key_findings) }}"
+            },
+            {
+              "name": "recommendations",
+              "value": "={{ JSON.stringify($json.recommendations) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "notify-director-001",
+      "name": "Notify Marketing Director",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2400, 180]
+    },
+    {
+      "parameters": {},
+      "id": "respond-webhook-001",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2600, 260]
+    },
+    {
+      "parameters": {
+        "cron": "0 8 * * 1"
+      },
+      "id": "schedule-001",
+      "name": "Weekly Market Scan",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [200, 580]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Generate weekly market research topics\nconst researchTopics = [\n  {\n    type: 'trend_analysis',\n    scope: 'emerging art styles and consumer preferences',\n    focus: ['instagram trends', 'pinterest boards', 'google trends']\n  },\n  {\n    type: 'competitor_research',\n    scope: 'top 5 competitors weekly activity',\n    focus: ['new products', 'pricing changes', 'marketing campaigns']\n  },\n  {\n    type: 'market_analysis',\n    scope: 'art market performance indicators',\n    focus: ['sales data', 'customer segments', 'geographic trends']\n  }\n];\n\nreturn researchTopics.map(topic => ({\n  json: {\n    trigger_source: 'scheduled_scan',\n    research_request: {\n      type: topic.type,\n      scope: topic.scope,\n      urgency: 'standard'\n    },\n    research_parameters: {\n      target_market: {\n        demographics: ['25-45 age', '$50k+ income', 'urban/suburban'],\n        psychographics: ['art enthusiasts', 'home decorators', 'gift buyers']\n      },\n      data_sources: {\n        primary: ['website analytics', 'customer surveys'],\n        secondary: ['industry reports', 'social media'],\n        social: ['instagram', 'pinterest', 'reddit']\n      }\n    },\n    analysis_focus: topic.focus,\n    strategic_questions: [\n      'What are the emerging opportunities?',\n      'What threats should we monitor?',\n      'How can we differentiate?'\n    ]\n  }\n}));"
+      },
+      "id": "generate-topics-001",
+      "name": "Generate Research Topics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 580]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "batch-001",
+      "name": "Process Topics Sequentially",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [600, 580]
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "id": "wait-001",
+      "name": "Wait Between Research",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [800, 580]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  report_id,\n  report_type,\n  report_scope,\n  executive_summary,\n  key_findings,\n  recommendations,\n  confidence_level,\n  created_at\nFROM research_reports\nWHERE created_at > NOW() - INTERVAL '7 days'\n  AND status = 'completed'\nORDER BY confidence_level DESC\nLIMIT 10;",
+        "options": {}
+      },
+      "id": "get-reports-001",
+      "name": "Get Recent Reports",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1000, 580],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Compile weekly research digest\nconst reports = items;\nconst digest = {\n  week_ending: new Date().toISOString().split('T')[0],\n  total_reports: reports.length,\n  high_confidence_findings: [],\n  market_opportunities: [],\n  competitive_threats: [],\n  recommended_actions: []\n};\n\nreports.forEach(report => {\n  const data = report.json;\n  \n  if (data.confidence_level > 0.8) {\n    digest.high_confidence_findings.push({\n      type: data.report_type,\n      summary: data.executive_summary,\n      confidence: data.confidence_level\n    });\n  }\n  \n  if (data.key_findings?.primary_insights) {\n    data.key_findings.primary_insights.forEach(insight => {\n      if (insight.impact === 'high') {\n        if (insight.finding.toLowerCase().includes('opportunity')) {\n          digest.market_opportunities.push(insight);\n        } else if (insight.finding.toLowerCase().includes('threat') || \n                   insight.finding.toLowerCase().includes('competitor')) {\n          digest.competitive_threats.push(insight);\n        }\n      }\n    });\n  }\n  \n  if (data.recommendations?.immediate_actions) {\n    digest.recommended_actions.push(...data.recommendations.immediate_actions);\n  }\n});\n\nreturn [{\n  json: digest\n}];"
+      },
+      "id": "compile-digest-001",
+      "name": "Compile Research Digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 580]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.vividwalls.blog/webhook/business-manager",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "report_type",
+              "value": "weekly_research_digest"
+            },
+            {
+              "name": "digest",
+              "value": "={{ JSON.stringify($json) }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ new Date().toISOString() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "send-digest-001",
+      "name": "Send Digest to Business Manager",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 580]
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare Research Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Research Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Research Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Chat Message Received": {
+      "main": [
+        [
+          {
+            "node": "Prepare Research Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Research Input": {
+      "main": [
+        [
+          {
+            "node": "Route by Research Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Research Type": {
+      "main": [
+        [
+          {
+            "node": "Create Research Report",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Research Report",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Research Report",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Research Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Research Report": {
+      "main": [
+        [
+          {
+            "node": "Marketing Research AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Research AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Process Research Findings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Research Findings": {
+      "main": [
+        [
+          {
+            "node": "Update Research Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Research Report": {
+      "main": [
+        [
+          {
+            "node": "Format Research Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Research Response": {
+      "main": [
+        [
+          {
+            "node": "High Confidence Research?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "High Confidence Research?": {
+      "main": [
+        [
+          {
+            "node": "Notify Marketing Director",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Marketing Director": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly Market Scan": {
+      "main": [
+        [
+          {
+            "node": "Generate Research Topics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Research Topics": {
+      "main": [
+        [
+          {
+            "node": "Process Topics Sequentially",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Topics Sequentially": {
+      "main": [
+        [
+          {
+            "node": "Wait Between Research",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Between Research": {
+      "main": [
+        [
+          {
+            "node": "Prepare Research Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Recent Reports": {
+      "main": [
+        [
+          {
+            "node": "Compile Research Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compile Research Digest": {
+      "main": [
+        [
+          {
+            "node": "Send Digest to Business Manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Marketing Research AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Marketing Research AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Market Research Knowledge Base": {
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Research AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Market Research Knowledge Base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily Web Search": {
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Research AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Competitor Website Crawl": {
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Research AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SEO Keyword Research": {
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Research AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify Analytics": {
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Research AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Historical Research Data": {
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Research AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "marketing-research-v1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "vividwalls-mas"
+  },
+  "id": "marketing-research-agent-001",
+  "tags": [
+    {
+      "id": "marketing-agents",
+      "name": "Marketing Agents"
+    },
+    {
+      "id": "research",
+      "name": "Research"
+    },
+    {
+      "id": "market-intelligence",
+      "name": "Market Intelligence"
+    },
+    {
+      "id": "tavily-integration",
+      "name": "Tavily Integration"
+    }
+  ]
+}

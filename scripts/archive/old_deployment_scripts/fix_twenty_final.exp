@@ -1,0 +1,72 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Final Twenty CRM Fix ==='\r"
+        expect "root@*"
+        
+        send "cd /opt/twenty/packages/twenty-docker\r"
+        expect "root@*"
+        
+        # Check what the database expects
+        send "echo 'Checking docker-compose.yml for database config...'\r"
+        expect "root@*"
+        send "grep -A10 'db:' docker-compose.yml | grep -E 'POSTGRES_USER|POSTGRES_PASSWORD' || echo 'Using default postgres user'\r"
+        expect "root@*"
+        
+        # Stop everything
+        send "echo '\nStopping Twenty containers...'\r"
+        expect "root@*"
+        send "docker-compose down\r"
+        expect "root@*"
+        
+        # Update .env to use postgres user (not twenty)
+        send "echo '\nUpdating .env to use postgres user...'\r"
+        expect "root@*"
+        send "sed -i 's/PG_DATABASE_USER=twenty/PG_DATABASE_USER=postgres/' .env\r"
+        expect "root@*"
+        send "sed -i 's/PG_DATABASE_PASSWORD=twentycrm2025/PG_DATABASE_PASSWORD=postgres/' .env\r"
+        expect "root@*"
+        
+        # Show updated config
+        send "echo 'Updated configuration:'\r"
+        expect "root@*"
+        send "grep '^PG_' .env\r"
+        expect "root@*"
+        
+        # Start fresh
+        send "echo '\nStarting Twenty CRM fresh...'\r"
+        expect "root@*"
+        send "docker-compose up -d\r"
+        expect "root@*"
+        
+        # Wait and check
+        send "sleep 30\r"
+        expect "root@*"
+        
+        send "echo '\n=== Final Status ==='\r"
+        expect "root@*"
+        send "docker ps | grep twenty | wc -l\r"
+        expect "root@*"
+        send "echo 'Twenty containers running'\r"
+        expect "root@*"
+        
+        send "docker ps --format 'table {{.Names}}\t{{.Status}}' | grep twenty\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

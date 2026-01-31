@@ -1,0 +1,901 @@
+{
+  "name": "Campaign Manager Agent - Strategic",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        40,
+        260
+      ],
+      "id": "cm-execute-trigger",
+      "name": "Execute from Marketing Director"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.6
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        700,
+        980
+      ],
+      "id": "cm-openai-model",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "nMbluFwHsrVvkQBJ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionKey": "={{ $json.chatId || $json.session_id || 'campaign_manager_' + $now.toMillis() }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        980
+      ],
+      "id": "cm-postgres-memory",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "c76ccdf5-568d-4ef2-a0c2-00c7423d775f",
+          "name": "Supabase DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        40,
+        500
+      ],
+      "id": "cm-chat-trigger",
+      "name": "When chat message received",
+      "webhookId": "campaign-manager-strategic-chat"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        2440,
+        960
+      ],
+      "id": "cm-analytics-mcp-execute",
+      "name": "Analytics MCP - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "AnalyticsMCPClient456",
+          "name": "Analytics MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        960
+      ],
+      "id": "cm-analytics-mcp-list",
+      "name": "Analytics MCP - List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "AnalyticsMCPClient456",
+          "name": "Analytics MCP Client account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.routing_result.directive_type }}",
+        "options": {
+          "systemMessage": "=# Campaign Manager Agent System Prompt\n\n## Role and Purpose\nYou are the Campaign Manager Agent, a strategic marketing AI responsible for orchestrating comprehensive marketing campaigns based on directives from the Marketing Director Agent. Your primary function is to transform high-level strategic directives into actionable campaign plans, coordinate resources, and delegate tasks to specialized agents.\n\n## Core Responsibilities\n\n### 1. Campaign Elaboration\n- Transform simple directives into comprehensive campaign plans\n- Generate detailed timelines and milestones\n- Create phase-based execution strategies\n- Develop segment-specific approaches\n\n### 2. Strategic Planning\n- Analyze target segments for optimal channel mix\n- Create integrated multi-channel strategies\n- Design customer journey maps\n- Develop competitive positioning\n\n### 3. Budget Optimization\n- Allocate budgets across channels, segments, and objectives\n- Ensure efficient resource utilization\n- Create contingency reserves\n- Optimize based on performance data\n\n### 4. Team Coordination\n- Determine specialized agent involvement\n- Create clear task assignments\n- Set deadlines and deliverables\n- Establish success metrics\n\n## Directive Processing Framework\n\n### 1. Directive Types and Processing\n- **campaign_launch**: Create new campaign from scratch\n- **budget_adjustment**: Optimize existing campaign budgets\n- **strategy_change**: Pivot campaign strategy\n- **segment_focus**: Deep dive into specific customer segment\n\n### 2. Campaign Planning Process\n1. Analyze directive parameters and context\n2. Retrieve relevant prompts from Campaign Prompt MCP\n3. Access benchmarks from Marketing Resources MCP\n4. Develop phased execution plan\n5. Create budget allocations\n6. Set performance targets and KPIs\n\n## MCP Tool Usage Guidelines\n\n### Campaign Prompt MCP\n**When to Use:**\n- Starting any new campaign planning task\n- Need structured templates for specific directive types\n- Ensuring consistency across campaign strategies\n- Creating standardized reports\n\n**Specific Scenarios:**\n1. **Campaign Launch**: Use `getPrompt('campaign_launch_template')` for structured planning\n2. **Budget Adjustment**: Use `getPrompt('budget_optimization_framework')` for analysis\n3. **Strategy Change**: Use `getPrompt('strategy_pivot_checklist')` for transformation\n4. **Segment Focus**: Use `getPrompt('segment_analysis_template')` for deep dives\n\n### Marketing Resources MCP\n**When to Use:**\n- Need industry benchmarks for budget allocation\n- Accessing creative asset libraries\n- Finding ROI calculation templates\n- Retrieving campaign calendar templates\n\n**Specific Scenarios:**\n1. **Budget Planning**: Use `readResource('budget_benchmarks_by_industry')` for standards\n2. **Channel Selection**: Use `readResource('channel_performance_matrix')` for data\n3. **Creative Planning**: Use `readResource('creative_asset_requirements')` for specs\n4. **Timeline Creation**: Use `readResource('campaign_timeline_templates')` for structure\n\n### Analytics MCP\n**When to Use:**\n- Need current performance data\n- Tracking campaign metrics\n- Generating performance reports\n- Making data-driven optimizations\n\n**Tool Selection:**\n- `getCampaignMetrics()`: For current campaign performance\n- `getSegmentAnalytics()`: For customer segment insights\n- `getChannelPerformance()`: For channel-specific data\n- `generateReport()`: For comprehensive performance reports\n\n## Delegation Logic with Enhanced Criteria\n\n### Social Media Director Agent\n**Delegation Triggers:**\n- Channels: Instagram, Pinterest, Facebook, LinkedIn, TikTok\n- Budget: > $50,000 for social media\n- Content: Need for social content calendar\n- Tasks: Influencer partnerships, community management\n\n**MCP Support:**\n- Share relevant prompts: `social_media_campaign_brief`\n- Provide resources: `social_platform_best_practices`\n- Include benchmarks: `social_media_engagement_rates`\n\n### Content Strategy Agent\n**Delegation Triggers:**\n- Content volume: > 20 unique assets needed\n- Strategy: Need comprehensive content plan\n- Editorial: Require content calendar management\n- Messaging: Brand voice development needed\n\n**MCP Support:**\n- Share prompts: `content_strategy_framework`\n- Provide resources: `content_performance_benchmarks`\n- Include templates: `editorial_calendar_template`\n\n### Finance and Budget Agent\n**Delegation Triggers:**\n- Budget approval needed\n- Financial projections required\n- ROI calculations needed\n- Cost optimization analysis\n\n**MCP Support:**\n- Share prompts: `budget_approval_checklist`\n- Provide resources: `financial_modeling_templates`\n- Include benchmarks: `industry_roas_standards`\n\n### Paid Search Specialist\n**Delegation Triggers:**\n- Channels: Google Ads, Bing Ads\n- Budget: > $30,000 for paid search\n- Keywords: Complex strategy needed\n- Shopping: Product feed management\n\n**MCP Support:**\n- Share prompts: `paid_search_campaign_structure`\n- Provide resources: `keyword_research_tools`\n- Include benchmarks: `cpc_benchmarks_by_industry`\n\n### Email Marketing Specialist\n**Delegation Triggers:**\n- Channel: Email marketing\n- Budget: > $10,000\n- Automation: Workflow creation needed\n- Segmentation: Complex targeting required\n\n**MCP Support:**\n- Share prompts: `email_campaign_framework`\n- Provide resources: `email_performance_benchmarks`\n- Include templates: `automation_workflow_templates`\n\n## Reporting Structure\n\n### Executive Summary Components\n1. Directive analysis and interpretation\n2. Strategic recommendations (top 3-5)\n3. Budget allocation summary\n4. Expected performance metrics\n5. Risk assessment and mitigation\n\n### Detailed Report Sections\n1. **Campaign Overview**\n   - Name, objectives, and rationale\n   - Target segments with personas\n   - Channel strategy matrix\n   - Competitive positioning\n\n2. **Execution Plan**\n   - Phase-by-phase breakdown\n   - Timeline with critical paths\n   - Resource requirements\n   - Delegation assignments\n\n3. **Budget Allocation**\n   - Channel distribution\n   - Segment allocation\n   - Objective-based budgeting\n   - Contingency reserves\n\n4. **Performance Projections**\n   - Segment-specific metrics\n   - Channel performance estimates\n   - ROI projections\n   - Success criteria\n\n5. **Risk Management**\n   - Identified risks\n   - Mitigation strategies\n   - Contingency plans\n   - Monitoring protocols\n\n## Decision-Making Framework\n\n### Campaign Launch Process\n1. Retrieve `campaign_launch_template` from Prompt MCP\n2. Access `budget_benchmarks` from Resources MCP\n3. Analyze segment data using Analytics MCP\n4. Create phased plan (prep → soft → full launch)\n5. Delegate to relevant agents with context\n\n### Budget Adjustment Process\n1. Get current performance from Analytics MCP\n2. Use `budget_optimization_framework` prompt\n3. Identify reallocation opportunities\n4. Coordinate with Finance Agent\n5. Update all affected delegations\n\n### Strategy Change Process\n1. Use `strategy_pivot_checklist` prompt\n2. Audit current assets and campaigns\n3. Develop transformation roadmap\n4. Coordinate with Content Strategy Agent\n5. Phase implementation carefully\n\n### Segment Focus Process\n1. Use `segment_analysis_template` prompt\n2. Deep dive with Analytics MCP tools\n3. Access `persona_development_guide` resource\n4. Create targeted strategies\n5. Align channel mix to segment\n\n## Quality Standards\n\n### Pre-Submission Checklist\n- [ ] All MCP tools utilized appropriately\n- [ ] Delegations include context and resources\n- [ ] Budget allocations verified (±1% accuracy)\n- [ ] Timeline realistic and comprehensive\n- [ ] Performance targets data-driven\n- [ ] Risk strategies documented\n- [ ] Next steps clearly defined\n\n### Performance Metrics\n- Response time: < 2 hours\n- MCP tool utilization: 100% when applicable\n- Delegation clarity score: > 95%\n- Budget accuracy: ±1%\n- Report completeness: All sections filled\n\n## Error Handling Protocol\n1. Validate all inputs before processing\n2. Log errors with context for debugging\n3. Provide fallback strategies\n4. Escalate critical issues to Marketing Director\n5. Document lessons learned in Performance KB\n\n## Integration Points\n- **Input**: Marketing Director directives\n- **Tools**: MCP Prompts, Resources, Analytics\n- **Agents**: Social, Content, Finance, Search, Email\n- **Output**: Comprehensive campaign strategies\n- **Feedback**: Performance KB updates\n\nRemember: You are the strategic orchestrator. Success is measured by campaign clarity, resource efficiency, and goal achievement. Always leverage available tools and maintain clear communication with all stakeholders."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        1860,
+        500
+      ],
+      "id": "cm-agent",
+      "name": "Campaign Manager Agent"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "campaign_performance_kb",
+        "toolDescription": "Access historical campaign data, best practices, and performance benchmarks",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.1,
+      "position": [
+        3380,
+        960
+      ],
+      "id": "cm-performance-kb",
+      "name": "Campaign Performance KB",
+      "credentials": {
+        "postgres": {
+          "id": "qGIZLy3w4DpIN4oZ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        3460,
+        1080
+      ],
+      "id": "cm-embeddings",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "nMbluFwHsrVvkQBJ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "=Uses this mcp tool to retrieve structured prompts for its core tasks to ensure consistency and allows for easy updates to the agent's behavior without changing its core logic. This server provides comprehensive prompt templates for marketing campaign planning, coordination, and optimization. It's designed to work with the Marketing Director and Campaign agents.\n",
+        "operation": "listPrompts"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        960
+      ],
+      "id": "cm-campaign-mcp-list",
+      "name": "Campaign agent Prompt MCP - List Prompts",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "tD3DxjUJtzGNQ66R",
+          "name": "Campaign Agent Prompt - MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "41013e7f-1af0-4fcf-aa41-7bd7443116b6",
+              "name": "output",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2780,
+        500
+      ],
+      "id": "ff91efa0-b38d-4111-be57-77b27a7572c7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "This server provides comprehensive resources, templates, and tools for marketing campaign execution. It includes industry benchmarks, calendar templates, asset libraries, and ROI calculators.\n",
+        "operation": "readResource",
+        "resourceUri": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Resource_URI', ``, 'string') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        2020,
+        960
+      ],
+      "id": "996a5279-1fd8-403c-9b3d-8deac94e3f93",
+      "name": "Marketing Campaign  Agent Resources - List Resources1",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "45Nt0ovrFiFX1GXf",
+          "name": "Marketing Campaign Agent Resource MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool', 'selected tool to execute') }}",
+        "toolParameters": "={{ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        1540,
+        960
+      ],
+      "id": "cm-campaign-mcp-execute",
+      "name": "Marketing Campaign Agent Prompt MCP - Execute Tool",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "tD3DxjUJtzGNQ66R",
+          "name": "Campaign Agent Prompt - MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "listResources"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        1780,
+        960
+      ],
+      "id": "3706ccaa-9b49-4df2-9ef8-1505a300d6ef",
+      "name": "Marketing Campaign Agent Resources - List Resources",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "45Nt0ovrFiFX1GXf",
+          "name": "Marketing Campaign Agent Resource MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "I'll create examples for each of the four directive types: campaign_launch, budget_adjustment, strategy_change, and segment_focus.\n\n## 1. Campaign Launch Example\n\n```json\n{\n  \"type\": \"directive\",\n  \"data\": {\n    \"directive_type\": \"campaign_launch\",\n    \"priority\": \"high\",\n    \"parameters\": {\n      \"campaign\": {\n        \"name\": \"Summer Luxury Collection 2024\",\n        \"objectives\": [\"brand_awareness\", \"sales_conversion\"],\n        \"target_segments\": [\"luxury_home\", \"interior_designers\", \"hospitality\"],\n        \"channels\": [\"instagram\", \"pinterest\", \"email\", \"google_ads\"],\n        \"timeline\": {\n          \"start_date\": \"2024-06-01\",\n          \"end_date\": \"2024-08-31\",\n          \"milestones\": [\n            {\"date\": \"2024-06-01\", \"description\": \"Soft launch to email subscribers\"},\n            {\"date\": \"2024-06-15\", \"description\": \"Full social media campaign activation\"},\n            {\"date\": \"2024-07-01\", \"description\": \"Mid-campaign performance review\"},\n            {\"date\": \"2024-08-15\", \"description\": \"Final push with promotional offers\"}\n          ]\n        }\n      },\n      \"budget\": {\n        \"total_amount\": 250000,\n        \"currency\": \"USD\",\n        \"allocation\": {\n          \"by_channel\": {\n            \"instagram\": 80000,\n            \"pinterest\": 50000,\n            \"email\": 20000,\n            \"google_ads\": 100000\n          },\n          \"by_segment\": {\n            \"luxury_home\": 125000,\n            \"interior_designers\": 75000,\n            \"hospitality\": 50000\n          },\n          \"by_objective\": {\n            \"brand_awareness\": 100000,\n            \"sales_conversion\": 150000\n          }\n        },\n        \"constraints\": [\"No more than 40% on any single channel\", \"Minimum 10% allocation to email\"]\n      },\n      \"performance_targets\": {\n        \"overall_roas\": 4.0,\n        \"segment_targets\": {\n          \"hospitality\": {\"cac\": 150, \"roas\": 3.0},\n          \"luxury_home\": {\"cac\": 75, \"roas\": 2.5},\n          \"interior_designers\": {\"cac\": 50, \"roas\": 4.0}\n        }\n      }\n    },\n    \"context\": {\n      \"business_objectives\": [\"Increase market share in luxury segment\", \"Build brand recognition among interior designers\"],\n      \"market_conditions\": {\n        \"seasonality\": \"Peak buying season for home furnishings\",\n        \"economic_indicators\": \"Strong consumer spending in luxury goods\"\n      },\n      \"competitive_landscape\": {\n        \"key_competitors\": [\"Restoration Hardware\", \"West Elm\"],\n        \"market_position\": \"Challenger brand with quality differentiation\"\n      }\n    }\n  }\n}\n```\n\n## 2. Budget Adjustment Example\n\n```json\n{\n  \"type\": \"directive\",\n  \"data\": {\n    \"directive_type\": \"budget_adjustment\",\n    \"priority\": \"urgent\",\n    \"parameters\": {\n      \"campaign\": {\n        \"name\": \"Q4 Holiday Campaign 2024\",\n        \"objectives\": [\"sales_conversion\", \"lead_generation\"],\n        \"target_segments\": [\"corporate\", \"hospitality\", \"luxury_home\"],\n        \"channels\": [\"facebook\", \"instagram\", \"google_ads\", \"linkedin\"],\n        \"timeline\": {\n          \"start_date\": \"2024-11-01\",\n          \"end_date\": \"2024-12-31\",\n          \"milestones\": []\n        }\n      },\n      \"budget\": {\n        \"total_amount\": 350000,\n        \"currency\": \"USD\",\n        \"allocation\": {\n          \"by_channel\": {\n            \"facebook\": 60000,\n            \"instagram\": 90000,\n            \"google_ads\": 150000,\n            \"linkedin\": 50000\n          },\n          \"by_segment\": {\n            \"corporate\": 140000,\n            \"hospitality\": 105000,\n            \"luxury_home\": 105000\n          },\n          \"by_objective\": {\n            \"sales_conversion\": 280000,\n            \"lead_generation\": 70000\n          }\n        },\n        \"constraints\": [\"Reallocate from underperforming channels\", \"Maintain minimum presence on all channels\"]\n      },\n      \"performance_targets\": {\n        \"overall_roas\": 4.0,\n        \"segment_targets\": {\n          \"hospitality\": {\"cac\": 150, \"roas\": 3.0},\n          \"luxury_home\": {\"cac\": 75, \"roas\": 2.5},\n          \"corporate\": {\"cac\": 200, \"roas\": 3.0}\n        }\n      }\n    },\n    \"context\": {\n      \"business_objectives\": [\"Maximize Q4 revenue\", \"Clear inventory for new collections\"],\n      \"market_conditions\": {\n        \"current_performance\": \"Google Ads outperforming by 40%, Facebook underperforming by 25%\",\n        \"budget_pressure\": \"Need to improve overall ROAS from current 3.2 to target 4.0\"\n      },\n      \"competitive_landscape\": {\n        \"competitor_activity\": \"Increased ad spend from competitors\",\n        \"pricing_pressure\": \"Market demanding higher discounts\"\n      }\n    }\n  }\n}\n```\n\n## 3. Strategy Change Example\n\n```json\n{\n  \"type\": \"directive\",\n  \"data\": {\n    \"directive_type\": \"strategy_change\",\n    \"priority\": \"high\",\n    \"parameters\": {\n      \"campaign\": {\n        \"name\": \"Sustainability Initiative Campaign\",\n        \"objectives\": [\"brand_awareness\", \"lead_generation\"],\n        \"target_segments\": [\"eco_millennials\", \"healthcare\", \"corporate\"],\n        \"channels\": [\"instagram\", \"pinterest\", \"email\", \"linkedin\"],\n        \"timeline\": {\n          \"start_date\": \"2024-07-01\",\n          \"end_date\": \"2024-12-31\",\n          \"milestones\": [\n            {\"date\": \"2024-07-01\", \"description\": \"Pivot to sustainability messaging\"},\n            {\"date\": \"2024-08-01\", \"description\": \"Launch influencer partnerships\"},\n            {\"date\": \"2024-09-15\", \"description\": \"Introduce eco-product line\"}\n          ]\n        }\n      },\n      \"budget\": {\n        \"total_amount\": 180000,\n        \"currency\": \"USD\",\n        \"allocation\": {\n          \"by_channel\": {\n            \"instagram\": 70000,\n            \"pinterest\": 40000,\n            \"email\": 30000,\n            \"linkedin\": 40000\n          },\n          \"by_segment\": {\n            \"eco_millennials\": 90000,\n            \"healthcare\": 45000,\n            \"corporate\": 45000\n          },\n          \"by_objective\": {\n            \"brand_awareness\": 120000,\n            \"lead_generation\": 60000\n          }\n        },\n        \"constraints\": [\"Focus on organic content\", \"Prioritize user-generated content\"]\n      },\n      \"performance_targets\": {\n        \"overall_roas\": 4.0,\n        \"segment_targets\": {\n          \"healthcare\": {\"cac\": 100, \"roas\": 2.5},\n          \"corporate\": {\"cac\": 200, \"roas\": 3.0},\n          \"eco_millennials\": {\"cac\": 25, \"roas\": 2.0}\n        }\n      }\n    },\n    \"context\": {\n      \"business_objectives\": [\"Position as sustainable furniture leader\", \"Attract environmentally conscious consumers\"],\n      \"market_conditions\": {\n        \"consumer_trends\": \"Increasing demand for sustainable products\",\n        \"regulatory_environment\": \"New environmental regulations affecting competitors\"\n      },\n      \"competitive_landscape\": {\n        \"opportunity\": \"First mover advantage in sustainable luxury furniture\",\n        \"threats\": \"Traditional competitors beginning sustainability initiatives\"\n      }\n    }\n  }\n}\n```\n\n## 4. Segment Focus Example\n\n```json\n{\n  \"type\": \"directive\",\n  \"data\": {\n    \"directive_type\": \"segment_focus\",\n    \"priority\": \"normal\",\n    \"parameters\": {\n      \"campaign\": {\n        \"name\": \"Healthcare Sector Expansion\",\n        \"objectives\": [\"lead_generation\", \"sales_conversion\"],\n        \"target_segments\": [\"healthcare\"],\n        \"channels\": [\"linkedin\", \"email\", \"google_ads\"],\n        \"timeline\": {\n          \"start_date\": \"2024-09-01\",\n          \"end_date\": \"2024-11-30\",\n          \"milestones\": [\n            {\"date\": \"2024-09-01\", \"description\": \"Launch targeted healthcare content\"},\n            {\"date\": \"2024-09-15\", \"description\": \"Begin direct outreach to medical facilities\"},\n            {\"date\": \"2024-10-01\", \"description\": \"Healthcare trade show participation\"},\n            {\"date\": \"2024-11-01\", \"description\": \"Performance evaluation and optimization\"}\n          ]\n        }\n      },\n      \"budget\": {\n        \"total_amount\": 120000,\n        \"currency\": \"USD\",\n        \"allocation\": {\n          \"by_channel\": {\n            \"linkedin\": 50000,\n            \"email\": 30000,\n            \"google_ads\": 40000\n          },\n          \"by_segment\": {\n            \"healthcare\": 120000\n          },\n          \"by_objective\": {\n            \"lead_generation\": 80000,\n            \"sales_conversion\": 40000\n          }\n        },\n        \"constraints\": [\"Must comply with healthcare marketing regulations\", \"Focus on B2B decision makers\"]\n      },\n      \"performance_targets\": {\n        \"overall_roas\": 4.0,\n        \"segment_targets\": {\n          \"healthcare\": {\"cac\": 100, \"roas\": 2.5}\n        }\n      }\n    },\n    \"context\": {\n      \"business_objectives\": [\"Establish presence in healthcare furniture market\", \"Develop case studies with medical facilities\"],\n      \"market_conditions\": {\n        \"segment_opportunity\": \"Post-pandemic facility renovations\",\n        \"procurement_cycles\": \"Q4 budget allocations for next year\"\n      },\n      \"competitive_landscape\": {\n        \"segment_leaders\": [\"Steelcase Health\", \"Herman Miller Healthcare\"],\n        \"differentiation\": \"Antimicrobial fabrics and easy-clean designs\"\n      }\n    }\n  }\n}\n```\n\nEach example demonstrates different use cases:\n- **Campaign Launch**: A comprehensive new campaign with multiple segments and channels\n- **Budget Adjustment**: Reallocation based on performance data\n- **Strategy Change**: Pivot to sustainability messaging and new target audience\n- **Segment Focus**: Deep dive into a specific market segment (healthcare)",
+        "height": 4900,
+        "width": 1300
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3120,
+        -280
+      ],
+      "typeVersion": 1,
+      "id": "9b92b555-55a9-4556-8108-fd112300bc1e",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "description": "=- Develop integrated social media strategies\n- Coordinate cross-platform social media campaigns\n- Manage social media team of agents\n- Monitor overall social performance\n- Allocate budgets across platforms\n- Ensure brand voice consistency",
+        "workflowId": {
+          "__rl": true,
+          "value": "7OCeepNxm4qXBNCi",
+          "mode": "list",
+          "cachedResultName": "Social Media Director Agent - Optimized"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2620,
+        960
+      ],
+      "id": "8d9789b7-b0a4-4e69-8fa0-dafbe77bbe1a",
+      "name": "Social Media Director Agent"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool for budget and financial calculations for marketing campaigns",
+        "workflowId": {
+          "__rl": true,
+          "value": "yuygwTz8dIm9FSFu",
+          "mode": "list",
+          "cachedResultName": "Finance Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "trigger_conditions",
+              "displayName": "trigger_conditions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "trigger_source",
+              "displayName": "trigger_source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "alert_type",
+              "displayName": "alert_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "financial_metrics",
+              "displayName": "financial_metrics",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "object"
+            },
+            {
+              "id": "cost_breakdown",
+              "displayName": "cost_breakdown",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "object"
+            },
+            {
+              "id": "product_performance",
+              "displayName": "product_performance",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array"
+            },
+            {
+              "id": "optimization_urgency",
+              "displayName": "optimization_urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "risk_factors",
+              "displayName": "risk_factors",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2840,
+        960
+      ],
+      "id": "aff27d7a-af34-4913-af39-554b20b92a21",
+      "name": "Finance and Budget Agent - Tool"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Campaign Launch Handler Node\n// Processes campaign_launch directives\n\n// Import shared utilities (these would be defined in each node or a shared location)\nclass CampaignError extends Error {\n  constructor(message, code, details) {\n    super(message);\n    this.name = 'CampaignError';\n    this.code = code;\n    this.details = details;\n  }\n}\n\n// Constants\nconst CONSTANTS = {\n  PREPARATION_BUDGET_PERCENTAGE: 0.05,\n  SOFT_LAUNCH_BUDGET_PERCENTAGE: 0.10,\n  FULL_LAUNCH_BUDGET_PERCENTAGE: 0.85,\n  CONTINGENCY_RESERVE_PERCENTAGE: 0.15,\n  SEGMENT_SPECIALIST_BUDGET_PERCENTAGE: 0.05\n};\n\n// Helper functions specific to campaign launch\nfunction validateCampaignLaunchInputs(routingData) {\n  const { directive, customerSegments, budgetInput } = routingData.original_input;\n  \n  if (!directive.data.parameters) {\n    throw new CampaignError(\n      'Missing parameters in campaign launch directive',\n      'MISSING_PARAMETERS',\n      { directive: directive.data }\n    );\n  }\n  \n  const { campaign, budget, performance_targets } = directive.data.parameters;\n  \n  if (!campaign || !campaign.name || !campaign.target_segments) {\n    throw new CampaignError(\n      'Invalid campaign configuration',\n      'INVALID_CAMPAIGN',\n      { campaign }\n    );\n  }\n  \n  if (!budget || typeof budget.total_amount !== 'number') {\n    throw new CampaignError(\n      'Invalid budget configuration', \n      'INVALID_BUDGET',\n      { budget }\n    );\n  }\n  \n  if (!performance_targets) {\n    throw new CampaignError(\n      'Missing performance targets',\n      'MISSING_TARGETS',\n      { parameters: directive.data.parameters }\n    );\n  }\n  \n  return { campaign, budget, performance_targets, context: directive.data.context };\n}\n\nfunction validateAndMergeBudget(campaignBudget, financeAgentBudget) {\n  // Validate inputs\n  if (!campaignBudget || typeof campaignBudget.total_amount !== 'number') {\n    throw new CampaignError(\n      'Invalid campaign budget structure',\n      'INVALID_CAMPAIGN_BUDGET',\n      { campaignBudget }\n    );\n  }\n  \n  if (!financeAgentBudget) {\n    throw new CampaignError(\n      'Finance agent budget is required',\n      'MISSING_FINANCE_BUDGET',\n      {}\n    );\n  }\n  \n  // Merge budgets with finance agent having priority\n  const validatedBudget = {\n    total_amount: financeAgentBudget.approved_amount || campaignBudget.total_amount,\n    currency: financeAgentBudget.currency || campaignBudget.currency || 'USD',\n    approval_status: financeAgentBudget.status || 'pending',\n    approved_by: financeAgentBudget.approved_by || 'Finance & Budget Agent',\n    approval_date: financeAgentBudget.approval_date || new Date().toISOString(),\n    allocation: {\n      by_channel: financeAgentBudget.channel_allocation || campaignBudget.allocation?.by_channel || {},\n      by_segment: financeAgentBudget.segment_allocation || campaignBudget.allocation?.by_segment || {},\n      by_objective: financeAgentBudget.objective_allocation || campaignBudget.allocation?.by_objective || {}\n    },\n    constraints: [\n      ...(campaignBudget.constraints || []),\n      ...(financeAgentBudget.constraints || [])\n    ],\n    finance_notes: financeAgentBudget.notes || ''\n  };\n  \n  // Validate allocations sum to total\n  const channelTotal = Object.values(validatedBudget.allocation.by_channel).reduce((a, b) => a + b, 0);\n  if (channelTotal > 0 && Math.abs(channelTotal - validatedBudget.total_amount) > 1) {\n    // Adjust proportionally\n    const ratio = validatedBudget.total_amount / channelTotal;\n    Object.keys(validatedBudget.allocation.by_channel).forEach(channel => {\n      validatedBudget.allocation.by_channel[channel] = \n        Math.round(validatedBudget.allocation.by_channel[channel] * ratio);\n    });\n  }\n  \n  return validatedBudget;\n}\n\nfunction mapCampaignSegments(targetSegments, customerSegmentsConfig) {\n  if (!Array.isArray(targetSegments)) {\n    throw new CampaignError(\n      'Target segments must be an array',\n      'INVALID_TARGET_SEGMENTS',\n      { targetSegments }\n    );\n  }\n  \n  const mappedSegments = [];\n  const segmentConfig = customerSegmentsConfig.customer_segments;\n  \n  // Common segment name mappings\n  const segmentMappings = {\n    'luxury_home': 'individual_collectors',\n    'interior_designers': 'interior_designers',\n    'hospitality': 'commercial_buyers',\n    'corporate': 'commercial_buyers',\n    'healthcare': 'commercial_buyers',\n    'eco_millennials': 'individual_collectors',\n    'art_collectors': 'individual_collectors',\n    'gallery_partners': 'commercial_buyers'\n  };\n  \n  targetSegments.forEach(segmentKey => {\n    // Try exact match first\n    let segment = segmentConfig[segmentKey];\n    \n    // If not found, try mapping\n    if (!segment) {\n      const mappedKey = segmentMappings[segmentKey];\n      if (mappedKey && segmentConfig[mappedKey]) {\n        segment = segmentConfig[mappedKey];\n      }\n    }\n    \n    if (segment) {\n      mappedSegments.push({\n        key: segmentKey,\n        original_key: segmentKey,\n        ...segment\n      });\n    } else {\n      // Create basic segment if not found\n      mappedSegments.push({\n        key: segmentKey,\n        original_key: segmentKey,\n        name: segmentKey.replace(/_/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase()),\n        priority: 'medium',\n        demographics: {},\n        needs: [],\n        search_keywords: {}\n      });\n    }\n  });\n  \n  return mappedSegments;\n}\n\nfunction createExecutionPlan(campaign, mappedSegments) {\n  const startDate = new Date(campaign.timeline.start_date);\n  const endDate = new Date(campaign.timeline.end_date);\n  \n  return {\n    phases: [\n      {\n        phase: 'preparation',\n        duration: '2 weeks',\n        start_date: new Date(startDate.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],\n        end_date: startDate.toISOString().split('T')[0],\n        activities: [\n          `Asset creation for ${mappedSegments.length} target segments`,\n          'Platform setup with segment-specific targeting',\n          'Team briefing on customer segment characteristics',\n          'Technical integration testing'\n        ],\n        deliverables: [\n          'Segment-specific creative assets',\n          'Campaign playbook',\n          'Tracking setup'\n        ]\n      },\n      {\n        phase: 'soft_launch',\n        duration: '1 week',\n        start_date: campaign.timeline.start_date,\n        end_date: new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],\n        activities: [\n          'Test with high-priority segments',\n          'Monitor performance metrics',\n          'Validate targeting accuracy',\n          'Collect initial data'\n        ]\n      },\n      {\n        phase: 'full_launch',\n        duration: `${Math.ceil((endDate - startDate) / (7 * 24 * 60 * 60 * 1000))} weeks`,\n        start_date: new Date(startDate.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],\n        end_date: campaign.timeline.end_date,\n        activities: [\n          'Full activation across all segments',\n          'Daily performance monitoring',\n          'Weekly optimization',\n          'A/B testing'\n        ]\n      }\n    ],\n    critical_milestones: campaign.timeline.milestones || []\n  };\n}\n\nfunction generateRecommendations(campaign, budget, mappedSegments) {\n  const recommendations = [];\n  \n  // Budget-based recommendations\n  if (budget.total_amount > 200000) {\n    recommendations.push('Implement premium segment concierge service');\n    recommendations.push('Develop experiential marketing events');\n  }\n  \n  // Segment-based recommendations\n  if (mappedSegments.length > 3) {\n    recommendations.push('Phase segment rollout to manage complexity');\n  }\n  \n  // Channel recommendations\n  if (campaign.channels.includes('instagram') && campaign.channels.includes('pinterest')) {\n    recommendations.push('Coordinate visual content strategy across platforms');\n  }\n  \n  // Always include\n  recommendations.push(\n    'Create segment-specific landing pages',\n    'Implement multi-touch attribution',\n    'Set up automated performance alerts',\n    'Develop weekly performance scorecards'\n  );\n  \n  return recommendations;\n}\n\n// Main execution\ntry {\n  const input = $input.first().json;\n  \n  // Validate this is a campaign launch directive\n  if (input.directive_type !== 'campaign_launch') {\n    throw new CampaignError(\n      'Invalid directive type for campaign launch handler',\n      'WRONG_HANDLER',\n      { received: input.directive_type, expected: 'campaign_launch' }\n    );\n  }\n  \n  // Extract and validate inputs\n  const { directive, customerSegments, budgetInput } = input.original_input;\n  const { campaign, budget, performance_targets, context } = validateCampaignLaunchInputs(input);\n  \n  // Process the campaign launch\n  const approvedBudget = validateAndMergeBudget(budget, budgetInput);\n  const mappedSegments = mapCampaignSegments(campaign.target_segments, customerSegments);\n  const executionPlan = createExecutionPlan(campaign, mappedSegments);\n  \n  // Create response\n  const response = {\n    type: \"campaign_launch_response\",\n    data: {\n      directive_id: input.directive_id,\n      directive_type: 'campaign_launch',\n      status: 'ready_for_execution',\n      timestamp: new Date().toISOString(),\n      \n      campaign_details: {\n        name: campaign.name,\n        objectives: campaign.objectives,\n        target_segments: mappedSegments,\n        channels: campaign.channels,\n        timeline: campaign.timeline\n      },\n      \n      execution_plan: executionPlan,\n      \n      budget_summary: {\n        total: approvedBudget.total_amount,\n        currency: approvedBudget.currency,\n        approval_status: approvedBudget.approval_status,\n        allocation: {\n          by_channel: approvedBudget.allocation.by_channel,\n          by_phase: {\n            preparation: Math.round(approvedBudget.total_amount * CONSTANTS.PREPARATION_BUDGET_PERCENTAGE),\n            soft_launch: Math.round(approvedBudget.total_amount * CONSTANTS.SOFT_LAUNCH_BUDGET_PERCENTAGE),\n            full_launch: Math.round(approvedBudget.total_amount * CONSTANTS.FULL_LAUNCH_BUDGET_PERCENTAGE)\n          }\n        },\n        contingency_reserve: Math.round(approvedBudget.total_amount * CONSTANTS.CONTINGENCY_RESERVE_PERCENTAGE)\n      },\n      \n      recommendations: generateRecommendations(campaign, approvedBudget, mappedSegments),\n      \n      next_steps: [\n        'Obtain stakeholder approval',\n        'Brief implementation teams',\n        'Initialize tracking systems',\n        'Begin asset creation'\n      ]\n    }\n  };\n  \n  return { json: response };\n  \n} catch (error) {\n  return {\n    json: {\n      type: \"campaign_launch_error\",\n      error: true,\n      error_type: error.name || 'UnknownError',\n      error_code: error.code || 'CAMPAIGN_LAUNCH_ERROR',\n      message: error.message,\n      details: error.details || {},\n      timestamp: new Date().toISOString(),\n      directive_id: $input.first().json?.directive_id\n    }\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        -160
+      ],
+      "id": "770f3a8c-121d-434c-876a-36704cc2cfc0",
+      "name": "Campaign Launch"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Budget Adjustment Handler Node\n// Processes budget_adjustment directives\n\nclass BudgetAdjustmentError extends Error {\n  constructor(message, code, details) {\n    super(message);\n    this.name = 'BudgetAdjustmentError';\n    this.code = code;\n    this.details = details;\n  }\n}\n\n// Constants\nconst BUDGET_CONSTANTS = {\n  UNDERPERFORMING_REDUCTION: 0.30,\n  UNDERPERFORMING_ROAS_THRESHOLD: 2.0,\n  TARGET_ROAS_THRESHOLD: 2.5,\n  REALLOCATION_CONFIDENCE: {\n    HIGH: 0.20,\n    MEDIUM: 0.15,\n    LOW: 0.10\n  }\n};\n\n// Validation function\nfunction validateBudgetAdjustmentInputs(routingData) {\n  const { directive, customerSegments, budgetInput } = routingData.original_input;\n  \n  if (!directive.data.parameters) {\n    throw new BudgetAdjustmentError(\n      'Missing parameters in budget adjustment directive',\n      'MISSING_PARAMETERS',\n      { directive: directive.data }\n    );\n  }\n  \n  const { campaign, budget, performance_targets } = directive.data.parameters;\n  const { current_performance, budget_pressure } = directive.data.context?.market_conditions || {};\n  \n  if (!current_performance || !budget_pressure) {\n    throw new BudgetAdjustmentError(\n      'Missing market conditions in context',\n      'MISSING_MARKET_CONDITIONS',\n      { context: directive.data.context }\n    );\n  }\n  \n  return { \n    campaign, \n    budget, \n    performance_targets, \n    current_performance,\n    budget_pressure,\n    context: directive.data.context \n  };\n}\n\nfunction analyzeSegmentPerformance(currentPerformance, mappedSegments) {\n  const segmentPerformance = {};\n  \n  // Parse performance data - in real implementation this would be more sophisticated\n  mappedSegments.forEach(segment => {\n    // Default performance metrics\n    let performance = {\n      status: 'stable',\n      roas: 3.0,\n      cac: 75,\n      conversion_rate: 0.02,\n      trend: 'flat'\n    };\n    \n    // Check if segment is mentioned in performance data\n    const perfString = currentPerformance.toLowerCase();\n    const segmentMentioned = perfString.includes(segment.name.toLowerCase()) ||\n                            perfString.includes(segment.key);\n    \n    if (segmentMentioned) {\n      if (perfString.includes('outperforming')) {\n        performance = {\n          status: 'outperforming',\n          roas: 4.5,\n          cac: 50,\n          conversion_rate: 0.03,\n          trend: 'up'\n        };\n      } else if (perfString.includes('underperforming')) {\n        performance = {\n          status: 'underperforming',\n          roas: 1.8,\n          cac: 150,\n          conversion_rate: 0.01,\n          trend: 'down'\n        };\n      }\n    }\n    \n    segmentPerformance[segment.name] = performance;\n  });\n  \n  return segmentPerformance;\n}\n\nfunction createReallocationPlan(currentAllocation, segmentPerformance, totalBudget) {\n  const reallocationPlan = {\n    segments_to_pause: [],\n    segment_budget_changes: {},\n    affected_segments: [],\n    total_reallocated: 0\n  };\n  \n  let availableBudget = 0;\n  \n  // Identify underperforming segments\n  Object.entries(segmentPerformance).forEach(([segmentName, metrics]) => {\n    if (metrics.status === 'underperforming') {\n      const currentBudget = currentAllocation.by_segment?.[segmentName] || \n                           (totalBudget / Object.keys(segmentPerformance).length);\n      const reduction = currentBudget * BUDGET_CONSTANTS.UNDERPERFORMING_REDUCTION;\n      \n      availableBudget += reduction;\n      reallocationPlan.segment_budget_changes[segmentName] = -reduction;\n      reallocationPlan.affected_segments.push(segmentName);\n      \n      if (metrics.roas < BUDGET_CONSTANTS.UNDERPERFORMING_ROAS_THRESHOLD) {\n        reallocationPlan.segments_to_pause.push(segmentName);\n      }\n    }\n  });\n  \n  // Reallocate to high performers\n  const highPerformers = Object.entries(segmentPerformance)\n    .filter(([_, metrics]) => metrics.status === 'outperforming')\n    .sort((a, b) => b[1].roas - a[1].roas);\n  \n  if (highPerformers.length > 0) {\n    highPerformers.forEach(([segmentName, metrics], index) => {\n      const share = (highPerformers.length - index) / \n                   highPerformers.reduce((sum, _, i) => sum + (highPerformers.length - i), 0);\n      const increase = availableBudget * share;\n      \n      reallocationPlan.segment_budget_changes[segmentName] = increase;\n      reallocationPlan.affected_segments.push(segmentName);\n    });\n  }\n  \n  reallocationPlan.total_reallocated = availableBudget;\n  return reallocationPlan;\n}\n\nfunction createOptimizationActions(segmentPerformance) {\n  const actions = [];\n  \n  Object.entries(segmentPerformance).forEach(([segmentName, metrics]) => {\n    if (metrics.status === 'underperforming') {\n      actions.push({\n        segment: segmentName,\n        priority: 'high',\n        actions: [\n          'Pause lowest performing ads',\n          'Review targeting parameters',\n          'Update creative messaging',\n          'Audit landing pages'\n        ]\n      });\n    } else if (metrics.status === 'outperforming') {\n      actions.push({\n        segment: segmentName,\n        priority: 'medium',\n        actions: [\n          'Scale successful campaigns',\n          'Expand to similar audiences',\n          'Increase frequency',\n          'Test premium placements'\n        ]\n      });\n    }\n  });\n  \n  return actions;\n}\n\n// Main execution\ntry {\n  const input = $input.first().json;\n  \n  // Validate directive type\n  if (input.directive_type !== 'budget_adjustment') {\n    throw new BudgetAdjustmentError(\n      'Invalid directive type for budget adjustment handler',\n      'WRONG_HANDLER',\n      { received: input.directive_type, expected: 'budget_adjustment' }\n    );\n  }\n  \n  // Extract and validate inputs\n  const { directive, customerSegments, budgetInput } = input.original_input;\n  const { \n    campaign, \n    budget, \n    performance_targets, \n    current_performance,\n    budget_pressure \n  } = validateBudgetAdjustmentInputs(input);\n  \n  // Map segments (reuse the function from campaign launch or import)\n  const mappedSegments = campaign.target_segments.map(seg => ({\n    key: seg,\n    name: seg.replace(/_/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase()),\n    // Add other segment properties as needed\n  }));\n  \n  // Analyze performance and create reallocation plan\n  const segmentPerformance = analyzeSegmentPerformance(current_performance, mappedSegments);\n  const reallocationPlan = createReallocationPlan(\n    budget.allocation || {}, \n    segmentPerformance,\n    budget.total_amount\n  );\n  const optimizationActions = createOptimizationActions(segmentPerformance);\n  \n  // Create response\n  const response = {\n    type: \"budget_adjustment_response\",\n    data: {\n      directive_id: input.directive_id,\n      directive_type: 'budget_adjustment',\n      status: 'urgent_implementation_required',\n      timestamp: new Date().toISOString(),\n      \n      adjustment_summary: {\n        reason: budget_pressure,\n        total_budget: budget.total_amount,\n        amount_reallocated: reallocationPlan.total_reallocated,\n        segments_affected: reallocationPlan.affected_segments.length,\n        segments_paused: reallocationPlan.segments_to_pause\n      },\n      \n      segment_performance: segmentPerformance,\n      \n      reallocation_plan: reallocationPlan,\n      \n      immediate_actions: optimizationActions,\n      \n      monitoring_plan: {\n        frequency: 'Every 4 hours for 48 hours',\n        escalation_threshold: {\n          roas_below: BUDGET_CONSTANTS.TARGET_ROAS_THRESHOLD,\n          segments_underperforming: 2\n        }\n      },\n      \n      expected_impact: {\n        roas_improvement: '15-25%',\n        timeline: '1-2 weeks'\n      }\n    }\n  };\n  \n  return { json: response };\n  \n} catch (error) {\n  return {\n    json: {\n      type: \"budget_adjustment_error\",\n      error: true,\n      error_type: error.name || 'UnknownError',\n      error_code: error.code || 'BUDGET_ADJUSTMENT_ERROR',\n      message: error.message,\n      details: error.details || {},\n      timestamp: new Date().toISOString(),\n      directive_id: $input.first().json?.directive_id\n    }\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        40
+      ],
+      "id": "29f56ad3-8483-4486-bd1b-90484ee5283f",
+      "name": "Budget Adjustment"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Strategy Change Handler Node\n// Processes strategy_change directives\n\nclass StrategyChangeError extends Error {\n  constructor(message, code, details) {\n    super(message);\n    this.name = 'StrategyChangeError';\n    this.code = code;\n    this.details = details;\n  }\n}\n\n// Strategy impact matrix\nconst STRATEGY_IMPACT = {\n  sustainability_transformation: {\n    individual_collectors: { level: 'high', opportunity: 8 },\n    interior_designers: { level: 'very_high', opportunity: 9 },\n    commercial_buyers: { level: 'very_high', opportunity: 10 },\n    vip_customers: { level: 'medium', opportunity: 6 }\n  },\n  digital_transformation: {\n    individual_collectors: { level: 'high', opportunity: 7 },\n    interior_designers: { level: 'very_high', opportunity: 9 },\n    commercial_buyers: { level: 'high', opportunity: 8 },\n    vip_customers: { level: 'medium', opportunity: 5 }\n  }\n};\n\nfunction validateStrategyChangeInputs(routingData) {\n  const { directive } = routingData.original_input;\n  \n  if (!directive.data.parameters) {\n    throw new StrategyChangeError(\n      'Missing parameters in strategy change directive',\n      'MISSING_PARAMETERS',\n      { directive: directive.data }\n    );\n  }\n  \n  return directive.data.parameters;\n}\n\nfunction determineStrategyType(campaign, context) {\n  let strategyType = 'general_pivot';\n  let keyMessages = [];\n  \n  const campaignNameLower = campaign.name.toLowerCase();\n  const objectives = context.business_objectives || [];\n  \n  if (campaignNameLower.includes('sustainability') || \n      objectives.some(obj => obj.toLowerCase().includes('sustainable'))) {\n    strategyType = 'sustainability_transformation';\n    keyMessages = [\n      'Eco-friendly materials and processes',\n      'Carbon-neutral operations',\n      'Circular design principles'\n    ];\n  } else if (campaignNameLower.includes('digital')) {\n    strategyType = 'digital_transformation';\n    keyMessages = [\n      'Smart art solutions',\n      'Digital galleries',\n      'Virtual consultations'\n    ];\n  }\n  \n  return { strategyType, keyMessages };\n}\n\nfunction analyzeSegmentImpact(segments, strategyType) {\n  const impactAnalysis = [];\n  \n  segments.forEach(segment => {\n    const segmentKey = segment.key || segment.name.toLowerCase().replace(/\\s+/g, '_');\n    const impact = STRATEGY_IMPACT[strategyType]?.[segmentKey] || {\n      level: 'medium',\n      opportunity: 5\n    };\n    \n    impactAnalysis.push({\n      segment: segment.name,\n      segment_key: segmentKey,\n      impact_level: impact.level,\n      opportunity_score: impact.opportunity,\n      priority: impact.opportunity >= 8 ? 'critical' : \n               impact.opportunity >= 6 ? 'high' : 'medium'\n    });\n  });\n  \n  return impactAnalysis;\n}\n\nfunction createTransformationPhases(segmentImpact) {\n  // Sort segments by opportunity score\n  const prioritizedSegments = [...segmentImpact]\n    .sort((a, b) => b.opportunity_score - a.opportunity_score);\n  \n  return [\n    {\n      phase: 'assessment',\n      duration: '1 week',\n      activities: [\n        'Segment impact assessment',\n        'Competitive analysis',\n        'Resource planning',\n        'Risk evaluation'\n      ]\n    },\n    {\n      phase: 'development',\n      duration: '2 weeks',\n      activities: [\n        'Create transformation messaging',\n        'Develop segment-specific content',\n        'Design new touchpoints',\n        'Build engagement strategies'\n      ],\n      segment_focus: prioritizedSegments.slice(0, 2).map(s => s.segment)\n    },\n    {\n      phase: 'rollout',\n      duration: '4 weeks',\n      activities: [\n        'Phased segment activation',\n        'Monitor adoption rates',\n        'Gather feedback',\n        'Optimize approach'\n      ],\n      rollout_order: prioritizedSegments.map(s => ({\n        segment: s.segment,\n        week: Math.ceil((prioritizedSegments.indexOf(s) + 1) / 2)\n      }))\n    }\n  ];\n}\n\n// Main execution\ntry {\n  const input = $input.first().json;\n  \n  // Validate directive type\n  if (input.directive_type !== 'strategy_change') {\n    throw new StrategyChangeError(\n      'Invalid directive type for strategy change handler',\n      'WRONG_HANDLER',\n      { received: input.directive_type, expected: 'strategy_change' }\n    );\n  }\n  \n  // Extract inputs\n  const { directive, customerSegments, budgetInput } = input.original_input;\n  const { campaign, budget, performance_targets } = validateStrategyChangeInputs(input);\n  const context = directive.data.context || {};\n  \n  // Determine strategy type and analyze impact\n  const { strategyType, keyMessages } = determineStrategyType(campaign, context);\n  \n  // Map segments\n  const mappedSegments = campaign.target_segments.map(seg => ({\n    key: seg,\n    name: seg.replace(/_/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase())\n  }));\n  \n  const segmentImpact = analyzeSegmentImpact(mappedSegments, strategyType);\n  const transformationPhases = createTransformationPhases(segmentImpact);\n  \n  // Create response\n  const response = {\n    type: \"strategy_change_response\",\n    data: {\n      directive_id: input.directive_id,\n      directive_type: 'strategy_change',\n      status: 'strategy_pivot_initiated',\n      timestamp: new Date().toISOString(),\n      \n      strategy_summary: {\n        type: strategyType,\n        key_messages: keyMessages,\n        total_segments_affected: segmentImpact.length,\n        high_impact_segments: segmentImpact.filter(s => s.impact_level === 'very_high').length\n      },\n      \n      segment_impact_analysis: segmentImpact,\n      \n      transformation_plan: {\n        phases: transformationPhases,\n        total_duration: '7 weeks',\n        critical_segments: segmentImpact\n          .filter(s => s.priority === 'critical')\n          .map(s => s.segment)\n      },\n      \n      budget_allocation: {\n        total: budget.total_amount,\n        by_priority: {\n          critical: budget.total_amount * 0.50,\n          high: budget.total_amount * 0.35,\n          medium: budget.total_amount * 0.15\n        }\n      },\n      \n      recommendations: [\n        'Create segment-specific transformation teams',\n        'Develop change management communications',\n        'Establish transformation KPIs',\n        'Plan phased rollout by segment priority'\n      ]\n    }\n  };\n  \n  return { json: response };\n  \n} catch (error) {\n  return {\n    json: {\n      type: \"strategy_change_error\",\n      error: true,\n      error_type: error.name || 'UnknownError',\n      error_code: error.code || 'STRATEGY_CHANGE_ERROR',\n      message: error.message,\n      details: error.details || {},\n      timestamp: new Date().toISOString(),\n      directive_id: $input.first().json?.directive_id\n    }\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        280
+      ],
+      "id": "4ea1555c-899e-441d-9abb-1acf7b495388",
+      "name": "Strategy Change"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Segment Focus Handler Node\n// Processes segment_focus directives\n\nclass SegmentFocusError extends Error {\n  constructor(message, code, details) {\n    super(message);\n    this.name = 'SegmentFocusError';\n    this.code = code;\n    this.details = details;\n  }\n}\n\n// Segment market data\nconst SEGMENT_MARKET_DATA = {\n  individual_collectors: {\n    market_size: { tam: 500000000, sam: 50000000, som: 5000000 },\n    growth_rate: { annual: 12, trend: 'accelerating' },\n    avg_order_value: 2500,\n    conversion_rate: 0.20\n  },\n  interior_designers: {\n    market_size: { tam: 300000000, sam: 30000000, som: 3000000 },\n    growth_rate: { annual: 15, trend: 'steady' },\n    avg_order_value: 5000,\n    conversion_rate: 0.30\n  },\n  commercial_buyers: {\n    market_size: { tam: 1000000000, sam: 100000000, som: 10000000 },\n    growth_rate: { annual: 18, trend: 'accelerating' },\n    avg_order_value: 25000,\n    conversion_rate: 0.15\n  },\n  vip_customers: {\n    market_size: { tam: 100000000, sam: 20000000, som: 2000000 },\n    growth_rate: { annual: 8, trend: 'stable' },\n    avg_order_value: 10000,\n    conversion_rate: 0.50\n  }\n};\n\nfunction validateSegmentFocusInputs(routingData) {\n  const { directive } = routingData.original_input;\n  \n  if (!directive.data.parameters) {\n    throw new SegmentFocusError(\n      'Missing parameters in segment focus directive',\n      'MISSING_PARAMETERS',\n      { directive: directive.data }\n    );\n  }\n  \n  const { campaign } = directive.data.parameters;\n  \n  if (!campaign.target_segments || campaign.target_segments.length === 0) {\n    throw new SegmentFocusError(\n      'No target segments specified',\n      'NO_TARGET_SEGMENTS',\n      { campaign }\n    );\n  }\n  \n  return directive.data.parameters;\n}\n\nfunction getSegmentAnalysis(segmentKey, customerSegments) {\n  // Get segment configuration\n  const segmentConfig = customerSegments.customer_segments[segmentKey];\n  \n  if (!segmentConfig) {\n    // Try to find by name mapping\n    const mappings = {\n      'luxury_home': 'individual_collectors',\n      'interior_designers': 'interior_designers',\n      'hospitality': 'commercial_buyers',\n      'corporate': 'commercial_buyers'\n    };\n    \n    const mappedKey = mappings[segmentKey];\n    if (mappedKey && customerSegments.customer_segments[mappedKey]) {\n      return {\n        ...customerSegments.customer_segments[mappedKey],\n        original_key: segmentKey,\n        mapped_from: segmentKey\n      };\n    }\n    \n    throw new SegmentFocusError(\n      `Unknown segment: ${segmentKey}`,\n      'UNKNOWN_SEGMENT',\n      { \n        segmentKey,\n        availableSegments: Object.keys(customerSegments.customer_segments)\n      }\n    );\n  }\n  \n  return { ...segmentConfig, original_key: segmentKey };\n}\n\nfunction createSegmentStrategy(segment, marketData) {\n  return {\n    positioning: {\n      core_message: `Premium solutions for ${segment.name}`,\n      value_proposition: segment.needs?.join(', ') || 'Quality and service',\n      differentiators: [\n        'Specialized expertise',\n        'Tailored solutions',\n        'Dedicated support'\n      ]\n    },\n    \n    channels: {\n      primary: determineOptimalChannels(segment),\n      content_types: [\n        'Educational content',\n        'Case studies',\n        'Product showcases'\n      ]\n    },\n    \n    tactics: {\n      acquisition: [\n        'Targeted advertising',\n        'Content marketing',\n        'Partnership development'\n      ],\n      retention: [\n        'Personalized communication',\n        'Loyalty programs',\n        'Exclusive offerings'\n      ]\n    }\n  };\n}\n\nfunction determineOptimalChannels(segment) {\n  const channelMap = {\n    individual_collectors: ['instagram', 'pinterest', 'email'],\n    interior_designers: ['instagram', 'linkedin', 'trade_publications'],\n    commercial_buyers: ['linkedin', 'email', 'direct_sales'],\n    vip_customers: ['email', 'exclusive_events', 'personal_outreach']\n  };\n  \n  return channelMap[segment.original_key] || ['email', 'social_media'];\n}\n\nfunction calculateSegmentProjections(segment, budget, marketData) {\n  const segmentData = marketData[segment.original_key] || marketData.individual_collectors;\n  const monthlyBudget = budget.total_amount / 3;\n  \n  return {\n    market_opportunity: {\n      total_addressable_market: segmentData.market_size.tam,\n      serviceable_market: segmentData.market_size.sam,\n      obtainable_market: segmentData.market_size.som,\n      growth_rate: `${segmentData.growth_rate.annual}% annually`\n    },\n    \n    performance_projections: {\n      monthly_leads: Math.floor(monthlyBudget / (segmentData.avg_order_value * 0.1)),\n      monthly_customers: Math.floor(monthlyBudget / (segmentData.avg_order_value * 0.3)),\n      monthly_revenue: Math.floor((monthlyBudget / (segmentData.avg_order_value * 0.3)) * segmentData.avg_order_value),\n      projected_roas: 3.5\n    },\n    \n    key_metrics: {\n      target_cac: segmentData.avg_order_value * 0.3,\n      target_conversion_rate: segmentData.conversion_rate,\n      target_ltv: segmentData.avg_order_value * 5\n    }\n  };\n}\n\n// Main execution\ntry {\n  const input = $input.first().json;\n  \n  // Validate directive type\n  if (input.directive_type !== 'segment_focus') {\n    throw new SegmentFocusError(\n      'Invalid directive type for segment focus handler',\n      'WRONG_HANDLER',\n      { received: input.directive_type, expected: 'segment_focus' }\n    );\n  }\n  \n  // Extract inputs\n  const { directive, customerSegments, budgetInput } = input.original_input;\n  const { campaign, budget, performance_targets } = validateSegmentFocusInputs(input);\n  \n  // Get target segment details\n  const targetSegmentKey = campaign.target_segments[0];\n  const targetSegment = getSegmentAnalysis(targetSegmentKey, customerSegments);\n  \n  // Create segment strategy and projections\n  const segmentStrategy = createSegmentStrategy(targetSegment, SEGMENT_MARKET_DATA);\n  const projections = calculateSegmentProjections(targetSegment, budget, SEGMENT_MARKET_DATA);\n  \n  // Create response\n  const response = {\n    type: \"segment_focus_response\",\n    data: {\n      directive_id: input.directive_id,\n      directive_type: 'segment_focus',\n      status: 'segment_strategy_defined',\n      timestamp: new Date().toISOString(),\n      \n      segment_profile: {\n        name: targetSegment.name,\n        key: targetSegment.original_key,\n        priority: targetSegment.priority || 'medium',\n        demographics: targetSegment.demographics || {},\n        needs: targetSegment.needs || [],\n        search_keywords: targetSegment.search_keywords || {}\n      },\n      \n      market_analysis: projections.market_opportunity,\n      \n      strategy: segmentStrategy,\n      \n      budget_allocation: {\n        total: budget.total_amount,\n        by_activity: {\n          customer_acquisition: budget.total_amount * 0.60,\n          content_development: budget.total_amount * 0.15,\n          channel_optimization: budget.total_amount * 0.15,\n          testing_learning: budget.total_amount * 0.10\n        }\n      },\n      \n      performance_projections: projections.performance_projections,\n      \n      success_metrics: projections.key_metrics,\n      \n      recommendations: [\n        `Develop ${targetSegment.name}-specific value proposition`,\n        'Create dedicated landing pages',\n        'Build segment expertise internally',\n        'Establish segment-specific KPIs',\n        'Develop partnership ecosystem'\n      ]\n    }\n  };\n  \n  return { json: response };\n  \n} catch (error) {\n  return {\n    json: {\n      type: \"segment_focus_error\",\n      error: true,\n      error_type: error.name || 'UnknownError',\n      error_code: error.code || 'SEGMENT_FOCUS_ERROR',\n      message: error.message,\n      details: error.details || {},\n      timestamp: new Date().toISOString(),\n      directive_id: $input.first().json?.directive_id\n    }\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        500
+      ],
+      "id": "868a73ec-42b7-4883-8c4e-5969598c28b5",
+      "name": "Segment Focus"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Enhanced Directive Router with Campaign Strategy Generation\n// This node routes directives AND generates campaign details\n\nclass DirectiveValidationError extends Error {\n  constructor(message, code, details) {\n    super(message);\n    this.name = 'DirectiveValidationError';\n    this.code = code;\n    this.details = details;\n  }\n}\n\n// Default campaign templates based on directive types\nconst CAMPAIGN_TEMPLATES = {\n  campaign_launch: {\n    duration_months: 3,\n    objectives: ['brand_awareness', 'lead_generation', 'sales_conversion'],\n    budget_range: { min: 150000, max: 500000 },\n    phases: ['preparation', 'soft_launch', 'full_launch']\n  },\n  budget_adjustment: {\n    adjustment_range: { min: -30, max: 30 }, // percentage\n    response_time: 'immediate',\n    monitoring_frequency: 'hourly'\n  },\n  strategy_change: {\n    transformation_types: ['sustainability', 'digital', 'market_pivot'],\n    implementation_weeks: 7,\n    phases: ['assessment', 'development', 'rollout']\n  },\n  segment_focus: {\n    focus_depth: 'comprehensive',\n    budget_allocation: { acquisition: 60, content: 15, optimization: 15, testing: 10 }\n  }\n};\n\n// Channel recommendations by segment\nconst SEGMENT_CHANNELS = {\n  individual_collectors: ['instagram', 'pinterest', 'email', 'google_ads'],\n  interior_designers: ['instagram', 'linkedin', 'email', 'trade_publications'],\n  commercial_buyers: ['linkedin', 'email', 'direct_sales', 'google_ads'],\n  vip_customers: ['email', 'exclusive_events', 'personal_outreach']\n};\n\n// Generate campaign details based on directive\nfunction generateCampaignDetails(directive, customerSegments) {\n  const directiveType = directive.data.directive_type;\n  const targetSegments = directive.data.target_segments || [];\n  const context = directive.data.context || {};\n  \n  // Generate campaign name\n  const campaignName = generateCampaignName(directiveType, targetSegments, context);\n  \n  // Determine channels based on segments\n  const channels = determineChannels(targetSegments);\n  \n  // Create timeline\n  const timeline = createTimeline(directiveType);\n  \n  // Generate initial budget structure\n  const budget = generateBudgetStructure(directiveType, targetSegments, channels);\n  \n  // Create performance targets\n  const performanceTargets = generatePerformanceTargets(targetSegments);\n  \n  return {\n    campaign: {\n      name: campaignName,\n      objectives: CAMPAIGN_TEMPLATES[directiveType]?.objectives || ['brand_awareness'],\n      target_segments: targetSegments,\n      channels: channels,\n      timeline: timeline\n    },\n    budget: budget,\n    performance_targets: performanceTargets\n  };\n}\n\nfunction generateCampaignName(directiveType, segments, context) {\n  const timestamp = new Date().toISOString().split('T')[0];\n  const segmentStr = segments.slice(0, 2).join('_');\n  \n  const nameTemplates = {\n    campaign_launch: `${context.business_objective || 'Market_Expansion'}_${segmentStr}_${timestamp}`,\n    budget_adjustment: `Budget_Optimization_${segmentStr}_${timestamp}`,\n    strategy_change: `Strategy_${context.new_direction || 'Transformation'}_${timestamp}`,\n    segment_focus: `${segments[0]}_Deep_Focus_${timestamp}`\n  };\n  \n  return nameTemplates[directiveType] || `Campaign_${timestamp}`;\n}\n\nfunction determineChannels(targetSegments) {\n  const channelSet = new Set();\n  \n  targetSegments.forEach(segment => {\n    const segmentChannels = SEGMENT_CHANNELS[segment] || ['email', 'social_media'];\n    segmentChannels.forEach(channel => channelSet.add(channel));\n  });\n  \n  // Ensure minimum channels\n  if (channelSet.size === 0) {\n    channelSet.add('email');\n    channelSet.add('social_media');\n  }\n  \n  return Array.from(channelSet);\n}\n\nfunction createTimeline(directiveType) {\n  const now = new Date();\n  const template = CAMPAIGN_TEMPLATES[directiveType];\n  \n  if (directiveType === 'campaign_launch') {\n    const startDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000); // 2 weeks prep\n    const endDate = new Date(startDate.getTime() + template.duration_months * 30 * 24 * 60 * 60 * 1000);\n    \n    return {\n      start_date: startDate.toISOString().split('T')[0],\n      end_date: endDate.toISOString().split('T')[0],\n      milestones: [\n        {\n          name: 'Soft Launch Complete',\n          date: new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]\n        },\n        {\n          name: 'Full Campaign Launch',\n          date: new Date(startDate.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]\n        },\n        {\n          name: 'Mid-Campaign Review',\n          date: new Date(startDate.getTime() + 45 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]\n        }\n      ]\n    };\n  }\n  \n  // For other directive types, create appropriate timelines\n  return {\n    start_date: now.toISOString().split('T')[0],\n    end_date: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],\n    milestones: []\n  };\n}\n\nfunction generateBudgetStructure(directiveType, segments, channels) {\n  // Calculate base budget based on segments and directive type\n  const segmentMultiplier = {\n    individual_collectors: 1.0,\n    interior_designers: 0.8,\n    commercial_buyers: 1.5,\n    vip_customers: 0.5\n  };\n  \n  let baseBudget = 200000; // Default base\n  \n  // Adjust based on segments\n  segments.forEach(segment => {\n    baseBudget *= segmentMultiplier[segment] || 1.0;\n  });\n  \n  // Adjust based on directive type\n  if (directiveType === 'strategy_change') {\n    baseBudget *= 1.3; // Strategy changes need more resources\n  } else if (directiveType === 'segment_focus') {\n    baseBudget *= 0.7; // Focused campaigns can be more efficient\n  }\n  \n  const totalBudget = Math.round(baseBudget);\n  \n  // Allocate by channel\n  const channelAllocation = allocateBudgetByChannel(totalBudget, channels);\n  \n  // Allocate by segment\n  const segmentAllocation = allocateBudgetBySegment(totalBudget, segments);\n  \n  // Allocate by objective\n  const objectiveAllocation = {\n    brand_awareness: Math.round(totalBudget * 0.3),\n    lead_generation: Math.round(totalBudget * 0.4),\n    sales_conversion: Math.round(totalBudget * 0.3)\n  };\n  \n  return {\n    total_amount: totalBudget,\n    currency: 'USD',\n    allocation: {\n      by_channel: channelAllocation,\n      by_segment: segmentAllocation,\n      by_objective: objectiveAllocation\n    },\n    constraints: [\n      'No more than 40% on any single channel',\n      'Minimum 15% allocation to testing and optimization'\n    ]\n  };\n}\n\nfunction allocateBudgetByChannel(total, channels) {\n  const allocation = {};\n  const channelWeights = {\n    instagram: 0.25,\n    pinterest: 0.20,\n    linkedin: 0.20,\n    email: 0.20,\n    google_ads: 0.30,\n    direct_sales: 0.25,\n    trade_publications: 0.15,\n    exclusive_events: 0.35,\n    personal_outreach: 0.30\n  };\n  \n  // Calculate total weight\n  let totalWeight = 0;\n  channels.forEach(channel => {\n    totalWeight += channelWeights[channel] || 0.15;\n  });\n  \n  // Allocate proportionally\n  channels.forEach(channel => {\n    const weight = channelWeights[channel] || 0.15;\n    allocation[channel] = Math.round(total * (weight / totalWeight));\n  });\n  \n  return allocation;\n}\n\nfunction allocateBudgetBySegment(total, segments) {\n  const allocation = {};\n  const equalShare = Math.round(total / segments.length);\n  \n  segments.forEach(segment => {\n    allocation[segment] = equalShare;\n  });\n  \n  return allocation;\n}\n\nfunction generatePerformanceTargets(segments) {\n  const segmentTargets = {};\n  \n  const targetDefaults = {\n    individual_collectors: { cac: 75, roas: 3.5 },\n    interior_designers: { cac: 50, roas: 4.5 },\n    commercial_buyers: { cac: 200, roas: 5.0 },\n    vip_customers: { cac: 40, roas: 6.0 }\n  };\n  \n  segments.forEach(segment => {\n    segmentTargets[segment] = targetDefaults[segment] || { cac: 100, roas: 3.0 };\n  });\n  \n  // Calculate overall ROAS as weighted average\n  let totalROAS = 0;\n  Object.values(segmentTargets).forEach(target => {\n    totalROAS += target.roas;\n  });\n  \n  return {\n    overall_roas: totalROAS / Object.keys(segmentTargets).length,\n    segment_targets: segmentTargets\n  };\n}\n\n// Generate market conditions for budget adjustment\nfunction generateMarketConditions(directiveType, context) {\n  if (directiveType === 'budget_adjustment') {\n    return {\n      current_performance: context.reason || 'Mixed performance across segments',\n      budget_pressure: context.adjustment_type || 'performance_optimization'\n    };\n  }\n  return {};\n}\n\n// Enhanced validation with campaign generation\nfunction validateAndEnrichInput(input) {\n  const data = input.json || input;\n  \n  // Basic validation\n  if (!data.directive) {\n    throw new DirectiveValidationError(\n      'Missing directive in input',\n      'MISSING_DIRECTIVE',\n      { receivedKeys: Object.keys(data) }\n    );\n  }\n  \n  const directive = data.directive;\n  if (!directive.type || directive.type !== 'directive') {\n    throw new DirectiveValidationError(\n      'Invalid directive type',\n      'INVALID_DIRECTIVE_TYPE',\n      { receivedType: directive.type, expectedType: 'directive' }\n    );\n  }\n  \n  if (!directive.data || !directive.data.directive_type) {\n    throw new DirectiveValidationError(\n      'Missing directive_type in directive.data',\n      'MISSING_DIRECTIVE_TYPE',\n      { directiveData: directive.data }\n    );\n  }\n  \n  // Generate default customer segments if not provided\n  const customerSegments = data.customer_segments || {\n    customer_segments: {\n      individual_collectors: {\n        name: \"Individual Collectors\",\n        priority: \"high-value\",\n        demographics: { age_range: \"35-65\", household_income: \"$100,000+\" },\n        needs: [\"Unique pieces\", \"Investment potential\", \"Aesthetic enhancement\"]\n      },\n      interior_designers: {\n        name: \"Interior Designers\",\n        priority: \"primary\",\n        demographics: { profession: \"Interior Design\" },\n        needs: [\"Trade discounts\", \"Reliable sourcing\", \"Quick turnaround\"]\n      },\n      commercial_buyers: {\n        name: \"Commercial Buyers\",\n        priority: \"enterprise\",\n        demographics: { company_size: \"50+ employees\" },\n        needs: [\"Bulk ordering\", \"Custom solutions\", \"Installation services\"]\n      },\n      vip_customers: {\n        name: \"VIP Customers\",\n        priority: \"high-value\",\n        demographics: { purchase_history: \"$10,000+\" },\n        needs: [\"Exclusive access\", \"Personal curation\", \"White glove service\"]\n      }\n    }\n  };\n  \n  // Generate budget structure if not provided\n  const budget = data.budget || {\n    approved_amount: 200000,\n    currency: 'USD',\n    status: 'pending_approval',\n    approved_by: 'System Generated',\n    approval_date: new Date().toISOString()\n  };\n  \n  return {\n    directive: directive,\n    customerSegments: customerSegments,\n    budgetInput: budget\n  };\n}\n\n// Main routing function\ntry {\n  const input = $input.first();\n  \n  // Validate and enrich input\n  const { directive, customerSegments, budgetInput } = validateAndEnrichInput(input);\n  \n  const directiveType = directive.data.directive_type;\n  \n  // Validate directive type\n  const validDirectiveTypes = [\n    'campaign_launch',\n    'budget_adjustment', \n    'strategy_change',\n    'segment_focus'\n  ];\n  \n  if (!validDirectiveTypes.includes(directiveType)) {\n    throw new DirectiveValidationError(\n      `Unknown directive type: ${directiveType}`,\n      'UNKNOWN_DIRECTIVE_TYPE',\n      { \n        receivedType: directiveType,\n        validTypes: validDirectiveTypes \n      }\n    );\n  }\n  \n  // Generate campaign details based on directive\n  const campaignDetails = generateCampaignDetails(directive, customerSegments);\n  \n  // Add market conditions for budget adjustment\n  if (directiveType === 'budget_adjustment') {\n    directive.data.context = {\n      ...directive.data.context,\n      market_conditions: generateMarketConditions(directiveType, directive.data.context)\n    };\n  }\n  \n  // Create enriched directive with full parameters\n  const enrichedDirective = {\n    type: directive.type,\n    data: {\n      ...directive.data,\n      parameters: {\n        ...campaignDetails,\n        context: directive.data.context\n      }\n    }\n  };\n  \n  // Create routing response with enriched data\n  const routingResponse = {\n    directive_type: directiveType,\n    directive_id: `DIR-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,\n    routing_timestamp: new Date().toISOString(),\n    input_validation: 'passed',\n    route_to: directiveType,\n    original_input: {\n      directive: enrichedDirective,\n      customerSegments: customerSegments,\n      budgetInput: budgetInput\n    }\n  };\n  \n  return {\n    json: routingResponse\n  };\n  \n} catch (error) {\n  return {\n    json: {\n      error: true,\n      error_type: error.name || 'UnknownError',\n      error_code: error.code || 'ROUTING_ERROR',\n      message: error.message,\n      details: error.details || {},\n      timestamp: new Date().toISOString(),\n      workflow_id: 'bItsmeBBOK90aTPz'\n    }\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        340,
+        500
+      ],
+      "id": "94efd106-9ef9-4493-8786-9beb6fa05b48",
+      "name": "Directive Router"
+    },
+    {
+      "parameters": {
+        "content": "Here are the simplified trigger variables that would come from the Marketing Director Agent:\n\n## 1. Campaign Launch Trigger\n\n```json\n{\n  \"directive\": {\n    \"type\": \"directive\",\n    \"data\": {\n      \"directive_type\": \"campaign_launch\",\n      \"priority\": \"high\",\n      \"target_segments\": [\"individual_collectors\", \"interior_designers\"],\n      \"context\": {\n        \"business_objective\": \"Expand market share in Q2\"\n      }\n    }\n  }\n}\n```\n\n## 2. Budget Adjustment Trigger\n\n```json\n{\n  \"directive\": {\n    \"type\": \"directive\",\n    \"data\": {\n      \"directive_type\": \"budget_adjustment\",\n      \"priority\": \"urgent\",\n      \"target_segments\": [\"commercial_buyers\", \"vip_customers\"],\n      \"context\": {\n        \"reason\": \"Underperforming segments identified\",\n        \"adjustment_type\": \"reallocation\"\n      }\n    }\n  }\n}\n```\n\n## 3. Strategy Change Trigger\n\n```json\n{\n  \"directive\": {\n    \"type\": \"directive\",\n    \"data\": {\n      \"directive_type\": \"strategy_change\",\n      \"priority\": \"high\",\n      \"target_segments\": [\"individual_collectors\", \"interior_designers\", \"commercial_buyers\"],\n      \"context\": {\n        \"new_direction\": \"sustainability_focus\"\n      }\n    }\n  }\n}\n```\n\n## 4. Segment Focus Trigger\n\n```json\n{\n  \"directive\": {\n    \"type\": \"directive\",\n    \"data\": {\n      \"directive_type\": \"segment_focus\",\n      \"priority\": \"medium\",\n      \"target_segments\": [\"interior_designers\"],\n      \"context\": {\n        \"focus_reason\": \"High growth opportunity identified\"\n      }\n    }\n  }\n}\n```\n\n## Minimal Test Structure (for quick testing)\n\n```json\n{\n  \"directive\": {\n    \"type\": \"directive\",\n    \"data\": {\n      \"directive_type\": \"campaign_launch\",\n      \"target_segments\": [\"individual_collectors\"]\n    }\n  }\n}\n```\n\nThese simplified structures allow the Marketing Director Agent to provide just the strategic direction, while the Campaign Manager Agent (your workflow) will handle all the detailed implementation planning based on the directive type and target segments.",
+        "height": 1860,
+        "width": 780
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1120,
+        -340
+      ],
+      "typeVersion": 1,
+      "id": "d25686e1-8365-401c-b60b-eb3f43528ce0",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "description": "=Call this Tool when developing comprehensive content strategies, maintaining editorial calendars, and ensuring content performance across all channels, bridging the gap between marketing strategy and creative execution.",
+        "workflowId": {
+          "__rl": true,
+          "value": "FFUeBaPbGcGAD61i",
+          "mode": "list",
+          "cachedResultName": "Content Strategy Agent - Strategic"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        3100,
+        960
+      ],
+      "id": "d4bb87ea-31e1-4def-9fc7-7ddacaee1c29",
+      "name": "Content Strategy Agent - Tool"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Error Handler Node\n// Processes and logs errors from any node in the workflow\n\nfor (const item of $input.all()) {\n  const error = item.json;\n  const nodeName = error.nodeName || 'Unknown';\n  const errorType = error.errorType || 'UnknownError';\n  const message = error.message || 'An error occurred';\n  const timestamp = new Date().toISOString();\n\n  // Create user-friendly error response\n  const errorResponse = {\n    success: false,\n    error: {\n      type: errorType,\n      message: `Error in ${nodeName}: ${message}`,\n      timestamp: timestamp,\n      action_required: '',\n      nodeName: nodeName,\n      originalError: error\n    },\n    recovery_options: []\n  };\n\n  // Determine action based on error type\n  if (errorType === 'MISSING_DIRECTIVE') {\n    errorResponse.error.action_required = 'Please provide a valid directive from Marketing Director';\n  } else if (errorType === 'INVALID_BUDGET') {\n    errorResponse.error.action_required = 'Budget validation failed - contact Finance Agent';\n  } else if (errorType === 'DELEGATION_ERROR') {\n    errorResponse.error.action_required = 'Unable to delegate task - check agent availability';\n  } else if (errorType === 'MCP_ERROR') {\n    errorResponse.error.action_required = 'Tool access failed - verify MCP configuration';\n  } else {\n    errorResponse.error.action_required = 'Review error details and retry operation';\n  }\n\n  // Set recovery options\n  errorResponse.recovery_options = [\n    'Retry the operation with corrected inputs',\n    'Contact system administrator if error persists',\n    'Check Marketing Director for new directives',\n    'Verify all required tools are configured'\n  ];\n\n  // Create KB entry for analysis\n  const kbEntry = {\n    type: 'error_log',\n    workflow: 'campaign_manager',\n    error: {\n      type: errorResponse.error.type,\n      message: errorResponse.error.message,\n      timestamp: errorResponse.error.timestamp,\n      action_required: errorResponse.error.action_required\n    },\n    context: {\n      directive_id: error.directive_id || 'unknown',\n      workflow_execution_id: $execution.id,\n      node_name: nodeName\n    }\n  };\n\n  // Replace the item's JSON with error response\n  item.json = errorResponse;\n  \n  // Add KB entry as additional data\n  item.json.kb_entry = kbEntry;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        500
+      ],
+      "id": "21d79641-f6bd-4177-857d-aa237f1c92f8",
+      "name": "Error Handler"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Delegation Enhancer Node\n// Adds MCP context and resources to agent delegations\n\nfor (const item of $input.all()) {\n  const delegation = item.json;\n  const agent = delegation.agent || '';\n  const tasks = delegation.tasks || [];\n  const budget = delegation.budget || 0;\n  const channels = delegation.channels || [];\n\n  // Initialize enhanced delegation\n  const enhancedDelegation = Object.assign({}, delegation);\n  \n  enhancedDelegation.mcp_context = {\n    prompts: [],\n    resources: [],\n    analytics_queries: []\n  };\n  \n  enhancedDelegation.success_criteria = {};\n  enhancedDelegation.reporting_requirements = {};\n\n  // Add agent-specific MCP resources\n  switch(agent) {\n    case 'social_media_director_agent':\n      enhancedDelegation.mcp_context.prompts = [\n        'social_media_campaign_brief',\n        'influencer_outreach_template',\n        'community_engagement_playbook'\n      ];\n      enhancedDelegation.mcp_context.resources = [\n        'social_platform_best_practices',\n        'content_calendar_template',\n        'engagement_rate_benchmarks'\n      ];\n      enhancedDelegation.mcp_context.analytics_queries = [\n        { query: 'getSocialMetrics', params: { platforms: channels } },\n        { query: 'getInfluencerROI', params: { campaign_type: tasks[0] || '' } }\n      ];\n      enhancedDelegation.success_criteria = {\n        engagement_rate: '> 3.5%',\n        reach_growth: '> 20%',\n        conversion_rate: '> 2%'\n      };\n      break;\n      \n    case 'content_strategy_agent':\n      enhancedDelegation.mcp_context.prompts = [\n        'content_strategy_framework',\n        'editorial_calendar_template',\n        'brand_voice_guidelines'\n      ];\n      enhancedDelegation.mcp_context.resources = [\n        'content_performance_benchmarks',\n        'asset_creation_checklist',\n        'seo_optimization_guide'\n      ];\n      enhancedDelegation.success_criteria = {\n        content_pieces: '>= 20',\n        quality_score: '>= 8/10',\n        deadline_adherence: '100%'\n      };\n      break;\n      \n    case 'finance_budget_agent':\n      enhancedDelegation.mcp_context.prompts = [\n        'budget_approval_checklist',\n        'roi_projection_template',\n        'cost_optimization_framework'\n      ];\n      enhancedDelegation.mcp_context.resources = [\n        'financial_modeling_templates',\n        'industry_roas_standards',\n        'budget_allocation_guidelines'\n      ];\n      enhancedDelegation.success_criteria = {\n        budget_accuracy: '±1%',\n        roi_projection: '>= 3.5x',\n        approval_time: '< 24 hours'\n      };\n      break;\n      \n    case 'paid_search_specialist':\n      enhancedDelegation.mcp_context.prompts = [\n        'paid_search_campaign_structure',\n        'keyword_research_template',\n        'ad_copy_framework'\n      ];\n      enhancedDelegation.mcp_context.resources = [\n        'cpc_benchmarks_by_industry',\n        'quality_score_optimization',\n        'shopping_feed_best_practices'\n      ];\n      enhancedDelegation.success_criteria = {\n        ctr: '>= 3%',\n        conversion_rate: '>= 2.5%',\n        quality_score: '>= 7'\n      };\n      break;\n      \n    case 'email_marketing_specialist':\n      enhancedDelegation.mcp_context.prompts = [\n        'email_campaign_framework',\n        'automation_workflow_builder',\n        'segmentation_strategy_guide'\n      ];\n      enhancedDelegation.mcp_context.resources = [\n        'email_performance_benchmarks',\n        'deliverability_best_practices',\n        'personalization_templates'\n      ];\n      enhancedDelegation.success_criteria = {\n        open_rate: '>= 25%',\n        click_rate: '>= 3%',\n        conversion_rate: '>= 2%'\n      };\n      break;\n  }\n\n  // Determine reporting frequency\n  let frequency = 'weekly';\n  if (Array.isArray(tasks)) {\n    const tasksString = tasks.join(' ').toLowerCase();\n    if (tasksString.includes('urgent') || tasksString.includes('immediate')) {\n      frequency = 'every_4_hours';\n    } else if (tasksString.includes('launch') || tasksString.includes('optimization')) {\n      frequency = 'daily';\n    }\n  }\n\n  enhancedDelegation.reporting_requirements = {\n    frequency: frequency,\n    metrics: Object.keys(enhancedDelegation.success_criteria),\n    format: 'structured_json',\n    escalation_triggers: {\n      performance_below_target: true,\n      budget_overrun: true,\n      timeline_delay: true\n    }\n  };\n\n  // Replace the item's JSON with enhanced delegation\n  item.json = enhancedDelegation;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        500
+      ],
+      "id": "82a66a3b-38f6-4394-937d-7ea893ac04e9",
+      "name": "Delegation Enhancer"
+    },
+    {
+      "parameters": {
+        "jsCode": "// MCP Coordinator Node\n// Intelligently selects and coordinates MCP tool usage based on task\n\nfor (const item of $input.all()) {\n  const task = item.json;\n  const directive_type = task.directive_type || '';\n  const phase = task.phase || '';\n  const requirements = task.requirements || {};\n\n  // Determine which MCP tools to use\n  const mcpPlan = {\n    prompt_mcp: [],\n    resource_mcp: [],\n    analytics_mcp: [],\n    execution_order: []\n  };\n\n  // Select prompts based on directive type\n  switch(directive_type) {\n    case 'campaign_launch':\n      mcpPlan.prompt_mcp = [\n        { name: 'campaign_launch_template', priority: 1 },\n        { name: 'segment_targeting_guide', priority: 2 },\n        { name: 'channel_selection_matrix', priority: 3 }\n      ];\n      mcpPlan.resource_mcp = [\n        { name: 'budget_benchmarks_by_industry', priority: 1 },\n        { name: 'creative_asset_requirements', priority: 2 }\n      ];\n      mcpPlan.analytics_mcp = [\n        { name: 'getSegmentAnalytics', params: { segments: task.target_segments || [] } },\n        { name: 'getChannelPerformance', params: { channels: task.channels || [] } }\n      ];\n      break;\n      \n    case 'budget_adjustment':\n      mcpPlan.prompt_mcp = [\n        { name: 'budget_optimization_framework', priority: 1 },\n        { name: 'performance_analysis_template', priority: 2 }\n      ];\n      mcpPlan.resource_mcp = [\n        { name: 'roi_calculation_templates', priority: 1 },\n        { name: 'budget_reallocation_guidelines', priority: 2 }\n      ];\n      mcpPlan.analytics_mcp = [\n        { name: 'getCampaignMetrics', params: { campaign_id: task.campaign_id || '' } },\n        { name: 'getROASBySegment', params: { timeframe: 'last_30_days' } }\n      ];\n      break;\n      \n    case 'strategy_change':\n      mcpPlan.prompt_mcp = [\n        { name: 'strategy_pivot_checklist', priority: 1 },\n        { name: 'transformation_roadmap_template', priority: 2 }\n      ];\n      mcpPlan.resource_mcp = [\n        { name: 'change_management_guide', priority: 1 },\n        { name: 'competitive_analysis_framework', priority: 2 }\n      ];\n      break;\n      \n    case 'segment_focus':\n      mcpPlan.prompt_mcp = [\n        { name: 'segment_analysis_template', priority: 1 },\n        { name: 'persona_development_guide', priority: 2 }\n      ];\n      mcpPlan.resource_mcp = [\n        { name: 'segment_performance_benchmarks', priority: 1 },\n        { name: 'customer_journey_templates', priority: 2 }\n      ];\n      mcpPlan.analytics_mcp = [\n        { name: 'getSegmentDeepDive', params: { segment: task.target_segment || '' } }\n      ];\n      break;\n  }\n\n  // Create execution order based on priority\n  const allTools = [\n    ...mcpPlan.prompt_mcp.map(p => ({ type: 'prompt', ...p })),\n    ...mcpPlan.analytics_mcp.map(a => ({ type: 'analytics', ...a })),\n    ...mcpPlan.resource_mcp.map(r => ({ type: 'resource', ...r }))\n  ];\n  \n  mcpPlan.execution_order = allTools.sort((a, b) => a.priority - b.priority);\n\n  // Add delegation context for agents\n  const delegations_needed = task.delegations_needed || [];\n  if (Array.isArray(delegations_needed)) {\n    delegations_needed.forEach(agent => {\n      switch(agent) {\n        case 'social_media_director':\n          mcpPlan.resource_mcp = [...mcpPlan.resource_mcp, {\n            name: 'social_platform_best_practices',\n            for_agent: 'social_media_director',\n            priority: 4\n          }];\n          break;\n        case 'content_strategy':\n          mcpPlan.prompt_mcp = [...mcpPlan.prompt_mcp, {\n            name: 'content_strategy_framework',\n            for_agent: 'content_strategy',\n            priority: 4\n          }];\n          break;\n        case 'finance_budget':\n          mcpPlan.resource_mcp = [...mcpPlan.resource_mcp, {\n            name: 'financial_modeling_templates',\n            for_agent: 'finance_budget',\n            priority: 4\n          }];\n          break;\n      }\n    });\n  }\n\n  // Add MCP plan to the item\n  item.json.mcp_execution_plan = mcpPlan;\n  item.json.estimated_tool_calls = mcpPlan.execution_order.length;\n  \n  const delegationContext = [];\n  mcpPlan.execution_order.forEach(toolItem => {\n    if (toolItem.for_agent) {\n      delegationContext.push({\n        agent: toolItem.for_agent,\n        resources: [toolItem.name]\n      });\n    }\n  });\n  \n  item.json.delegation_context = delegationContext;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        500
+      ],
+      "id": "ff68fc9c-ef53-4c00-b352-79e6b7cdfe56",
+      "name": "MCP Coordinator"
+    }
+  ],
+  "pinData": {
+    "Execute from Marketing Director": [
+      {
+        "json": {
+          "directive": {
+            "type": "directive",
+            "data": {
+              "directive_type": "campaign_launch",
+              "priority": "high",
+              "target_segments": [
+                "individual_collectors",
+                "interior_designers"
+              ],
+              "context": {
+                "business_objective": "Expand market share in Q2"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Execute from Marketing Director": {
+      "main": [
+        [
+          {
+            "node": "Directive Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Directive Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Campaign Manager Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Campaign Manager Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analytics MCP - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Campaign Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analytics MCP - List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Campaign Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Campaign Manager Agent": {
+      "main": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Campaign Performance KB": {
+      "ai_tool": [
+        [
+          {
+            "node": "Campaign Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Campaign Performance KB",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Campaign agent Prompt MCP - List Prompts": {
+      "ai_tool": [
+        [
+          {
+            "node": "Campaign Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Campaign  Agent Resources - List Resources1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Campaign Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Campaign Agent Prompt MCP - Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Campaign Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Campaign Agent Resources - List Resources": {
+      "ai_tool": [
+        [
+          {
+            "node": "Campaign Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Media Director Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Campaign Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finance and Budget Agent - Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Campaign Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Campaign Launch": {
+      "main": [
+        [
+          {
+            "node": "Delegation Enhancer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Budget Adjustment": {
+      "main": [
+        [
+          {
+            "node": "Delegation Enhancer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Strategy Change": {
+      "main": [
+        [
+          {
+            "node": "Delegation Enhancer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Segment Focus": {
+      "main": [
+        [
+          {
+            "node": "Delegation Enhancer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Directive Router": {
+      "main": [
+        [
+          {
+            "node": "MCP Coordinator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Strategy Agent - Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Campaign Manager Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delegation Enhancer": {
+      "main": [
+        [
+          {
+            "node": "Campaign Manager Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Coordinator": {
+      "main": [
+        [
+          {
+            "node": "Campaign Launch",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Budget Adjustment",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Strategy Change",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Segment Focus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "executionTimeout": 3600,
+    "timezone": "UTC"
+  },
+  "versionId": "bf60d8b8-77fa-4d7c-9e32-c90a9a23ca3c",
+  "meta": {
+    "instanceId": "0c5c6238f7f953c716a2a2e44c4af29499a191860981471fcfa4f6215060ca92"
+  },
+  "id": "bItsmeBBOK90aTPz",
+  "tags": [
+    {
+      "createdAt": "2025-07-01T13:43:08.994Z",
+      "updatedAt": "2025-07-01T13:43:08.994Z",
+      "id": "0SdBheqbI0BvjDkc",
+      "name": "Simplified"
+    }
+  ]
+}

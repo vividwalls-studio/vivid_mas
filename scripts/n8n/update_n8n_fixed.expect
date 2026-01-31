@@ -1,0 +1,179 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# Set backup date
+set backup_date [clock format [clock seconds] -format "%Y%m%d"]
+
+puts "========================================="
+puts "n8n Update Script"
+puts "Current version: 1.104.1"
+puts "Updating to: latest"
+puts "========================================="
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        puts "\nConnected successfully!"
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}
+
+# Navigate to project directory
+send "cd /root/vivid_mas\r"
+expect "root@*"
+
+# Create backup directory
+puts "\n1. Creating backup directory..."
+send "mkdir -p /root/backups/n8n-backup-$backup_date\r"
+expect "root@*"
+
+# Export workflows
+puts "\n2. Backing up workflows..."
+send "docker exec postgres pg_dump -U postgres -d postgres -t workflow_entity > /root/backups/n8n-backup-$backup_date/workflows.sql\r"
+expect "root@*"
+
+# Export credentials
+puts "\n3. Backing up credentials..."
+send "docker exec postgres pg_dump -U postgres -d postgres -t credentials_entity > /root/backups/n8n-backup-$backup_date/credentials.sql\r"
+expect "root@*"
+
+# Check backup files
+puts "\n4. Verifying backup..."
+send "ls -la /root/backups/n8n-backup-$backup_date/\r"
+expect "root@*"
+
+# Pull latest n8n image
+puts "\n5. Pulling latest n8n image (this may take a few minutes)..."
+send "docker pull n8nio/n8n:latest\r"
+expect -timeout 300 "root@*"
+
+# Stop n8n container
+puts "\n6. Stopping current n8n container..."
+send "docker stop n8n\r"
+expect "root@*"
+
+# Remove old container (keeping volumes)
+puts "\n7. Removing old container (volumes preserved)..."
+send "docker rm n8n\r"
+expect "root@*"
+
+# Start new n8n container with latest image
+puts "\n8. Starting n8n with latest version..."
+send "docker run -d --name n8n \\\r"
+expect ">"
+send "  --network vivid_mas \\\r"
+expect ">"
+send "  -p 5678:5678 \\\r"
+expect ">"
+send "  -e DB_TYPE=postgresdb \\\r"
+expect ">"
+send "  -e DB_POSTGRESDB_HOST=postgres \\\r"
+expect ">"
+send "  -e DB_POSTGRESDB_PORT=5432 \\\r"
+expect ">"
+send "  -e DB_POSTGRESDB_DATABASE=postgres \\\r"
+expect ">"
+send "  -e DB_POSTGRESDB_USER=postgres \\\r"
+expect ">"
+send "  -e DB_POSTGRESDB_PASSWORD=myqP9lSMLobnuIfkUpXQzZg07 \\\r"
+expect ">"
+send "  -e N8N_ENCRYPTION_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZDAxYzZjZC1lNjY5LTQ4YWQtYTY5ZS1mMDU0YTY4NjU1YzQiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzUwNDQ5MzEzfQ.uBJrDT3a0pQdA5hA28Zf5egmhFLryv8DUNLvsoleXcs \\\r"
+expect ">"
+send "  -e N8N_HOST=n8n.vividwalls.blog \\\r"
+expect ">"
+send "  -e N8N_PORT=5678 \\\r"
+expect ">"
+send "  -e N8N_PROTOCOL=https \\\r"
+expect ">"
+send "  -e WEBHOOK_URL=https://n8n.vividwalls.blog/ \\\r"
+expect ">"
+send "  -e GENERIC_TIMEZONE=America/New_York \\\r"
+expect ">"
+send "  -e N8N_METRICS=true \\\r"
+expect ">"
+send "  -v n8n_storage:/home/node/.n8n \\\r"
+expect ">"
+send "  -v /opt/mcp-servers:/opt/mcp-servers:ro \\\r"
+expect ">"
+send "  -v /root/vivid_mas/n8n/backup:/backup \\\r"
+expect ">"
+send "  -v /root/vivid_mas/shared:/data/shared \\\r"
+expect ">"
+send "  --restart unless-stopped \\\r"
+expect ">"
+send "  n8nio/n8n:latest\r"
+expect "root@*"
+
+# Wait for n8n to start
+puts "\n9. Waiting for n8n to initialize..."
+send "sleep 20\r"
+expect "root@*"
+
+# Check if n8n is running
+puts "\n10. Checking n8n status..."
+send "docker ps | grep n8n\r"
+expect "root@*"
+
+# Check new version
+puts "\n11. Verifying new version..."
+send "docker exec n8n n8n --version 2>&1 | head -1\r"
+expect "root@*"
+
+# Check n8n logs
+puts "\n12. Checking startup logs..."
+send "docker logs n8n --tail 30 2>&1 | grep -E 'version|Version|started|Starting|Initializing|webhook' | tail -15\r"
+expect "root@*"
+
+# Test n8n health
+puts "\n13. Testing n8n health endpoint..."
+send "curl -s http://localhost:5678/healthz\r"
+expect "root@*"
+
+# Verify workflows
+puts "\n14. Verifying workflows are intact..."
+send "docker exec postgres psql -U postgres -d postgres -t -c 'SELECT COUNT(*) FROM workflow_entity;'\r"
+expect "root@*"
+
+# Check active workflows
+puts "\n15. Checking active workflows..."
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT name, active FROM workflow_entity WHERE active = true;\"\r"
+expect "root@*"
+
+# Test webhook endpoint
+puts "\n16. Testing webhook functionality..."
+send "curl -X POST http://localhost:5678/webhook-test/test \\\r"
+send "  -H 'Content-Type: application/json' \\\r"
+send "  -d '{\"test\":true}' 2>&1 | head -50\r"
+expect "root@*"
+
+puts "\n========================================="
+puts "n8n Update Complete!"
+puts "========================================="
+puts "Backup location: /root/backups/n8n-backup-$backup_date/"
+puts "Access n8n at: https://n8n.vividwalls.blog"
+puts ""
+puts "Next steps:"
+puts "1. Visit https://n8n.vividwalls.blog"
+puts "2. Check all workflows are working"
+puts "3. Test webhook endpoints"
+puts "========================================="
+
+send "exit\r"
+expect eof

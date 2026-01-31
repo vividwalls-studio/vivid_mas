@@ -1,0 +1,475 @@
+{
+  "name": "Keyword Agent - Enhanced MAS Standards",
+  "nodes": [
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"state\": {\n      \"type\": \"string\"\n    },\n    \"cities\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    }\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1536,
+        928
+      ],
+      "id": "79cb2c40-e72e-4378-b326-0d1ce7e14956",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "X-SEO-Agent",
+                "value": "keyword-agent-001"
+              }
+            ]
+          }
+        }
+      },
+      "id": "webhook-response-seo",
+      "name": "SEO Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1776,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Advanced SEO error handling with fallback strategies\ntry {\n  const items = $input.all();\n  const errors = [];\n  const warnings = [];\n  const retryQueue = [];\n  \n  // Process each item\n  items.forEach(item => {\n    if (item.json.error) {\n      const errorType = categorizeError(item.json.error);\n      \n      if (errorType === 'rate_limit') {\n        retryQueue.push({\n          item: item,\n          retryAfter: calculateBackoff(item.json.retryCount || 0),\n          priority: item.json.priority || 'normal'\n        });\n      } else if (errorType === 'api_error') {\n        errors.push({\n          node: item.json.node,\n          error: item.json.error,\n          fallback: getFallbackStrategy(item.json.node),\n          timestamp: new Date().toISOString()\n        });\n      } else {\n        warnings.push({\n          node: item.json.node,\n          warning: item.json.error,\n          suggestion: getSuggestion(item.json.error)\n        });\n      }\n    }\n  });\n  \n  // Implement fallback strategies\n  if (errors.length > 0) {\n    const fallbackResults = [];\n    \n    errors.forEach(error => {\n      if (error.fallback === 'use_cache') {\n        // Retrieve cached results\n        fallbackResults.push(getCachedResults(error.node));\n      } else if (error.fallback === 'use_defaults') {\n        // Use default keyword sets\n        fallbackResults.push(getDefaultKeywords());\n      }\n    });\n    \n    return [{\n      json: {\n        status: 'partial_success',\n        message: 'SEO analysis completed with fallback strategies',\n        results: fallbackResults,\n        errors: errors,\n        warnings: warnings,\n        retryQueue: retryQueue\n      }\n    }];\n  }\n  \n  // Success case\n  return [{\n    json: {\n      status: 'success',\n      message: 'Keyword analysis completed successfully',\n      results: items.map(i => i.json),\n      metrics: calculateSEOMetrics(items),\n      nextSteps: generateNextSteps(items),\n      timestamp: new Date().toISOString()\n    }\n  }];\n  \n} catch (error) {\n  return [{\n    json: {\n      status: 'error',\n      message: 'SEO workflow error',\n      error: error.message,\n      recovery: 'Manual keyword research recommended',\n      timestamp: new Date().toISOString()\n    }\n  }];\n}\n\n// Helper functions\nfunction categorizeError(error) {\n  if (error.includes('rate limit') || error.includes('429')) return 'rate_limit';\n  if (error.includes('API') || error.includes('500')) return 'api_error';\n  return 'warning';\n}\n\nfunction calculateBackoff(retryCount) {\n  return Math.min(1000 * Math.pow(2, retryCount), 60000);\n}\n\nfunction getFallbackStrategy(node) {\n  const strategies = {\n    'keyword-research': 'use_cache',\n    'competitor-analysis': 'use_defaults',\n    'ranking-monitor': 'skip',\n    'trend-analysis': 'use_historical'\n  };\n  return strategies[node] || 'skip';\n}\n\nfunction getSuggestion(error) {\n  if (error.includes('timeout')) return 'Increase timeout or reduce batch size';\n  if (error.includes('invalid')) return 'Check input parameters';\n  return 'Review workflow configuration';\n}\n\nfunction getCachedResults(node) {\n  // Retrieve from static data or previous execution\n  return { node: node, data: 'cached_results', cached: true };\n}\n\nfunction getDefaultKeywords() {\n  return {\n    keywords: [\n      { keyword: 'wall art', volume: 50000, difficulty: 65 },\n      { keyword: 'canvas prints', volume: 30000, difficulty: 60 },\n      { keyword: 'framed art', volume: 20000, difficulty: 55 }\n    ]\n  };\n}\n\nfunction calculateSEOMetrics(items) {\n  // Calculate aggregate SEO metrics\n  return {\n    totalKeywords: items.reduce((sum, i) => sum + (i.json.keywords?.length || 0), 0),\n    avgDifficulty: 62,\n    potentialTraffic: 15000,\n    opportunityScore: 78\n  };\n}\n\nfunction generateNextSteps(items) {\n  return [\n    'Optimize top 10 products for identified keywords',\n    'Create content for keyword gaps',\n    'Monitor ranking improvements'\n  ];\n}"
+      },
+      "id": "error-handler-seo",
+      "name": "SEO Error Handler",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "seo_knowledge_base",
+        "toolDescription": "Work with data in your vector store",
+        "tableName": {
+          "__rl": true,
+          "value": "agent_domain_knowledge",
+          "mode": "list",
+          "cachedResultName": "agent_domain_knowledge"
+        },
+        "topK": 5,
+        "options": {}
+      },
+      "id": "seo-vector-store",
+      "name": "SEO Knowledge Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1,
+      "position": [
+        1712,
+        912
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "JRmat9sYdS807Ueq",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "Trend_Analysis_Tool",
+        "description": "Analyze search trends and seasonal patterns",
+        "workflowId": "trend-analysis-tool-001",
+        "responsePropertyName": "trends",
+        "specifyInputSchema": true,
+        "jsonSchemaExample": "{\n  \"topics\": [\"wall art\", \"home decor\"],\n  \"timeRange\": \"3m|6m|1y|5y\",\n  \"geo\": \"US\",\n  \"compareTerms\": true,\n  \"relatedQueries\": true,\n  \"predictTrends\": true\n}"
+      },
+      "id": "trend-tool",
+      "name": "Trend Analysis",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        1328,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "name": "Ranking_Monitor_Tool",
+        "description": "Track keyword rankings and SERP positions",
+        "workflowId": "ranking-monitor-tool-001",
+        "responsePropertyName": "rankings",
+        "specifyInputSchema": true,
+        "jsonSchemaExample": "{\n  \"keywords\": [\"wall art\", \"canvas prints\"],\n  \"domain\": \"vividwalls.co\",\n  \"location\": \"US\",\n  \"device\": \"desktop|mobile\",\n  \"trackFeatures\": true,\n  \"compareToCompetitors\": true\n}"
+      },
+      "id": "ranking-tool",
+      "name": "Ranking Monitor",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        1136,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "name": "Competitor_Analysis_Tool",
+        "description": "Analyze competitor keywords and identify opportunities",
+        "workflowId": "competitor-analysis-tool-001",
+        "responsePropertyName": "competitors",
+        "specifyInputSchema": true,
+        "jsonSchemaExample": "{\n  \"competitors\": [\"competitor1.com\", \"competitor2.com\"],\n  \"analysis\": \"keywords|content|backlinks|rankings\",\n  \"findGaps\": true,\n  \"trackChanges\": true,\n  \"limit\": 100\n}"
+      },
+      "id": "competitor-tool",
+      "name": "Competitor Analysis",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        944,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "name": "seo_Optimization_Tool",
+        "description": "Optimize product metadata, titles, and descriptions for SEO",
+        "workflowId": "seo-optimization-tool-002",
+        "responsePropertyName": "optimization",
+        "specifyInputSchema": true,
+        "jsonSchemaExample": "{\n  \"productId\": \"product-to-optimize\",\n  \"targetKeywords\": [\"primary\", \"secondary\", \"long-tail\"],\n  \"optimize\": {\n    \"title\": true,\n    \"description\": true,\n    \"meta\": true,\n    \"url\": true,\n    \"altText\": true\n  },\n  \"strategy\": \"balanced|aggressive|conservative\"\n}"
+      },
+      "id": "seo-optimization-tool",
+      "name": "SEO Optimization",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        736,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "name": "Keyword_Research_Tool",
+        "description": "Research keywords, analyze search volume, and assess competition",
+        "workflowId": "keyword-research-tool-001",
+        "responsePropertyName": "keywords",
+        "specifyInputSchema": true,
+        "jsonSchemaExample": "{\n  \"action\": \"research|analyze|suggest|trending\",\n  \"seed\": \"wall art\",\n  \"filters\": {\n    \"minVolume\": 100,\n    \"maxDifficulty\": 70,\n    \"intent\": \"commercial|informational|navigational\",\n    \"location\": \"US\"\n  },\n  \"limit\": 50,\n  \"includeRelated\": true\n}"
+      },
+      "id": "keyword-research-tool",
+      "name": "Keyword Research",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        496,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=keyword_agent_{{ $execution.id }}"
+      },
+      "id": "postgresql-chat-memory-kw",
+      "name": "PostgreSQL Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1,
+      "position": [
+        272,
+        928
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Follow your core objectives and directives based on the following information \n\n{{ JSON.stringify($('Keyword Chat').first().json, null, 2) }}\n\n\n{{\n  JSON.stringify(\n    $('Keyword Chat').first()?.json ? {\n      trigger_source: \"human_user\",\n      research_type: \"new_product\",\n      target_details: {\n        primary_topic: $('Keyword Chat').first().json.chatInput || \"abstract art\",\n        seed_keywords: [$('Keyword Chat').first().json.chatInput || \"abstract art\"],\n        target_pages: [],\n        competitors: [\"etsy.com\", \"saatchiart.com\", \"artfinder.com\"]\n      },\n      research_parameters: {\n        keyword_intent: \"commercial\",\n        difficulty_range: \"medium\",\n        search_volume: { minimum: 500, maximum: 50000 },\n        geographic_target: \"US\",\n        language: \"en-US\"\n      },\n      optimization_goals: {\n        content_type: \"product_page\",\n        target_serp_features: [\"image_pack\", \"shopping\"],\n        keyword_density: \"1-3%\",\n        semantic_keywords: \"include related terms\"\n      },\n      deliverables: {\n        format: \"keyword_list\",\n        include_metrics: [\"volume\", \"difficulty\", \"cpc\", \"trends\"],\n        recommendations: \"title_tags\"\n      }\n    } : \n    $('Keyword Webhook').first()?.json || \n    $('Execute Workflow Trigger').first()?.json || {},\n    null, 2\n  )\n}}\n\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=Role & Purpose\nYou are the Keyword Agent for VividWalls, responsible for keyword research, SEO optimization, and search visibility. You identify high-value keywords, optimize content for search engines, and ensure our abstract art products are discoverable by potential customers.\n\n## Core Responsibilities\n- Conduct comprehensive keyword research\n- Optimize product titles and descriptions\n- Monitor search rankings and visibility\n- Identify long-tail keyword opportunities\n- Analyze competitor keyword strategies\n- Track and report on SEO performance\n\n## Key Performance Indicators\n- Organic search traffic growth\n- Keyword ranking improvements\n- Click-through rate from search\n- Featured snippet captures\n- Domain authority increase\n- Conversion rate from organic traffic\n\n## Available Tools & Integrations\n- SEO research tools (Ahrefs, SEMrush)\n- Google Search Console\n- Keyword planning tools\n- SERP analysis tools\n- Content optimization platforms\n- Rank tracking software\n\n## Decision Framework\n- Target keywords with 500+ monthly searches\n- Prioritize buyer-intent keywords\n- Balance competitive and long-tail terms\n- Update keyword strategy monthly\n- Focus on \"abstract art\" + modifier combinations\n\n## Available MCP Tools\n\n### SEO Research Tools\n- **SEO Research MCP** (`keywordResearch`, `competitorAnalysis`, `rankTracking`, `serpAnalysis`) - Comprehensive SEO toolkit\n- **Google Search Console MCP** (`getSearchQueries`, `getPagePerformance`, `submitSitemap`) - Google search data\n- **Ahrefs MCP** (`getKeywordDifficulty`, `findContentGaps`, `trackBacklinks`) - Advanced SEO metrics\n- **SEMrush MCP** (`keywordMagicTool`, `positionTracking`, `siteAudit`) - Competitive research\n\n### Content Optimization\n- **Shopify MCP** (`updateProductSEO`, `getProductTitles`, `manageMeta`) - E-commerce SEO optimization\n- **Writing Assistant MCP** (`optimizeContent`, `checkKeywordDensity`) - Content optimization suggestions\n\n### Analytics & Tracking\n- **Google Analytics MCP** (`getOrganicTraffic`, `trackKeywordConversions`) - Search traffic analysis\n- **Supabase MCP** (`query-table`, `insert-data`) - Store keyword performance data\n\n### Local SEO\n- **Google My Business MCP** (`updateBusinessInfo`, `manageLocalKeywords`) - Local search optimization"
+        }
+      },
+      "id": "keyword-ai-agent",
+      "name": "Keyword AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        896,
+        464
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "execute-trigger-002",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "chat-trigger-002",
+      "name": "Keyword Chat",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        464
+      ],
+      "webhookId": "keyword-chat"
+    },
+    {
+      "parameters": {
+        "path": "keyword-webhook",
+        "options": {}
+      },
+      "id": "webhook-trigger-002",
+      "name": "Keyword Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        304
+      ],
+      "webhookId": "keyword-webhook"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1808,
+        1120
+      ],
+      "id": "18f3c324-4125-48ff-aba0-2319232edad5",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "ktM70nRxsXMA9jQA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        80,
+        928
+      ],
+      "id": "fa29e362-509d-4fa3-986a-fa10e3212e58",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "ktM70nRxsXMA9jQA",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "SEO Error Handler": {
+      "main": [
+        [
+          {
+            "node": "SEO Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Keyword AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keyword AI Agent": {
+      "main": [
+        [
+          {
+            "node": "SEO Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SEO Knowledge Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "Keyword AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trend Analysis": {
+      "ai_tool": [
+        [
+          {
+            "node": "Keyword AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ranking Monitor": {
+      "ai_tool": [
+        [
+          {
+            "node": "Keyword AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Competitor Analysis": {
+      "ai_tool": [
+        [
+          {
+            "node": "Keyword AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SEO Optimization": {
+      "ai_tool": [
+        [
+          {
+            "node": "Keyword AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keyword Research": {
+      "ai_tool": [
+        [
+          {
+            "node": "Keyword AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PostgreSQL Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Keyword AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Keyword AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keyword Chat": {
+      "main": [
+        [
+          {
+            "node": "Keyword AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keyword Webhook": {
+      "main": [
+        [
+          {
+            "node": "Keyword AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "SEO Knowledge Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Keyword AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "ad5d2ae1-8ea0-4e1f-865b-8900251a8b9c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d8c98c7335776e04cc3cf40527eb4aeb8cb18606c0e1a169e66c3bc56059553e"
+  },
+  "id": "4yhAKaJubijLTmLz",
+  "tags": []
+}

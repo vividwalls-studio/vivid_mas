@@ -1,0 +1,51 @@
+#!/usr/bin/expect -f
+
+set timeout 180
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Creating Container Inventory ==='\r"
+        expect "root@*"
+        
+        # Get all containers
+        send "docker ps -a --format 'table {{.Names}}\t{{.ID}}\t{{.Networks}}\t{{.Status}}\t{{.Ports}}' > /root/container_list.txt\r"
+        expect "root@*"
+        
+        send "echo '\n### All Containers:'\r"
+        expect "root@*"
+        
+        send "cat /root/container_list.txt\r"
+        expect "root@*"
+        
+        send "echo '\n### Caddy URLs from Caddyfile:'\r"
+        expect "root@*"
+        
+        send "docker exec caddy cat /etc/caddy/Caddyfile 2>/dev/null | grep -E '^[a-zA-Z0-9.-]+\\.vividwalls\\.blog' | head -30 || echo 'Could not read Caddyfile'\r"
+        expect "root@*"
+        
+        send "echo '\n### Port Usage Summary:'\r"
+        expect "root@*"
+        
+        send "docker ps -a --format '{{.Names}}: {{.Ports}}' | grep -E '(5432|5433|8080|3000|3001|3002)' | head -20\r"
+        expect "root@*"
+        
+        send "echo '\n### Failed Containers:'\r"
+        expect "root@*"
+        
+        send "docker ps -a --format '{{.Names}}: {{.Status}}' | grep -E '(Exited|Created|Restarting)' | head -20\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

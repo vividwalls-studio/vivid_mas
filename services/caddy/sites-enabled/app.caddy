@@ -1,0 +1,116 @@
+# =============================================================================
+# VividWalls MAS Frontend Application
+# =============================================================================
+# Service: Next.js Frontend Application
+# Container: vivid-frontend
+# Internal Port: 3000
+# Public URL: https://app.vividwalls.blog
+# =============================================================================
+
+app.vividwalls.blog {
+    # Enable automatic HTTPS with Let's Encrypt
+    # Caddy will automatically obtain and renew SSL certificates
+    
+    # Reverse proxy to the frontend container
+    reverse_proxy vivid-frontend:3000 {
+        # Health check for the upstream service
+        health_uri /api/health
+        health_interval 30s
+        health_timeout 5s
+        health_status 200
+        
+        # Headers for proper proxy behavior
+        header_up Host {http.request.host}
+        header_up X-Real-IP {http.request.remote.host}
+        header_up X-Forwarded-For {http.request.remote.host}
+        header_up X-Forwarded-Proto {http.request.scheme}
+        header_up X-Forwarded-Port {http.request.port}
+    }
+    
+    # Security Headers
+    header {
+        # Enable HSTS (HTTP Strict Transport Security)
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        
+        # Prevent clickjacking attacks
+        X-Frame-Options "SAMEORIGIN"
+        
+        # Prevent MIME type sniffing
+        X-Content-Type-Options "nosniff"
+        
+        # Enable XSS protection
+        X-XSS-Protection "1; mode=block"
+        
+        # Referrer Policy
+        Referrer-Policy "strict-origin-when-cross-origin"
+        
+        # Content Security Policy
+        Content-Security-Policy "default-src 'self' https://*.vividwalls.blog; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.vividwalls.blog; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.vividwalls.blog wss://*.vividwalls.blog; frame-ancestors 'none';"
+        
+        # Permissions Policy (formerly Feature Policy)
+        Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+        
+        # Remove server header
+        -Server
+    }
+    
+    # Enable compression
+    encode zstd gzip
+    
+    # Static file serving optimization
+    @static {
+        path /_next/static/*
+        path /static/*
+        path /images/*
+        path /fonts/*
+        path *.ico *.png *.jpg *.jpeg *.gif *.svg *.webp
+        path *.css *.js *.woff *.woff2
+    }
+    
+    # Cache static assets
+    header @static {
+        Cache-Control "public, max-age=31536000, immutable"
+    }
+    
+    # API routes should not be cached
+    @api {
+        path /api/*
+    }
+    
+    header @api {
+        Cache-Control "no-store, must-revalidate"
+        Pragma "no-cache"
+    }
+    
+    # WebSocket support for hot reload in development
+    @websocket {
+        header Connection *Upgrade*
+        header Upgrade websocket
+    }
+    
+    reverse_proxy @websocket vivid-frontend:3000
+    
+    # Custom error pages
+    handle_errors {
+        @404 {
+            expression {http.error.status_code} == 404
+        }
+        respond @404 "Page not found - VividWalls MAS" 404
+        
+        @5xx {
+            expression {http.error.status_code} >= 500
+        }
+        respond @5xx "Internal server error - Please try again later" {http.error.status_code}
+    }
+    
+    # Logging
+    log {
+        output file /var/log/caddy/app.vividwalls.blog.log {
+            roll_size 10mb
+            roll_keep 5
+            roll_keep_for 720h
+        }
+        format json
+        level INFO
+    }
+}

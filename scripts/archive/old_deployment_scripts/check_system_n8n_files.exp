@@ -1,0 +1,74 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Check system directories for n8n files
+send "echo '=== Checking system directories for n8n files ==='\r"
+expect "# "
+send "find /root -name '*n8n*' -type f -o -name '*.sqlite' -type f 2>/dev/null | grep -v node_modules | grep -v '.git' | head -20\r"
+expect "# "
+
+# Check for .n8n directories in system
+send "echo '\\n=== Checking for .n8n directories in system ==='\r"
+expect "# "
+send "find /root -type d -name '.n8n' 2>/dev/null | head -10\r"
+expect "# "
+
+# Check home directories
+send "echo '\\n=== Checking home directories ==='\r"
+expect "# "
+send "find /home -name '*n8n*' -o -name '*.sqlite' 2>/dev/null | head -10\r"
+expect "# "
+
+# Check /opt directory
+send "echo '\\n=== Checking /opt directory ==='\r"
+expect "# "
+send "find /opt -name '*n8n*' -o -name '*.sqlite' 2>/dev/null | head -10\r"
+expect "# "
+
+# Check for SQLite databases in common locations
+send "echo '\\n=== Finding all SQLite databases ==='\r"
+expect "# "
+send "find /root /home /opt -name '*.sqlite' -size +1M 2>/dev/null | head -20\r"
+expect "# "
+
+# Check docker volumes directory
+send "echo '\\n=== Checking Docker volumes directory ==='\r"
+expect "# "
+send "ls -la /var/lib/docker/volumes/ | grep n8n | head -10\r"
+expect "# "
+
+# Check specific docker volume data
+send "echo '\\n=== Checking Docker volume data directories ==='\r"
+expect "# "
+send "find /var/lib/docker/volumes -name 'database.sqlite' 2>/dev/null | while read db; do echo \"Found: \\$db\"; ls -lh \"\\$db\"; done\r"
+expect "# "
+
+# Check for n8n data in /var
+send "echo '\\n=== Checking /var for n8n data ==='\r"
+expect "# "
+send "find /var -name '*n8n*' -type d 2>/dev/null | grep -v 'docker/overlay' | grep -v 'lib/docker/containers' | head -10\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

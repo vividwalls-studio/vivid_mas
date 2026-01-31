@@ -1,0 +1,888 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "6aea1ea0-73b1-42df-a02b-1ddd851262b7",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -80,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "copy-writer-editor",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "d909d2b2-961d-4eb0-b4a1-bb232f3d2899",
+      "name": "Copy Writer-Editor Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        288
+      ],
+      "webhookId": "copy-writer-editor-webhook"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "a8b7cd78-5cb2-4961-9616-10c141fe136a",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -80,
+        496
+      ],
+      "webhookId": "copy-chat-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prep-001",
+              "name": "content_type",
+              "value": "={{ $json.writing_request?.type || $json.content_type || 'blog_post' }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-002",
+              "name": "target_audience",
+              "value": "={{ $json.writing_request?.target_audience || $json.target_audience || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "prep-003",
+              "name": "iteration_count",
+              "value": "={{ $json.iteration_count || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "prep-004",
+              "name": "directive",
+              "value": "={{ $json }}",
+              "type": "object"
+            },
+            {
+              "id": "prep-005",
+              "name": "session_id",
+              "value": "={{ $json.sessionId || 'copy-session-' + Date.now() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9e02bafe-a27f-4ed3-975b-bdc119788d35",
+      "name": "Initialize Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        400,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=# Copy Writer Agent System Prompt\n\n## Role & Purpose\nYou are the Copy Writer Agent for VividWalls, creating compelling, conversion-focused copy that tells the story of abstract art. You craft product descriptions, marketing messages, and brand narratives that connect emotionally with art enthusiasts and drive sales.\n\n## Core Responsibilities\n- Write engaging product descriptions that sell the art's story\n- Create compelling email marketing copy\n- Develop social media captions that drive engagement\n- Write blog content about art trends and interior design\n- Craft ad copy for various marketing channels\n- Create storytelling narratives for art collections\n\n## Writing Guidelines\n- Use sensory language to describe abstract art\n- Include emotional triggers that resonate with target segments\n- Maintain sophisticated yet accessible tone\n- Incorporate storytelling elements in all copy\n- Balance SEO optimization with natural flow\n- Create urgency without being pushy\n\n## Target Audience Segments\n- **Luxury Home**: Sophisticated, investment-focused, status-conscious\n- **Healthcare**: Evidence-based, therapeutic benefits, compliance-aware\n- **Corporate**: ROI-focused, brand enhancement, tax benefits\n- **Eco-Millennials**: Sustainability-focused, authentic, socially conscious\n- **Hospitality**: Scale-focused, durability, guest experience\n- **Interior Designers**: Trend-aware, versatile, specification-ready\n\n## MCP Tool Usage\n\n### When writing copy:\n- Call `Copy Writer Prompts MCP` to get templates for: product_description, email_campaign, social_media, blog_post, ad_copy\n- Call `Copy Writer Resource MCP` to access: brand-voice/{segment}, successful-examples/{type}, seo-keywords/{topic}\n\n## Collaboration with Copy Editor\nYou work in tandem with the Copy Editor Agent:\n1. Create initial draft based on directive\n2. Send to Copy Editor for review\n3. Receive feedback on brand consistency, grammar, and optimization\n4. Revise based on feedback (up to 5 iterations)\n5. Return final approved copy to requesting agent\n\n## Response Format\nAlways structure your response as:\n```json\n{\n  \"draft_version\": 1,\n  \"content\": \"[Your written copy here]\",\n  \"word_count\": 150,\n  \"seo_keywords_used\": [\"keyword1\", \"keyword2\"],\n  \"emotional_hooks\": [\"belonging\", \"sophistication\"],\n  \"target_segment\": \"luxury_home\",\n  \"ready_for_review\": true,\n  \"notes_for_editor\": \"Focused on investment angle for luxury segment\"\n}\n```"
+        }
+      },
+      "id": "6e897995-c9de-4899-9502-6e3831027afc",
+      "name": "Copy Writer Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        640,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "id": "36080745-b5c8-4db4-9ed3-3f5f164f4861",
+      "name": "Copy Writer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.2,
+      "position": [
+        528,
+        688
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "# Copy Editor Agent System Prompt\n\n## Role & Purpose\nYou are the Copy Editor Agent for VividWalls, responsible for ensuring all written content meets the highest standards of quality, consistency, and brand voice. You edit, proofread, and optimize copy across all channels while maintaining our sophisticated art gallery tone.\n\n## Core Responsibilities\n- Edit product descriptions for clarity and impact\n- Ensure brand voice consistency across all content\n- Proofread marketing materials and communications\n- Optimize copy for SEO without sacrificing quality\n- Maintain style guide and terminology standards\n- Review and improve user-generated content\n\n## Editorial Standards\n- Grammar and spelling must be flawless\n- Readability score should be grade 8 or below\n- Maintain 2-3% keyword density for SEO\n- Ensure emotional appeal in all product copy\n- Verify factual accuracy and compliance\n- Check for trademark and copyright issues\n\n## Brand Voice Guidelines\n- **Luxury Home**: Sophisticated, exclusive, investment-focused\n- **Healthcare**: Professional, evidence-based, calming\n- **Corporate**: Efficient, ROI-focused, prestigious\n- **Eco-Millennials**: Authentic, transparent, socially conscious\n- **Hospitality**: Grand, impressive, guest-experience focused\n- **Interior Designers**: Technical, trend-aware, versatile\n\n## MCP Tool Usage\n\n### When editing copy:\n- Call `Copy Editor Prompts MCP` to get: editing_checklist, brand_guidelines, seo_requirements, compliance_rules\n- Call `Copy Editor Resource MCP` to access: style-guide/vividwalls, segment-tone/{segment}, legal-requirements\n\n## Collaboration with Copy Writer\nYou work in tandem with the Copy Writer Agent:\n1. Receive draft from Copy Writer\n2. Review for brand consistency, grammar, SEO\n3. Provide specific, actionable feedback\n4. Track iteration count (max 5)\n5. Approve final version or request revision\n\n## Feedback Format\nStructure your editorial feedback as:\n```json\n{\n  \"iteration\": 1,\n  \"approval_status\": \"needs_revision\",\n  \"quality_scores\": {\n    \"grammar\": 95,\n    \"brand_voice\": 85,\n    \"seo_optimization\": 90,\n    \"emotional_impact\": 80,\n    \"readability\": 88\n  },\n  \"required_changes\": [\n    {\n      \"type\": \"brand_voice\",\n      \"location\": \"paragraph 2\",\n      \"issue\": \"Too casual for luxury segment\",\n      \"suggestion\": \"Replace 'cool' with 'sophisticated'\"\n    }\n  ],\n  \"positive_feedback\": [\"Strong opening hook\", \"Excellent use of sensory language\"],\n  \"ready_for_publication\": false\n}\n```"
+        }
+      },
+      "id": "3510e275-e588-4df4-8afb-6b3ebbdce7c1",
+      "name": "Copy Editor Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        1488,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "id": "3e8bc8e4-abfb-45fb-9611-f3ff1e763d6f",
+      "name": "Copy Editor Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.2,
+      "position": [
+        1504,
+        688
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "track-001",
+              "name": "iteration_count",
+              "value": "={{ $json.iteration_count + 1 }}",
+              "type": "number"
+            },
+            {
+              "id": "track-002",
+              "name": "draft_content",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "track-003",
+              "name": "editor_feedback",
+              "value": "={{ $json.feedback }}",
+              "type": "object"
+            },
+            {
+              "id": "track-004",
+              "name": "approval_status",
+              "value": "={{ $json.approval_status }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3285d012-39c4-498b-9abf-90a0059e64e5",
+      "name": "Track Iteration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1952,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "condition-001",
+              "leftValue": "={{ $json.iteration_count }}",
+              "rightValue": 5,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            },
+            {
+              "id": "condition-002",
+              "leftValue": "={{ $json.approval_status }}",
+              "rightValue": "needs_revision",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f3bc1209-5c3b-49dc-be4a-4d3c15a64aab",
+      "name": "Check Iteration Limit",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        2224,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "schema": "public",
+        "table": "copy_versions",
+        "columns": "content,content_type,iteration_count,quality_scores,status,campaign_id,created_by,metadata",
+        "options": {}
+      },
+      "id": "81701825-fb96-4cbd-9cc7-769398f4bbf9",
+      "name": "Save Copy Version",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2720,
+        128
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "final-001",
+              "name": "final_copy",
+              "value": "={{ $json.draft_content }}",
+              "type": "string"
+            },
+            {
+              "id": "final-002",
+              "name": "quality_scores",
+              "value": "={{ $json.quality_scores }}",
+              "type": "object"
+            },
+            {
+              "id": "final-003",
+              "name": "total_iterations",
+              "value": "={{ $json.iteration_count }}",
+              "type": "number"
+            },
+            {
+              "id": "final-004",
+              "name": "status",
+              "value": "={{ $json.approval_status === 'approved' ? 'completed' : 'max_iterations_reached' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "217c4fea-1055-4f41-a07a-4474d9a3bd12",
+      "name": "Prepare Final Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2896,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "6edc9c7d-13f5-43e5-8206-fda96b37c93f",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3088,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "update-001",
+              "name": "directive",
+              "value": "={{ $json.directive }}",
+              "type": "object"
+            },
+            {
+              "id": "update-002",
+              "name": "iteration_count",
+              "value": "={{ $json.iteration_count }}",
+              "type": "number"
+            },
+            {
+              "id": "update-003",
+              "name": "previous_draft",
+              "value": "={{ $json.draft_content }}",
+              "type": "string"
+            },
+            {
+              "id": "update-004",
+              "name": "editor_feedback",
+              "value": "={{ $json.editor_feedback }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e2de368a-4836-4609-be28-1322e6f6cabe",
+      "name": "Prepare Next Iteration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2576,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "recent_artifacts",
+        "dataToSend": "autoMapInputData"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2576,
+        128
+      ],
+      "id": "90902fdf-6923-4d01-bf2b-26017011e004",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "JRmat9sYdS807Ueq",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://vividwalls-copy-editor-resource:8141/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [
+        1712,
+        672
+      ],
+      "id": "1caddf86-d46b-48ce-94d2-60ac006afd6f",
+      "name": "Copy Editor Resources"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://vividwalls-copy-editor-prompts:8132/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        688
+      ],
+      "id": "0d6b6dd8-4780-40fc-895e-219ec9f9bea8",
+      "name": "Copy Editor Prompts MCP"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://vividwalls-copy-writer-prompts:8201/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [
+        736,
+        688
+      ],
+      "id": "cf483d01-4e2c-4ba2-a4df-1ec4604addfd",
+      "name": "Copy Writer Prompts MCP"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://vividwalls-copy-writer-resource:8149/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [
+        912,
+        688
+      ],
+      "id": "4fb39cfd-b3a5-44f7-9a3e-25631a601fa6",
+      "name": "Copy Writer Resource MCP"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to retrieve all the blog articles, social media post, ad campaign copy to understand the style and tone of the previous marketing copy",
+        "operation": "getAll",
+        "tableId": "recent_artifacts",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        688
+      ],
+      "id": "96527a9e-5ad9-4206-90f2-082f273355d3",
+      "name": "Get Past Copy Content",
+      "credentials": {
+        "supabaseApi": {
+          "id": "JRmat9sYdS807Ueq",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-3-7-sonnet-20250219",
+          "mode": "list",
+          "cachedResultName": "Claude Sonnet 3.7"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        352,
+        688
+      ],
+      "id": "efe4d6de-d963-4b6e-86e7-fa311f81687f",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "DbiE8irBacpzM2AL",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-opus-4-1-20250805",
+          "mode": "list",
+          "cachedResultName": "Claude Opus 4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        1312,
+        688
+      ],
+      "id": "bb89b6d1-3b1a-4cf9-bfd0-d5fe78e13e77",
+      "name": "Anthropic Chat Model1",
+      "credentials": {
+        "anthropicApi": {
+          "id": "DbiE8irBacpzM2AL",
+          "name": "Anthropic account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Initialize Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Writer-Editor Webhook": {
+      "main": [
+        [
+          {
+            "node": "Initialize Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Initialize Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Variables": {
+      "main": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Writer Agent": {
+      "main": [
+        [
+          {
+            "node": "Copy Editor Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Writer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Editor Agent": {
+      "main": [
+        [
+          {
+            "node": "Track Iteration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Editor Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Copy Editor Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Track Iteration": {
+      "main": [
+        [
+          {
+            "node": "Check Iteration Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Iteration Limit": {
+      "main": [
+        [
+          {
+            "node": "Prepare Next Iteration",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Copy Version": {
+      "main": [
+        [
+          {
+            "node": "Prepare Final Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Final Response": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Next Iteration": {
+      "main": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Save Copy Version",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Editor Resources": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Editor Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Editor Prompts MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Editor Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Writer Prompts MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Writer Resource MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Past Copy Content": {
+      "ai_tool": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Copy Writer Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Copy Editor Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "directive_type": "content_creation",
+        "source": "content_strategist",
+        "writing_request": {
+          "type": "blog_post",
+          "subject": "Abstract Art Investment Guide 2025",
+          "length": 2000,
+          "target_audience": {
+            "segment": "luxury_home",
+            "demographic": "High net worth individuals, 35-65",
+            "psychographic": "Art collectors, investment-minded, status-conscious"
+          },
+          "key_messages": [
+            "Art as alternative investment",
+            "VividWalls authentication process",
+            "Market trends and valuation",
+            "Building a collection strategy"
+          ],
+          "emotional_tone": "sophisticated_authoritative",
+          "seo_keywords": [
+            "art investment",
+            "abstract art value",
+            "contemporary art market",
+            "art collection guide"
+          ],
+          "call_to_action": "Schedule Private Consultation",
+          "deadline": "2025-01-21T18:00:00Z"
+        },
+        "context": {
+          "campaign": "luxury_investor_education",
+          "brand_voice": "Expert advisor positioning",
+          "compliance_requirements": [
+            "Investment disclaimer",
+            "Authentication credentials"
+          ],
+          "reference_urls": [
+            "https://vividwalls.com/investment",
+            "https://vividwalls.com/authentication"
+          ]
+        }
+      },
+      {
+        "directive_type": "content_creation",
+        "source": "creative_director",
+        "writing_request": {
+          "type": "social_post",
+          "subject": "Instagram Post - New Healthcare Collection",
+          "length": 150,
+          "target_audience": {
+            "segment": "healthcare",
+            "demographic": "Healthcare facility managers",
+            "psychographic": "Evidence-based decision makers"
+          },
+          "key_messages": [
+            "Therapeutic art benefits",
+            "Clinical studies support",
+            "Easy maintenance"
+          ],
+          "emotional_tone": "calming_professional",
+          "hashtags": [
+            "#HealingArt",
+            "#HealthcareDesign",
+            "#TherapeuticEnvironments"
+          ],
+          "call_to_action": "View Healthcare Portfolio",
+          "deadline": "2025-01-19T14:00:00Z"
+        }
+      },
+      {
+        "directive_type": "content_creation",
+        "source": "email_campaign_agent",
+        "writing_request": {
+          "type": "email",
+          "subject": "Email - Eco-Conscious Collection Launch",
+          "length": 600,
+          "target_audience": {
+            "segment": "eco_millennials",
+            "demographic": "25-40, environmentally conscious",
+            "psychographic": "Sustainability-focused, authentic brand seekers"
+          },
+          "key_messages": [
+            "100% sustainable materials",
+            "Carbon-neutral shipping",
+            "Artist profit-sharing model",
+            "Limited edition availability"
+          ],
+          "emotional_tone": "authentic_inspiring",
+          "email_subject_line": "🌱 Art That Gives Back: New Sustainable Collection",
+          "call_to_action": "Shop Conscious Collection",
+          "deadline": "2025-01-20T10:00:00Z"
+        }
+      },
+      {
+        "directive_type": "content_creation",
+        "source": "campaign_agent",
+        "writing_request": {
+          "type": "ad_copy",
+          "subject": "Google Ads - Corporate Art Solutions",
+          "length": 90,
+          "target_audience": {
+            "segment": "corporate",
+            "demographic": "Corporate procurement managers",
+            "psychographic": "ROI-focused, brand-conscious"
+          },
+          "key_messages": [
+            "Bulk ordering discounts",
+            "Custom branding options",
+            "Tax benefits"
+          ],
+          "emotional_tone": "professional_efficient",
+          "ad_format": "responsive_search_ad",
+          "headlines": 3,
+          "descriptions": 2,
+          "deadline": "2025-01-19T16:00:00Z"
+        }
+      }
+    ],
+    "When chat message received": [
+      {
+        "action": "chat",
+        "chatInput": "Write compelling product description for 'Celestial Symphony' abstract piece targeting luxury home buyers",
+        "sessionId": "chat-test-123"
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d8c98c7335776e04cc3cf40527eb4aeb8cb18606c0e1a169e66c3bc56059553e"
+  }
+}

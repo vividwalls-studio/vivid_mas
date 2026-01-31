@@ -1,0 +1,56 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# First, let's check the docker-compose file
+send "echo '=== ListMonk Docker Compose Configuration ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cd /opt/mcp-servers/listmonk-email-marketing && cat docker-compose.listmonk.yml | grep -A 5 -B 5 'depends_on\\|5432\\|network\\|postgres' | head -30\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Check if postgres container is healthy
+send "echo '\n=== PostgreSQL Container Health ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker inspect listmonk-postgres --format '{{.State.Health.Status}}' 2>/dev/null || echo 'Container not found'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Check network connectivity between containers
+send "echo '\n=== Docker Network Configuration ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker network inspect bridge | grep -A 10 'listmonk' | head -20\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Check environment variables
+send "echo '\n=== ListMonk Environment Variables ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker inspect listmonk | jq '.[0].Config.Env' | grep -E 'POSTGRES|DB' | head -10\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Check if config file exists
+send "echo '\n=== ListMonk Config File ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "ls -la config/listmonk.toml 2>/dev/null || echo 'Config file not found'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Exit
+send "exit\r"
+expect eof

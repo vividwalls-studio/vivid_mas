@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VividWalls Agent Webhook Testing</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .agent-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #f9f9f9;
+        }
+        .agent-card h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        .test-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        input, textarea, select {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #5a67d8;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .response-area {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            min-height: 100px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            display: none;
+        }
+        .response-area.show {
+            display: block;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-left: 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #48bb78;
+            color: white;
+        }
+        .status.error {
+            background: #f56565;
+            color: white;
+        }
+        .status.pending {
+            background: #ed8936;
+            color: white;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 VividWalls Multi-Agent System - Webhook Testing</h1>
+        
+        <div class="agent-card">
+            <h3>🏢 Business Manager Agent</h3>
+            <div class="test-form">
+                <div class="input-group">
+                    <select id="bm-action">
+                        <option value="analyze">Analyze Department</option>
+                        <option value="report">Generate Report</option>
+                        <option value="status">System Status</option>
+                        <option value="coordinate">Coordinate Agents</option>
+                    </select>
+                    <input type="text" id="bm-department" placeholder="Department (e.g., marketing, sales)">
+                </div>
+                <textarea id="bm-request" placeholder="Request details..." rows="3"></textarea>
+                <button onclick="testBusinessManager()">Test Business Manager</button>
+                <div id="bm-response" class="response-area"></div>
+            </div>
+        </div>
+
+        <div class="agent-card">
+            <h3>📈 Marketing Director Agent</h3>
+            <div class="test-form">
+                <div class="input-group">
+                    <select id="md-action">
+                        <option value="campaign_analysis">Campaign Analysis</option>
+                        <option value="performance_report">Performance Report</option>
+                        <option value="strategy">Strategy Planning</option>
+                        <option value="budget">Budget Review</option>
+                    </select>
+                    <input type="text" id="md-campaign" placeholder="Campaign ID (optional)">
+                </div>
+                <textarea id="md-data" placeholder="Additional data (JSON format)..." rows="3">{}</textarea>
+                <button onclick="testMarketingDirector()">Test Marketing Director</button>
+                <div id="md-response" class="response-area"></div>
+            </div>
+        </div>
+
+        <div class="agent-card">
+            <h3>📱 Social Media Director</h3>
+            <div class="test-form">
+                <div class="input-group">
+                    <select id="sm-platform">
+                        <option value="instagram">Instagram</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="pinterest">Pinterest</option>
+                        <option value="twitter">Twitter</option>
+                    </select>
+                    <select id="sm-action">
+                        <option value="schedule_post">Schedule Post</option>
+                        <option value="analyze_engagement">Analyze Engagement</option>
+                        <option value="content_calendar">Content Calendar</option>
+                        <option value="competitor_analysis">Competitor Analysis</option>
+                    </select>
+                </div>
+                <textarea id="sm-content" placeholder="Post content or analysis parameters..." rows="3"></textarea>
+                <button onclick="testSocialMedia()">Test Social Media</button>
+                <div id="sm-response" class="response-area"></div>
+            </div>
+        </div>
+
+        <div class="agent-card">
+            <h3>📊 Data Analytics Agent</h3>
+            <div class="test-form">
+                <div class="input-group">
+                    <select id="da-report">
+                        <option value="sales_analysis">Sales Analysis</option>
+                        <option value="customer_insights">Customer Insights</option>
+                        <option value="product_performance">Product Performance</option>
+                        <option value="market_trends">Market Trends</option>
+                    </select>
+                    <input type="date" id="da-start" placeholder="Start Date">
+                    <input type="date" id="da-end" placeholder="End Date">
+                </div>
+                <button onclick="testDataAnalytics()">Test Data Analytics</button>
+                <div id="da-response" class="response-area"></div>
+            </div>
+        </div>
+
+        <div class="agent-card">
+            <h3>🛍️ Sales Agent Webhook</h3>
+            <div class="test-form">
+                <div class="input-group">
+                    <select id="sa-segment">
+                        <option value="hospitality">Hospitality</option>
+                        <option value="corporate">Corporate</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="residential">Residential</option>
+                    </select>
+                    <select id="sa-action">
+                        <option value="lead_generation">Lead Generation</option>
+                        <option value="quote">Generate Quote</option>
+                        <option value="follow_up">Follow Up</option>
+                        <option value="conversion">Conversion Analysis</option>
+                    </select>
+                </div>
+                <textarea id="sa-details" placeholder="Customer details or requirements..." rows="3"></textarea>
+                <button onclick="testSalesAgent()">Test Sales Agent</button>
+                <div id="sa-response" class="response-area"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const N8N_BASE_URL = 'https://n8n.vividwalls.blog/webhook';
+        
+        async function callWebhook(endpoint, payload, responseElementId) {
+            const responseArea = document.getElementById(responseElementId);
+            responseArea.className = 'response-area show';
+            responseArea.innerHTML = '<div class="loading"></div> Sending request...';
+            
+            try {
+                const response = await fetch(`${N8N_BASE_URL}/${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    responseArea.innerHTML = `<span class="status success">SUCCESS</span>\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    responseArea.innerHTML = `<span class="status error">ERROR ${response.status}</span>\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                responseArea.innerHTML = `<span class="status error">NETWORK ERROR</span>\n\n${error.message}`;
+            }
+        }
+        
+        function testBusinessManager() {
+            const payload = {
+                action: document.getElementById('bm-action').value,
+                department: document.getElementById('bm-department').value,
+                request: document.getElementById('bm-request').value,
+                timestamp: new Date().toISOString()
+            };
+            callWebhook('business-manager', payload, 'bm-response');
+        }
+        
+        function testMarketingDirector() {
+            const payload = {
+                action: document.getElementById('md-action').value,
+                campaign_id: document.getElementById('md-campaign').value,
+                data: JSON.parse(document.getElementById('md-data').value || '{}'),
+                timestamp: new Date().toISOString()
+            };
+            callWebhook('marketing-director', payload, 'md-response');
+        }
+        
+        function testSocialMedia() {
+            const payload = {
+                platform: document.getElementById('sm-platform').value,
+                action: document.getElementById('sm-action').value,
+                content: document.getElementById('sm-content').value,
+                timestamp: new Date().toISOString()
+            };
+            callWebhook('social-media-director', payload, 'sm-response');
+        }
+        
+        function testDataAnalytics() {
+            const payload = {
+                report_type: document.getElementById('da-report').value,
+                date_range: {
+                    start: document.getElementById('da-start').value,
+                    end: document.getElementById('da-end').value
+                },
+                timestamp: new Date().toISOString()
+            };
+            callWebhook('data-analytics', payload, 'da-response');
+        }
+        
+        function testSalesAgent() {
+            const payload = {
+                segment: document.getElementById('sa-segment').value,
+                action: document.getElementById('sa-action').value,
+                details: document.getElementById('sa-details').value,
+                timestamp: new Date().toISOString()
+            };
+            callWebhook('sales-agent', payload, 'sa-response');
+        }
+    </script>
+</body>
+</html>

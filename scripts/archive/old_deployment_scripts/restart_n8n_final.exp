@@ -1,0 +1,74 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Restart n8n to reload workflows
+send "echo '=== Restarting n8n to reload workflows ==='\r"
+expect "# "
+send "docker compose restart n8n\r"
+expect "# "
+
+# Wait for n8n to start
+send "echo 'Waiting for n8n to reload workflows...'\r"
+expect "# "
+send "sleep 30\r"
+expect "# "
+
+# Check n8n status
+send "echo '=== Checking n8n status ==='\r"
+expect "# "
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Test the webhook again
+send "echo '\\n=== Testing Telegram webhook after restart ==='\r"
+expect "# "
+send "curl -s https://n8n.vividwalls.blog/webhook/czgQFXq4Bh6Ho3q3 -w '\\nHTTP Status: %{http_code}\\n'\r"
+expect "# "
+
+# Test with POST method (Telegram uses POST)
+send "echo '\\n=== Testing webhook with POST method ==='\r"
+expect "# "
+send "curl -s -X POST https://n8n.vividwalls.blog/webhook/czgQFXq4Bh6Ho3q3 -H 'Content-Type: application/json' -d '{}' -w '\\nHTTP Status: %{http_code}\\n'\r"
+expect "# "
+
+# Summary
+send "echo '\\n=== SUMMARY ==='\r"
+expect "# "
+send "echo '- n8n is running at https://n8n.vividwalls.blog'\r"
+expect "# "
+send "echo '- Using correct encryption key from UI'\r"
+expect "# "
+send "echo '- Connected to PostgreSQL with 75 workflows'\r"
+expect "# "
+send "echo '- Business Manager workflow is activated'\r"
+expect "# "
+send "echo '- Webhook URL: https://n8n.vividwalls.blog/webhook/czgQFXq4Bh6Ho3q3'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

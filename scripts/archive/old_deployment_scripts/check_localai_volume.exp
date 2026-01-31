@@ -1,0 +1,68 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Check localai_n8n_storage config
+send "echo '=== KEY in localai_n8n_storage volume ==='\r"
+expect "# "
+send "docker run --rm -v localai_n8n_storage:/data alpine cat /data/config 2>&1\r"
+expect "# "
+
+# Check contents of localai_n8n_storage
+send "echo '\n=== Contents of localai_n8n_storage ==='\r"
+expect "# "
+send "docker run --rm -v localai_n8n_storage:/data alpine ls -la /data/ | head -20\r"
+expect "# "
+
+# Check for database
+send "echo '\n=== Database in localai_n8n_storage ==='\r"
+expect "# "
+send "docker run --rm -v localai_n8n_storage:/data alpine ls -la /data/database.sqlite 2>&1\r"
+expect "# "
+
+# Check database size
+send "docker run --rm -v localai_n8n_storage:/data alpine du -h /data/database.sqlite 2>&1 || echo 'No database'\r"
+expect "# "
+
+# Summary of all keys
+send "echo '\n=== COMPLETE KEY SUMMARY ==='\r"
+expect "# "
+send "echo '1. .env file: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'\r"
+expect "# "
+send "echo '2. n8n_storage volume: Same as .env'\r"
+expect "# "
+send "echo '3. vivid_mas_n8n_storage volume: pAyfxPn9h2yqv32GtzSLA73h2IdZ1n88'\r"
+expect "# "
+send "echo '4. localai_n8n_storage volume: [checking now]'\r"
+expect "# "
+send "echo '\nCurrent n8n container uses: vivid_mas_n8n_storage (with key #3)'\r"
+expect "# "
+send "echo 'Mismatch: .env has key #1, but volume has key #3'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

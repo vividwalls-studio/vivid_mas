@@ -1,0 +1,53 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Navigate to the MCP server directory
+send "cd /opt/mcp-servers/listmonk-mcp-server\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Check if package.json exists
+send "echo '=== Checking for package.json ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+send "ls -la package.json\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Build the project
+send "echo '\n=== Building ListMonk MCP Server ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+send "npm run build\r"
+expect -timeout 120 "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Test connection to ListMonk
+send "echo '\n=== Testing ListMonk Connection ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+send "curl -s -u admin:admin123 http://localhost:9003/api/config | head -10\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Check n8n configuration
+send "echo '\n=== Checking n8n MCP Configuration ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+send "grep -A 10 'listmonk' /root/.n8n/mcp.json || echo 'Not found in n8n config'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Exit
+send "exit\r"
+expect eof

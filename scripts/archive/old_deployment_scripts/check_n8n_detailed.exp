@@ -1,0 +1,56 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check n8n environment variables
+send "echo '=== N8N Environment Variables ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker exec n8n env | grep -E '^(N8N_|WEBHOOK_|DB_)' | sort\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check n8n volumes
+send "echo '\n=== N8N Volumes ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker volume ls | grep n8n\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check docker-compose file
+send "echo '\n=== Docker Compose N8N Config ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cd /root/vivid_mas && cat docker-compose.yml | grep -A 20 'n8n:' | head -25\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+# Test n8n API with auth
+send "echo '\n=== Testing N8N Workflows API ==='\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+send "curl -s http://localhost:5678/api/v1/workflows 2>&1 | head -3\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+# Check MCP server details
+send "echo '\n=== MCP Server Details ==='\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+send "cd / && jq '.mcpServers | to_entries | .[] | \"\\(.key): \\(.value.name)\"' /opt/mcp-servers/n8n-mcp-config.json | head -10\r"
+expect "root@VividWalls-Studio-MAS:/#"
+
+# Exit
+send "exit\r"
+expect eof

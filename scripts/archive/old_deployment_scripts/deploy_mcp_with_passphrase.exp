@@ -1,0 +1,28 @@
+#!/usr/bin/expect -f
+
+set timeout 600
+
+# Run the deployment script
+spawn /Volumes/SeagatePortableDrive/Projects/vivid_mas/scripts/deploy_missing_mcp_servers.sh
+
+# Handle SSH passphrase prompts
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "Are you sure you want to continue connecting" {
+        send "yes\r"
+        exp_continue
+    }
+    "password:" {
+        send "freedom\r"
+        exp_continue
+    }
+    eof {
+        # Script completed
+    }
+}
+
+# Wait for completion
+wait

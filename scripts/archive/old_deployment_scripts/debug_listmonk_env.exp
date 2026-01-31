@@ -1,0 +1,78 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check environment variables in the container
+send "echo '=== Checking ListMonk Environment Variables ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker exec listmonk env | grep -i listmonk | sort\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Create a proper config.toml with correct database host
+send "echo '\n=== Creating Correct config.toml ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cat > /opt/mcp-servers/listmonk-email-marketing/config/config.toml << 'EOF'\r"
+send "[app]\r"
+send "address = \"0.0.0.0:9000\"\r"
+send "\r"
+send "[db]\r"
+send "host = \"listmonk-postgres\"\r"
+send "port = 5432\r"
+send "user = \"listmonk\"\r"
+send "password = \"listmonk123\"\r"
+send "database = \"listmonk\"\r"
+send "ssl_mode = \"disable\"\r"
+send "EOF\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Restart ListMonk
+send "echo '\n=== Restarting ListMonk with Correct Config ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker restart listmonk\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Wait for startup
+send "sleep 15\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check logs
+send "echo '\n=== ListMonk Logs ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker logs listmonk --tail 20 2>&1\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check if it's running
+send "echo '\n=== Container Status ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker ps | grep listmonk | grep -v postgres\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Test API
+send "echo '\n=== Testing ListMonk API ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "curl -s -w '\\nHTTP Status: %{http_code}\\n' http://localhost:9003/api/health\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

@@ -1,0 +1,862 @@
+{
+  "name": "Sales Director Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"directive_type\": \"sales_management\",\n  \"directive_id\": \"dir_20250118_001\",\n  \"source\": \"business_manager\",\n  \"target\": \"sales_director\",\n  \"priority\": \"high\",\n  \"deadline\": \"2025-01-31T23:59:59Z\",\n  \"sales_request\": {\n    \"request_type\": \"pipeline_optimization\",\n    \"scope\": \"all_segments\",\n    \"lead_qualification\": {\n      \"methodology\": \"MEDDIC\",\n      \"lead_source\": \"marketing_qualified\",\n      \"segment\": \"corporate\",\n      \"deal_size\": 25000,\n      \"probability_threshold\": 0.7\n    },\n    \"pipeline_targets\": {\n      \"conversion_rate\": 0.25,\n      \"average_deal_size\": 5000,\n      \"sales_cycle_days\": 30,\n      \"monthly_revenue\": 150000\n    },\n    \"customer_segments\": {\n      \"hospitality\": {\"priority\": \"high\", \"target_revenue\": 50000},\n      \"corporate\": {\"priority\": \"high\", \"target_revenue\": 60000},\n      \"residential\": {\"priority\": \"medium\", \"target_revenue\": 40000}\n    }\n  },\n  \"action_required\": {\n    \"urgency\": \"immediate\",\n    \"deliverables\": [\"pipeline_report\", \"qualification_assessment\", \"revenue_forecast\"],\n    \"escalation_threshold\": {\n      \"deal_size\": 10000,\n      \"conversion_drop\": 0.05\n    }\n  }\n}"
+      },
+      "id": "trigger-001",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [320, 240]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sales-director-agent",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-001",
+      "name": "Sales Director Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [320, 448],
+      "webhookId": "sales-director-webhook-001"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "allowedOrigins": "*",
+          "allowFileUploads": true
+        }
+      },
+      "id": "chat-trigger-001",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [320, 640],
+      "webhookId": "sales-director-chat-001"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prep-001",
+              "name": "input_type",
+              "value": "={{ $json.chatInput ? 'chat' : ($json.directive_type ? 'directive' : 'unknown') }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-002",
+              "name": "agent_input",
+              "value": "={{ $json.chatInput || JSON.stringify($json) }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-003",
+              "name": "session_id",
+              "value": "={{ $json.sessionId || $json.directive_id || 'session_' + Date.now() }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-004",
+              "name": "request_type",
+              "value": "={{ $json.sales_request?.request_type || 'general' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prep-input-001",
+      "name": "Prepare Agent Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [640, 448]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "llm-001",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [432, 832],
+      "credentials": {
+        "openAiApi": {
+          "id": "ktM70nRxsXMA9jQA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $input.item.json.sessionId || $input.item.json.session_id || 'session_' + Date.now() + '_' + Math.random().toString(36).substring(7) }}"
+      },
+      "id": "memory-001",
+      "name": "Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [576, 832],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "sales_knowledge",
+        "toolDescription": "Access comprehensive sales data, customer insights, pipeline analytics, and VividWalls sales history",
+        "options": {}
+      },
+      "id": "kb-001",
+      "name": "Sales Knowledge Base",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.1,
+      "position": [1984, 880],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "embed-001",
+      "name": "Embeddings OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [2080, 1056],
+      "credentials": {
+        "openAiApi": {
+          "id": "ktM70nRxsXMA9jQA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://shopify-mcp-server:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-shopify-001",
+      "name": "Shopify MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [768, 1000]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://stripe-mcp-server:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-stripe-001",
+      "name": "Stripe MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [960, 1000]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://twenty-mcp-server:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-twenty-001",
+      "name": "Twenty CRM MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [1152, 1000]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://supabase-mcp-server:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-supabase-001",
+      "name": "Supabase MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [1344, 1000]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://sales-director-prompts:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-prompts-001",
+      "name": "Sales Director Prompts MCP",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [768, 832]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://sales-director-resource:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-resources-001",
+      "name": "Sales Director Resources MCP",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [960, 832]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Commercial Sales Agent for B2B enterprise deals",
+        "workflowId": {
+          "__rl": true,
+          "value": "CommercialSalesWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Commercial Sales Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'commercial sales: corporate, hospitality, healthcare') }}",
+            "lead_details": "={{ $fromAI('lead_details', 'company, contact, deal size') }}",
+            "qualification_criteria": "={{ $fromAI('qualification_criteria', 'BANT or MEDDIC assessment') }}",
+            "proposal_requirements": "={{ $fromAI('proposal_requirements', 'custom pricing, volume discounts') }}",
+            "closing_strategy": "={{ $fromAI('closing_strategy', 'negotiation tactics, decision makers') }}"
+          }
+        }
+      },
+      "id": "commercial-tool-001",
+      "name": "Commercial Sales Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1152, 848]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Residential Sales Agent for consumer deals",
+        "workflowId": {
+          "__rl": true,
+          "value": "ResidentialSalesWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Residential Sales Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'residential sales: individual customers, home decor') }}",
+            "customer_profile": "={{ $fromAI('customer_profile', 'preferences, budget, style') }}",
+            "product_recommendations": "={{ $fromAI('product_recommendations', 'artwork suggestions based on needs') }}",
+            "personalization": "={{ $fromAI('personalization', 'custom sizes, framing options') }}",
+            "follow_up_strategy": "={{ $fromAI('follow_up_strategy', 'nurture sequence, timing') }}"
+          }
+        }
+      },
+      "id": "residential-tool-001",
+      "name": "Residential Sales Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1344, 848]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Digital Sales Agent for online conversions",
+        "workflowId": {
+          "__rl": true,
+          "value": "DigitalSalesWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Digital Sales Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'digital sales: e-commerce, online conversions') }}",
+            "visitor_behavior": "={{ $fromAI('visitor_behavior', 'browsing patterns, cart activity') }}",
+            "conversion_optimization": "={{ $fromAI('conversion_optimization', 'cart recovery, upselling') }}",
+            "personalization_engine": "={{ $fromAI('personalization_engine', 'product recommendations, offers') }}",
+            "engagement_tactics": "={{ $fromAI('engagement_tactics', 'chat, email, retargeting') }}"
+          }
+        }
+      },
+      "id": "digital-tool-001",
+      "name": "Digital Sales Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1536, 848]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Hospitality Sales Specialist for hotel and restaurant deals",
+        "workflowId": {
+          "__rl": true,
+          "value": "HospitalitySalesWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Hospitality Sales Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'hospitality sales: hotels, restaurants, venues') }}",
+            "venue_details": "={{ $fromAI('venue_details', 'property type, locations, brand') }}",
+            "project_scope": "={{ $fromAI('project_scope', 'number of pieces, installation requirements') }}",
+            "design_consultation": "={{ $fromAI('design_consultation', 'theme matching, custom curation') }}",
+            "contract_terms": "={{ $fromAI('contract_terms', 'bulk pricing, installation services') }}"
+          }
+        }
+      },
+      "id": "hospitality-tool-001",
+      "name": "Hospitality Sales Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1728, 848]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Corporate Sales Specialist for office and workspace deals",
+        "workflowId": {
+          "__rl": true,
+          "value": "CorporateSalesWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Corporate Sales Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'corporate sales: offices, workspaces, boardrooms') }}",
+            "company_profile": "={{ $fromAI('company_profile', 'industry, size, culture') }}",
+            "workspace_requirements": "={{ $fromAI('workspace_requirements', 'areas, aesthetic preferences') }}",
+            "procurement_process": "={{ $fromAI('procurement_process', 'approval chain, budget cycles') }}",
+            "enterprise_benefits": "={{ $fromAI('enterprise_benefits', 'volume discounts, maintenance packages') }}"
+          }
+        }
+      },
+      "id": "corporate-tool-001",
+      "name": "Corporate Sales Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1920, 848]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.agent_input }}",
+        "options": {
+          "systemMessage": "# Sales Director System Prompt\n\nYou are the Sales Director for VividWalls, responsible for sales strategy, pipeline management, and revenue optimization. You oversee lead qualification, customer relationships, and sales process optimization for our abstract art e-commerce business.\n\n## Communication Mode Detection\n\nYou are handling: {{ $json.input_type }} mode\n- **Chat Mode**: Respond conversationally to sales queries while maintaining your director authority\n- **Directive Mode**: Process formal sales directives with comprehensive analysis and strategic recommendations\n\n## Core Responsibilities\n\n### Sales Strategy & Leadership\n- Implement advanced sales methodologies (BANT, MEDDIC) for lead qualification\n- Develop segment-specific sales strategies and playbooks\n- Optimize sales pipeline conversion rates and deal velocity\n- Forecast revenue accurately and identify growth opportunities\n- Coach and enable sales teams for peak performance\n\n### Pipeline Management\n- Monitor and optimize sales pipeline health\n- Track lead progression through sales stages\n- Identify and remove conversion bottlenecks\n- Accelerate deal velocity and reduce sales cycles\n- Ensure CRM data accuracy and completeness\n\n### Customer Relationship Management\n- Manage customer lifecycle from prospect to retention\n- Develop key account strategies for high-value clients\n- Coordinate with marketing for lead quality improvement\n- Build long-term customer relationships and loyalty\n- Handle escalations and complex negotiations\n\n### Revenue Optimization\n- Analyze sales performance metrics and trends\n- Optimize pricing strategies by segment\n- Identify upselling and cross-selling opportunities\n- Maximize customer lifetime value (CLV)\n- Drive monthly recurring revenue (MRR) growth\n\n## Key Performance Indicators\n\n### Revenue Metrics\n- Monthly recurring revenue growth > 15%\n- Average deal size by customer segment\n- Customer lifetime value optimization\n- Revenue per sales rep productivity\n- Quota attainment rates > 80%\n\n### Pipeline Metrics\n- Sales pipeline conversion rate > 25%\n- Lead-to-opportunity conversion > 40%\n- Opportunity-to-close rate > 30%\n- Sales cycle reduction by 20%\n- Pipeline coverage ratio > 3x\n\n### Activity Metrics\n- Lead response time < 1 hour\n- Follow-up cadence compliance > 95%\n- CRM data completeness > 98%\n- Customer engagement score improvement\n- Win rate by segment and competitor\n\n## Available MCP Tools\n\n### CRM & Customer Management\n- **Twenty CRM MCP Server**: Lead tracking, deal management, customer relationships\n- **Shopify MCP Server**: Order data, customer purchase history, product analytics\n- **Stripe MCP Server**: Payment processing, subscription management, revenue analytics\n- **Supabase MCP Server**: Sales data storage, analytics, custom queries\n\n### Specialized Sales Tools\n- **Sales Director Prompts MCP**: BANT/MEDDIC frameworks, objection handling, closing techniques\n- **Sales Director Resources MCP**: Sales playbooks, templates, best practices\n\n## Sub-Agent Coordination\n\n### Segment-Specific Sales Agents\n- **Commercial Sales Agent**: B2B enterprise and bulk orders\n- **Residential Sales Agent**: Individual consumers and home decor\n- **Digital Sales Agent**: E-commerce optimization and online conversions\n- **Hospitality Sales Agent**: Hotels, restaurants, and venue deals\n- **Corporate Sales Agent**: Office spaces and workplace art\n\n## Decision Framework\n\n### Lead Qualification Process\n1. Apply BANT criteria for initial qualification\n2. Use MEDDIC for complex B2B opportunities\n3. Score leads based on segment-specific criteria\n4. Prioritize high-value segments (Hospitality, Corporate)\n5. Route qualified leads to appropriate sales agents\n\n### Deal Management Rules\n- Update CRM within 24 hours of customer interaction\n- Escalate deals > $10,000 to Business Manager\n- Follow up on proposals within 3 business days\n- Coordinate with Marketing for lead nurturing\n- Apply segment-specific closing strategies\n\n### Pricing Authority\n- Standard pricing: Full authority\n- Volume discounts 10-20%: Approve independently\n- Discounts > 20%: Escalate to Business Manager\n- Custom enterprise deals: Collaborative approval\n- Subscription packages: Define and implement\n\n## Reporting Requirements\n\n### Daily Monitoring\n- Pipeline movement and stage progression\n- High-priority deal status\n- Lead response metrics\n- Conversion rate tracking\n\n### Weekly Reports\n- Sales performance summary\n- Pipeline health analysis\n- Win/loss analysis\n- Forecast accuracy review\n\n### Monthly Analysis\n- Comprehensive revenue report\n- Segment performance analysis\n- Sales team productivity metrics\n- Strategic recommendations\n\n## Agent Hierarchy\n\n**Reports to:** Business Manager Agent\n\n**Direct Reports:**\n- Commercial Sales Agent\n- Residential Sales Agent\n- Digital Sales Agent\n- Hospitality Sales Specialist\n- Corporate Sales Specialist\n\n**Key Collaborations:**\n- Marketing Director (lead generation and quality)\n- Customer Experience Director (satisfaction and retention)\n- Finance Director (revenue forecasting and pricing)\n- Operations Director (fulfillment capabilities)\n- Analytics Director (performance metrics and insights)\n\n## Escalation Protocols\n\n### Immediate Escalation\n- Deal size > $10,000\n- Strategic account at risk\n- Competitive threats requiring response\n- Pricing exceptions > 20%\n- Legal or compliance issues\n\n### Strategic Escalation\n- New market entry opportunities\n- Major partnership proposals\n- Sales process changes\n- Technology investments\n- Team structure modifications\n\n## Quality Assurance\n\n### Sales Excellence Standards\n- Consistent methodology application\n- Data-driven decision making\n- Customer-centric approach\n- Continuous improvement mindset\n- Ethical selling practices\n\n### Performance Requirements\n- Accurate revenue forecasting (±5%)\n- Timely CRM updates\n- Professional customer interactions\n- Strategic thinking and planning\n- Results-oriented execution\n\n**Remember**: You are the revenue engine of VividWalls. Every interaction should move deals forward, every decision should optimize revenue, and every strategy should align with business growth objectives. Use data, methodology, and tools to drive predictable, scalable revenue growth."
+        }
+      },
+      "id": "agent-001",
+      "name": "Sales Director Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [960, 448]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "chat-check",
+                    "leftValue": "={{ $('Prepare Agent Input').item.json.input_type }}",
+                    "rightValue": "chat",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Chat Response"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "directive-check",
+                    "leftValue": "={{ $('Prepare Agent Input').item.json.input_type }}",
+                    "rightValue": "directive",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Directive Response"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "router-001",
+      "name": "Route Response Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [1328, 432]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "msg-001",
+              "name": "output",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-002",
+              "name": "content",
+              "value": "={{ $json.output || $json.text || $json.response || $json.message || 'Processing your sales request...' }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-003",
+              "name": "timestamp",
+              "value": "={{ new Date().toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-004",
+              "name": "agentName",
+              "value": "Sales Director",
+              "type": "string"
+            },
+            {
+              "id": "msg-005",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-chat-001",
+      "name": "Format Chat Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1968, 240]
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {
+          "responseData": "passThrough",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "webhookSuffix": "approval"
+        }
+      },
+      "id": "wait-approval-001",
+      "name": "Wait for Sales Approval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1696, 448],
+      "webhookId": "sales-approval-001"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "response-001",
+              "name": "response_type",
+              "value": "sales_performance_report",
+              "type": "string"
+            },
+            {
+              "id": "response-002",
+              "name": "response_id",
+              "value": "={{ 'sales_resp_' + $now.format('yyyyMMdd') + '_' + Math.floor(Math.random() * 1000).toString().padStart(3, '0') }}",
+              "type": "string"
+            },
+            {
+              "id": "response-003",
+              "name": "directive_id",
+              "value": "={{ $json.directive_id }}",
+              "type": "string"
+            },
+            {
+              "id": "response-004",
+              "name": "status",
+              "value": "sales_analysis_complete",
+              "type": "string"
+            },
+            {
+              "id": "response-005",
+              "name": "sales_output",
+              "value": "={{ $json }}",
+              "type": "object"
+            },
+            {
+              "id": "response-006",
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "response-007",
+              "name": "pipeline_metrics",
+              "value": "={{ $json.pipeline_metrics || {} }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prep-response-001",
+      "name": "Prepare Sales Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1968, 448]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "respond-001",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [2240, 448]
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Director Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Agent Input": {
+      "main": [
+        [
+          {
+            "node": "Sales Director Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Sales Director Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Sales Director Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Knowledge Base": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sales Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Sales Knowledge Base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify MCP Server": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sales Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stripe MCP Server": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sales Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twenty CRM MCP Server": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sales Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase MCP Server": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sales Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Director Prompts MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sales Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Director Resources MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sales Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Commercial Sales Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sales Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Residential Sales Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sales Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Digital Sales Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sales Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hospitality Sales Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sales Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Corporate Sales Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sales Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Director Agent": {
+      "main": [
+        [
+          {
+            "node": "Route Response Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Response Type": {
+      "main": [
+        [
+          {
+            "node": "Format Chat Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait for Sales Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Chat Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Sales Approval": {
+      "main": [
+        [
+          {
+            "node": "Prepare Sales Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Sales Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "tags": [
+    {
+      "id": "mcp-agent",
+      "name": "Agent"
+    },
+    {
+      "id": "sales",
+      "name": "Sales"
+    },
+    {
+      "id": "director",
+      "name": "Director"
+    }
+  ],
+  "triggerCount": 3,
+  "updatedAt": "2025-08-18T20:30:00.000Z",
+  "id": "SalesDirector001"
+}

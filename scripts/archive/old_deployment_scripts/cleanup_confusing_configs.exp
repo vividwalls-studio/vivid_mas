@@ -1,0 +1,78 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# List all .env files with different encryption keys
+send "echo '=== Backup .env files with old encryption keys ==='\r"
+expect "# "
+send "find /root/vivid_mas -name '.env*' -type f | xargs grep -l 'N8N_ENCRYPTION_KEY' | grep -v '/root/vivid_mas/.env$'\r"
+expect "# "
+
+# Remove backup .env files with old keys
+send "echo '\n=== Removing old backup .env files ==='\r"
+expect "# "
+send "find /root/vivid_mas/archive/env_backups -name '.env*' -type f -exec rm -f {} \\;\r"
+expect "# "
+
+# Remove other directories with .env files containing old keys
+send "echo '\n=== Removing .env files from other locations ==='\r"
+expect "# "
+send "rm -f /root/vivid_mas/supabase/docker/.env*\r"
+expect "# "
+send "rm -f /root/vivid_mas/backups/configs/.env*\r"
+expect "# "
+send "rm -f /root/vivid_mas/backups/configs/supabase/docker/.env*\r"
+expect "# "
+send "rm -f /home/vivid/vivid_mas/.env*\r"
+expect "# "
+send "rm -f /home/vivid/production/releases/*/archive/backups/.env*\r"
+expect "# "
+send "rm -f /home/vivid/production/releases/*/.env*\r"
+expect "# "
+
+# Clean up n8n-related config files in various volumes
+send "echo '\n=== Cleaning up config files in docker volumes ==='\r"
+expect "# "
+send "docker volume ls -q | grep -E '(n8n|localai)' | while read vol; do echo \"Checking volume: \$vol\"; docker run --rm -v \$vol:/data alpine find /data -name 'config*' -path '*n8n*' -type f -exec rm -f {} \\; 2>/dev/null; done\r"
+expect "# "
+
+# Remove any n8n config backups
+send "echo '\n=== Removing n8n config backups ==='\r"
+expect "# "
+send "find /root -name 'config*' -path '*n8n*' -type f | grep -v 'docker-compose' | xargs rm -f 2>/dev/null\r"
+expect "# "
+
+# Keep only the main .env and .env.example
+send "echo '\n=== Keeping only essential .env files ==='\r"
+expect "# "
+send "cd /root/vivid_mas && ls -la .env*\r"
+expect "# "
+
+# Verify main .env has correct key
+send "echo '\n=== Verifying main .env has correct key ==='\r"
+expect "# "
+send "grep '^N8N_ENCRYPTION_KEY' /root/vivid_mas/.env | cut -c1-50\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

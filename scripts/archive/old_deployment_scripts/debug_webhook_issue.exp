@@ -1,0 +1,72 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Check n8n logs for webhook registration
+send "echo '=== Checking n8n logs for webhook registration ==='\r"
+expect "# "
+send "docker logs n8n --tail 100 2>&1 | grep -i 'webhook\\|czgQFXq4Bh6Ho3q3\\|Business Manager' | tail -20\r"
+expect "# "
+
+# Check if workflow is truly active
+send "echo '\n=== Verifying workflow is active in database ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT id, name, active, created_at, updated_at FROM workflow_entity WHERE id = 'czgQFXq4Bh6Ho3q3';\"\r"
+expect "# "
+
+# Check for any webhook-related tables
+send "echo '\n=== Checking for webhook-related tables ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename LIKE '%webhook%';\"\r"
+expect "# "
+
+# Look for workflow nodes to see webhook configuration
+send "echo '\n=== Checking workflow nodes for webhook configuration ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT nodes FROM workflow_entity WHERE id = 'czgQFXq4Bh6Ho3q3';\" | head -50\r"
+expect "# "
+
+# List all active workflows with webhooks
+send "echo '\n=== Finding workflows with webhook nodes ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT id, name, active FROM workflow_entity WHERE nodes::text LIKE '%webhook%' AND active = true LIMIT 10;\"\r"
+expect "# "
+
+# Check n8n's current webhook registrations
+send "echo '\n=== Checking n8n webhook registration logs ==='\r"
+expect "# "
+send "docker logs n8n 2>&1 | grep -i 'registered\\|webhook\\|starting' | tail -30\r"
+expect "# "
+
+# Try accessing n8n UI to see if workflows are visible
+send "echo '\n=== Testing n8n UI access ==='\r"
+expect "# "
+send "curl -s http://localhost:5678/workflows | head -20\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

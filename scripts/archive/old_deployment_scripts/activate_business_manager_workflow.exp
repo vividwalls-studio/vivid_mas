@@ -1,0 +1,50 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Activate the Business Manager workflow
+send "echo '=== Activating Business Manager Agent (New) workflow ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"UPDATE workflow_entity SET active = true WHERE id = 'czgQFXq4Bh6Ho3q3';\"\r"
+expect "# "
+
+# Verify activation
+send "echo '\\n=== Verifying workflow activation ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT id, name, active FROM workflow_entity WHERE id = 'czgQFXq4Bh6Ho3q3';\"\r"
+expect "# "
+
+# Test the webhook
+send "echo '\\n=== Testing Telegram webhook ==='\r"
+expect "# "
+send "curl -s https://n8n.vividwalls.blog/webhook/czgQFXq4Bh6Ho3q3 -w '\\nHTTP Status: %{http_code}\\n'\r"
+expect "# "
+
+# Check Telegram webhook info again
+send "echo '\\n=== Checking Telegram webhook status ==='\r"
+expect "# "
+send "curl -s https://api.telegram.org/bot7988488328:AAFpSgwLqCQSo4O7hP1KekUt4W6DJIJRhrc/getWebhookInfo | python3 -m json.tool | grep -E 'url|pending_update_count|last_error' || echo 'Failed to get webhook info'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

@@ -1,0 +1,35 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check what's using port 5432
+send "echo '=== Checking Port 5432 Usage ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "netstat -tlpn | grep 5432\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check running containers
+send "echo '\n=== All Running Containers ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker ps | grep -E '(postgres|5432)'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

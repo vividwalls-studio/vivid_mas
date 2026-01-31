@@ -1,0 +1,58 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check for services that might be named differently
+send "echo '=== Checking Services Status ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check for Open WebUI (might be on port 3000 but Twenty is using it)
+send "echo '\n--- Checking port 3000 (Open WebUI vs Twenty) ---'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+send "docker ps | grep ':3000->'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check Supabase Kong (port 8000)
+send "echo '\n--- Supabase Kong (port 8000) ---'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+send "docker ps | grep 'supabase-kong.*8000'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check if services are in stopped state
+send "echo '\n=== Checking Stopped Containers ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker ps -a --filter 'status=exited' --format 'table {{.Names}}\\t{{.Status}}' | grep -E '(flowise|langfuse|searxng|ollama|open-webui)' || echo 'None found'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check docker compose files for missing services
+send "echo '\n=== Checking Docker Compose Files ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cd /root/vivid_mas && ls -la *.yml 2>/dev/null | head -10\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+# Check main docker-compose for commented out services
+send "echo '\n--- Checking main docker-compose.yml ---'\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+send "grep -E '(flowise|langfuse|searxng|ollama|open-webui)' docker-compose.yml | head -10 || echo 'Not found in main compose'\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+# Exit
+send "exit\r"
+expect eof

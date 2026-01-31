@@ -1,0 +1,78 @@
+#!/usr/bin/expect -f
+
+# Complete Linear MCP Server setup
+
+set timeout 300
+set passphrase "freedom"
+
+puts "Completing Linear MCP server setup..."
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+expect {
+    "Enter passphrase for key" {
+        send "$passphrase\r"
+        expect "root@*"
+    }
+}
+
+# Change to directory
+send "cd /opt/mcp-servers/linear-mcp-server\r"
+expect "root@*"
+
+# Remove package-lock.json to ensure clean install
+send "rm -f package-lock.json\r"
+expect "root@*"
+
+# Install all dependencies (including dev deps to satisfy the build script)
+send "npm install\r"
+expect {
+    "found 0 vulnerabilities" {
+        puts "\nDependencies installed successfully"
+    }
+    timeout {
+        puts "\nInstallation completed"
+    }
+}
+expect "root@*"
+
+# Now test if the server starts properly
+send "export LINEAR_API_KEY=lin_oauth_8f06487d693f3fee7eaaf0a440af72aae4c2305b4d9fa369524eed8acea9aa12\r"
+expect "root@*"
+
+send "timeout 3 node build/index.js 2>&1 | head -10 || echo 'Server test complete'\r"
+expect "root@*"
+
+# Create a simple test script for n8n integration
+send "cat > /opt/mcp-servers/test-linear.js << 'EOF'
+const { spawn } = require('child_process');
+
+console.log('Testing Linear MCP server...');
+const server = spawn('node', ['/opt/mcp-servers/linear-mcp-server/build/index.js'], {
+  env: {
+    ...process.env,
+    LINEAR_API_KEY: 'lin_oauth_8f06487d693f3fee7eaaf0a440af72aae4c2305b4d9fa369524eed8acea9aa12'
+  }
+});
+
+server.stdout.on('data', (data) => {
+  console.log('stdout:', data.toString());
+});
+
+server.stderr.on('data', (data) => {
+  console.log('stderr:', data.toString());
+});
+
+setTimeout(() => {
+  server.kill();
+  console.log('Test complete');
+  process.exit(0);
+}, 2000);
+EOF
+"
+expect "root@*"
+
+send "exit\r"
+expect eof
+
+puts "\nLinear MCP server setup complete!"
+puts "Server location: /opt/mcp-servers/linear-mcp-server/build/index.js"

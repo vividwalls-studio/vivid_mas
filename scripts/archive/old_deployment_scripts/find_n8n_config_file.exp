@@ -1,0 +1,76 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# First check if n8n is running properly with the old key
+send "echo '=== N8N Status with Old Key ==='\r"
+expect "# "
+send "docker ps -a | grep n8n\r"
+expect "# "
+
+# Check all docker volumes
+send "echo '=== All Docker Volumes ==='\r"
+expect "# "
+send "docker volume ls | grep n8n\r"
+expect "# "
+
+# Search in the main n8n_storage volume
+send "echo '=== Searching n8n_storage volume ==='\r"
+expect "# "
+send "docker run --rm -v n8n_storage:/data alpine find /data -name 'config' -o -name '*.json' 2>&1 | head -20\r"
+expect "# "
+
+# Search in vivid_mas_n8n_storage volume
+send "echo '=== Searching vivid_mas_n8n_storage volume ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine find /data -name 'config' -o -name '*.json' 2>&1 | head -20\r"
+expect "# "
+
+# Check inside the running n8n container
+send "echo '=== Searching inside n8n container ==='\r"
+expect "# "
+send "docker exec n8n find /home/node -name 'config' 2>&1 | grep -v 'Permission denied' | head -10\r"
+expect "# "
+
+# Look for .n8n directory
+send "docker exec n8n ls -la /home/node/.n8n/ 2>&1 || echo 'No .n8n directory in container'\r"
+expect "# "
+
+# Check if there's a bind mount
+send "echo '=== Checking for bind mounts ==='\r"
+expect "# "
+send "ls -la ./n8n_data/ 2>&1 || echo 'No n8n_data directory'\r"
+expect "# "
+
+# Check docker inspect for mounts
+send "echo '=== Docker inspect mounts ==='\r"
+expect "# "
+send "docker inspect n8n | grep -A10 -B2 'Mounts' | head -20\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

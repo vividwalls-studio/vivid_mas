@@ -1,0 +1,77 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Fixing Twenty CRM Database Configuration ==='\r"
+        expect "root@*"
+        
+        send "cd /opt/twenty/packages/twenty-docker\r"
+        expect "root@*"
+        
+        # Backup current .env
+        send "cp .env .env.backup.$(date +%Y%m%d_%H%M%S)\r"
+        expect "root@*"
+        
+        # Update the .env file with proper database credentials
+        send "echo '\nUpdating Twenty CRM database configuration...'\r"
+        expect "root@*"
+        
+        # Uncomment and set database credentials
+        send "sed -i 's/#PG_DATABASE_USER=postgres/PG_DATABASE_USER=twenty/' .env\r"
+        expect "root@*"
+        
+        send "sed -i 's/#PG_DATABASE_PASSWORD=.*/PG_DATABASE_PASSWORD=twentycrm2025/' .env\r"
+        expect "root@*"
+        
+        send "sed -i 's/#PG_DATABASE_HOST=db/PG_DATABASE_HOST=twenty-db-1/' .env\r"
+        expect "root@*"
+        
+        send "sed -i 's/#PG_DATABASE_PORT=5432/PG_DATABASE_PORT=5432/' .env\r"
+        expect "root@*"
+        
+        # Show the updated config
+        send "echo '\nUpdated database configuration:'\r"
+        expect "root@*"
+        send "grep -E '^PG_DATABASE' .env\r"
+        expect "root@*"
+        
+        # Start Twenty containers
+        send "echo '\nStarting Twenty CRM containers...'\r"
+        expect "root@*"
+        send "docker-compose up -d\r"
+        expect "root@*"
+        
+        # Wait for startup
+        send "sleep 10\r"
+        expect "root@*"
+        
+        # Check status
+        send "echo '\n=== Twenty CRM Status ==='\r"
+        expect "root@*"
+        send "docker ps | grep twenty\r"
+        expect "root@*"
+        
+        # Test the API
+        send "echo '\n=== Testing Twenty CRM API ==='\r"
+        expect "root@*"
+        send "sleep 5\r"
+        expect "root@*"
+        send "curl -s https://crm.vividwalls.blog/healthz || echo 'API not responding yet'\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

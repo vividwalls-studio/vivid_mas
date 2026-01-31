@@ -1,0 +1,52 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+# SSH into the droplet
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect "Enter passphrase for key*"
+send "freedom\r"
+
+# Wait for prompt
+expect "root@*"
+
+# Remove the conflicting container
+send "docker rm -f d869ce99d960\r"
+expect "root@*"
+
+# Check for any other caddy containers
+send "docker ps -a | grep caddy\r"
+expect "root@*"
+
+# Start Caddy using docker-compose
+send "cd /home/vivid/vivid_mas\r"
+expect "root@*"
+
+send "docker-compose up -d caddy\r"
+expect "root@*"
+
+# Wait for Caddy to start and obtain certificates
+send "sleep 15\r"
+expect "root@*"
+
+# Check if Caddy is running
+send "docker ps | grep caddy\r"
+expect "root@*"
+
+# Check Caddy logs for certificate management
+send "docker logs caddy --tail=30 2>&1 | grep -i 'enabling automatic TLS'\r"
+expect "root@*"
+
+# Check for crm.vividwalls.blog certificate
+send "docker logs caddy 2>&1 | grep -i 'crm.vividwalls.blog' | tail -10\r"
+expect "root@*"
+
+# Test access
+send "curl -I -k https://crm.vividwalls.blog\r"
+expect "root@*"
+
+# Exit
+send "exit\r"
+expect eof

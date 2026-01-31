@@ -1,0 +1,983 @@
+{
+  "name": "VividWalls Email Marketing Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "trigger-001",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 80]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "email-marketing-agent",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-001",
+      "name": "Email Marketing Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 240],
+      "webhookId": "email-marketing-agent-webhook"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "allowedOrigins": "*",
+          "allowFileUploads": true
+        }
+      },
+      "id": "chat-trigger-001",
+      "name": "When Chat Message Received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 400],
+      "webhookId": "email-marketing-chat-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prep-001",
+              "name": "trigger_source",
+              "value": "={{ $json.trigger_source || 'webhook' }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-002",
+              "name": "campaign_type",
+              "value": "={{ $json.campaign_type || 'promotional' }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-003",
+              "name": "session_id",
+              "value": "={{ $json.sessionId || $json.campaign_id || 'email_campaign_' + Date.now() }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-004",
+              "name": "campaign_details",
+              "value": "={{ $json.campaign_details || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "prep-005",
+              "name": "email_content",
+              "value": "={{ $json.email_content || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "prep-006",
+              "name": "scheduling",
+              "value": "={{ $json.scheduling || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "prep-007",
+              "name": "agent_input",
+              "value": "={{ $json.chatInput || JSON.stringify($json) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prep-input-001",
+      "name": "Prepare Campaign Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [520, 240]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "route-001",
+              "leftValue": "={{ $json.campaign_type }}",
+              "rightValue": "promotional",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "route-002",
+              "leftValue": "={{ $json.campaign_type }}",
+              "rightValue": "nurture",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "route-003",
+              "leftValue": "={{ $json.campaign_type }}",
+              "rightValue": "transactional",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "route-004",
+              "leftValue": "={{ $json.campaign_type }}",
+              "rightValue": "automated_flow",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        }
+      },
+      "id": "route-campaign-001",
+      "name": "Route by Campaign Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [720, 240]
+    },
+    {
+      "parameters": {
+        "operation": "execute",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "text": "={{ $json.agent_input }}",
+        "systemPromptEnabled": true,
+        "systemPrompt": "## Role & Purpose\nYou are the Email Marketing Agent for VividWalls, creating and managing email campaigns that nurture leads, drive conversions, and build customer relationships. You design automated flows, segment audiences, and optimize email performance for maximum ROI.\n\n## Core Responsibilities\n- Design and execute email marketing campaigns\n- Create automated email flows (welcome, abandoned cart, post-purchase)\n- Segment email lists for targeted messaging\n- A/B test subject lines, content, and send times\n- Monitor and optimize email performance metrics\n- Ensure compliance with email regulations\n\n## Key Performance Indicators\n- Email open rate > 25%\n- Click-through rate > 3%\n- Conversion rate > 2%\n- List growth rate\n- Unsubscribe rate < 0.5%\n- Revenue per email sent\n\n## Decision Framework\n- Send abandoned cart emails within 2 hours\n- Feature new arrivals to engaged non-purchasers\n- Reward loyal customers with exclusive previews\n- Pause campaigns with open rates below 15%\n\n## Available Tools\nYou have access to:\n1. ListMonk MCP for email campaign management\n2. Linear MCP for project tracking\n3. Shopify data for personalization\n4. Analytics for performance monitoring",
+        "maxTokens": 2000,
+        "temperature": 0.3
+      },
+      "id": "ai-agent-001",
+      "name": "Email Marketing AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [1280, 240]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "llm-001",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [1120, 480],
+      "credentials": {
+        "openAiApi": {
+          "id": "ktM70nRxsXMA9jQA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $input.item.json.session_id }}"
+      },
+      "id": "memory-001",
+      "name": "Campaign Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [1280, 480],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "email_marketing_knowledge",
+        "toolDescription": "Access email marketing best practices, campaign templates, and VividWalls email history",
+        "options": {}
+      },
+      "id": "kb-001",
+      "name": "Email Marketing Knowledge Base",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.1,
+      "position": [1440, 480],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "embed-001",
+      "name": "Embeddings OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [1440, 640],
+      "credentials": {
+        "openAiApi": {
+          "id": "ktM70nRxsXMA9jQA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "listmonk_create_campaign",
+        "description": "Create a new email campaign in ListMonk",
+        "workflowId": {
+          "__rl": true,
+          "value": "listmonk-mcp-workflow",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "action": "create_campaign",
+            "name": "={{ $fromAI('campaign_name', 'Campaign name for ListMonk') }}",
+            "subject": "={{ $fromAI('subject_line', 'Email subject line') }}",
+            "body": "={{ $fromAI('email_body', 'HTML email content') }}",
+            "lists": "={{ $fromAI('list_ids', 'Target list IDs array') }}",
+            "template_id": "={{ $fromAI('template_id', 'Optional template ID') }}",
+            "send_at": "={{ $fromAI('send_time', 'Schedule time in ISO format') }}"
+          }
+        },
+        "responsePropertyName": "campaign_created"
+      },
+      "id": "tool-listmonk-001",
+      "name": "ListMonk Create Campaign",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1.1,
+      "position": [1600, 480]
+    },
+    {
+      "parameters": {
+        "name": "listmonk_manage_subscribers",
+        "description": "Manage email subscribers - add, update, or segment",
+        "workflowId": {
+          "__rl": true,
+          "value": "listmonk-mcp-workflow",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "action": "manage_subscribers",
+            "operation": "={{ $fromAI('operation', 'add, update, or segment') }}",
+            "email": "={{ $fromAI('email', 'Subscriber email address') }}",
+            "name": "={{ $fromAI('name', 'Subscriber name') }}",
+            "lists": "={{ $fromAI('lists', 'List IDs to subscribe to') }}",
+            "attribs": "={{ $fromAI('attributes', 'Custom attributes object') }}"
+          }
+        },
+        "responsePropertyName": "subscriber_result"
+      },
+      "id": "tool-listmonk-002",
+      "name": "ListMonk Manage Subscribers",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1.1,
+      "position": [1760, 480]
+    },
+    {
+      "parameters": {
+        "name": "linear_create_task",
+        "description": "Create a campaign project task in Linear",
+        "workflowId": {
+          "__rl": true,
+          "value": "linear-mcp-workflow",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "action": "create_issue",
+            "title": "={{ $fromAI('task_title', 'Campaign task title') }}",
+            "description": "={{ $fromAI('task_description', 'Detailed task description') }}",
+            "teamId": "={{ $fromAI('team_id', 'Marketing team ID in Linear') }}",
+            "priority": "={{ $fromAI('priority', 'Task priority 1-4') }}",
+            "labels": "={{ $fromAI('labels', 'Array of label IDs') }}"
+          }
+        },
+        "responsePropertyName": "linear_task"
+      },
+      "id": "tool-linear-001",
+      "name": "Linear Create Task",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1.1,
+      "position": [1920, 480]
+    },
+    {
+      "parameters": {
+        "name": "shopify_get_segments",
+        "description": "Get customer segments from Shopify for targeting",
+        "workflowId": {
+          "__rl": true,
+          "value": "shopify-mcp-workflow",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "action": "get_customer_segments",
+            "segment_type": "={{ $fromAI('segment', 'vip, regular, new, abandoned_cart') }}",
+            "limit": "={{ $fromAI('limit', 'Number of customers to retrieve') }}"
+          }
+        },
+        "responsePropertyName": "shopify_segments"
+      },
+      "id": "tool-shopify-001",
+      "name": "Shopify Get Segments",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1.1,
+      "position": [2080, 480]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "campaign-001",
+              "name": "campaign_created",
+              "value": "={{ $json.campaign_created || false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "campaign-002",
+              "name": "campaign_id",
+              "value": "={{ $json.campaign_id }}",
+              "type": "string"
+            },
+            {
+              "id": "campaign-003",
+              "name": "listmonk_campaign_url",
+              "value": "={{ $json.campaign_url }}",
+              "type": "string"
+            },
+            {
+              "id": "campaign-004",
+              "name": "linear_project_id",
+              "value": "={{ $json.linear_task?.id }}",
+              "type": "string"
+            },
+            {
+              "id": "campaign-005",
+              "name": "subscriber_count",
+              "value": "={{ $json.subscriber_result?.count || 0 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "process-results-001",
+      "name": "Process Campaign Results",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1600, 240]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO email_campaigns (campaign_id, name, type, status, created_at, listmonk_id, linear_project_id, subscriber_count, metrics)\nVALUES (\n  '{{ $json.session_id }}',\n  '{{ $json.campaign_details.name }}',\n  '{{ $json.campaign_type }}',\n  'active',\n  NOW(),\n  '{{ $json.campaign_id }}',\n  '{{ $json.linear_project_id }}',\n  {{ $json.subscriber_count }},\n  '{{ JSON.stringify($json.metrics || {}) }}'\n)\nON CONFLICT (campaign_id) \nDO UPDATE SET \n  status = EXCLUDED.status,\n  updated_at = NOW(),\n  subscriber_count = EXCLUDED.subscriber_count,\n  metrics = EXCLUDED.metrics\nRETURNING *;",
+        "options": {}
+      },
+      "id": "db-store-001",
+      "name": "Store Campaign Data",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1800, 240],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Calculate email campaign metrics\nconst campaign = items[0].json;\n\nconst metrics = {\n  estimated_reach: campaign.subscriber_count || 0,\n  estimated_opens: Math.floor((campaign.subscriber_count || 0) * 0.25),\n  estimated_clicks: Math.floor((campaign.subscriber_count || 0) * 0.03),\n  estimated_conversions: Math.floor((campaign.subscriber_count || 0) * 0.02),\n  estimated_revenue: Math.floor((campaign.subscriber_count || 0) * 0.02 * 150),\n  cost_per_email: 0.002,\n  total_cost: (campaign.subscriber_count || 0) * 0.002,\n  roi_estimate: ((Math.floor((campaign.subscriber_count || 0) * 0.02 * 150) - ((campaign.subscriber_count || 0) * 0.002)) / ((campaign.subscriber_count || 0) * 0.002) * 100).toFixed(2)\n};\n\nreturn [{\n  json: {\n    ...campaign,\n    metrics,\n    performance_forecast: {\n      best_case: {\n        open_rate: 0.35,\n        click_rate: 0.05,\n        conversion_rate: 0.035,\n        revenue: metrics.estimated_revenue * 1.5\n      },\n      worst_case: {\n        open_rate: 0.15,\n        click_rate: 0.015,\n        conversion_rate: 0.01,\n        revenue: metrics.estimated_revenue * 0.5\n      },\n      likely_case: {\n        open_rate: 0.25,\n        click_rate: 0.03,\n        conversion_rate: 0.02,\n        revenue: metrics.estimated_revenue\n      }\n    }\n  }\n}];"
+      },
+      "id": "calculate-metrics-001",
+      "name": "Calculate Campaign Metrics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 240]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "response-001",
+              "name": "response_type",
+              "value": "email_campaign_execution",
+              "type": "string"
+            },
+            {
+              "id": "response-002",
+              "name": "response_id",
+              "value": "={{ 'resp_email_' + Date.now() }}",
+              "type": "string"
+            },
+            {
+              "id": "response-003",
+              "name": "directive_id",
+              "value": "={{ $json.session_id }}",
+              "type": "string"
+            },
+            {
+              "id": "response-004",
+              "name": "status",
+              "value": "={{ $json.campaign_created ? 'campaign_created' : 'campaign_planned' }}",
+              "type": "string"
+            },
+            {
+              "id": "response-005",
+              "name": "campaign_details",
+              "value": "={{ { campaign_id: $json.campaign_id, listmonk_url: $json.listmonk_campaign_url, linear_project: $json.linear_project_id, subscriber_count: $json.subscriber_count } }}",
+              "type": "object"
+            },
+            {
+              "id": "response-006",
+              "name": "metrics",
+              "value": "={{ $json.metrics }}",
+              "type": "object"
+            },
+            {
+              "id": "response-007",
+              "name": "performance_forecast",
+              "value": "={{ $json.performance_forecast }}",
+              "type": "object"
+            },
+            {
+              "id": "response-008",
+              "name": "next_steps",
+              "value": "={{ ['Monitor campaign performance', 'Prepare A/B test variants', 'Schedule follow-up campaigns', 'Analyze engagement metrics'] }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-response-001",
+      "name": "Format Agent Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2200, 240]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "check-001",
+              "leftValue": "={{ $json.metrics.estimated_opens }}",
+              "rightValue": 100,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "check-performance-001",
+      "name": "Check Performance Threshold",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2400, 240]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.vividwalls.blog/webhook/analytics-director",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event_type",
+              "value": "email_campaign_launched"
+            },
+            {
+              "name": "campaign_id",
+              "value": "={{ $json.campaign_id }}"
+            },
+            {
+              "name": "metrics",
+              "value": "={{ JSON.stringify($json.metrics) }}"
+            },
+            {
+              "name": "forecast",
+              "value": "={{ JSON.stringify($json.performance_forecast) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "notify-analytics-001",
+      "name": "Notify Analytics Director",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2600, 160]
+    },
+    {
+      "parameters": {},
+      "id": "respond-webhook-001",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2800, 240]
+    },
+    {
+      "parameters": {
+        "cron": "0 9 * * 1"
+      },
+      "id": "schedule-001",
+      "name": "Weekly Campaign Review",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 560]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  campaign_id,\n  name,\n  type,\n  status,\n  subscriber_count,\n  metrics,\n  created_at,\n  updated_at\nFROM email_campaigns\nWHERE status = 'active'\n  AND created_at > NOW() - INTERVAL '7 days'\nORDER BY created_at DESC;",
+        "options": {}
+      },
+      "id": "get-campaigns-001",
+      "name": "Get Active Campaigns",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [520, 560],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Analyze campaign performance and generate recommendations\nconst campaigns = items;\nconst analysis = [];\n\nfor (const campaign of campaigns) {\n  const metrics = campaign.json.metrics || {};\n  const openRate = metrics.open_rate || 0;\n  const clickRate = metrics.click_rate || 0;\n  const conversionRate = metrics.conversion_rate || 0;\n  \n  const recommendations = [];\n  \n  if (openRate < 0.20) {\n    recommendations.push('Improve subject line - A/B test urgency vs curiosity');\n    recommendations.push('Optimize send time - Test morning vs evening sends');\n  }\n  \n  if (clickRate < 0.025) {\n    recommendations.push('Enhance CTA visibility - Use contrasting colors');\n    recommendations.push('Simplify email layout - Focus on single action');\n  }\n  \n  if (conversionRate < 0.015) {\n    recommendations.push('Review landing page alignment');\n    recommendations.push('Add social proof elements');\n    recommendations.push('Test limited-time offers');\n  }\n  \n  analysis.push({\n    json: {\n      campaign_id: campaign.json.campaign_id,\n      campaign_name: campaign.json.name,\n      performance_status: openRate > 0.25 ? 'good' : openRate > 0.15 ? 'average' : 'poor',\n      metrics: {\n        open_rate: openRate,\n        click_rate: clickRate,\n        conversion_rate: conversionRate,\n        revenue: metrics.revenue || 0\n      },\n      recommendations,\n      action_required: recommendations.length > 2\n    }\n  });\n}\n\nreturn analysis;"
+      },
+      "id": "analyze-performance-001",
+      "name": "Analyze Campaign Performance",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 560]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "action-001",
+              "leftValue": "={{ $json.action_required }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "check-action-001",
+      "name": "Action Required?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [920, 560]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.vividwalls.blog/webhook/marketing-director",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "directive_type",
+              "value": "campaign_optimization_required"
+            },
+            {
+              "name": "campaigns_needing_attention",
+              "value": "={{ JSON.stringify($json) }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ new Date().toISOString() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "notify-director-001",
+      "name": "Notify Marketing Director",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 480]
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare Campaign Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Marketing Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Campaign Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Chat Message Received": {
+      "main": [
+        [
+          {
+            "node": "Prepare Campaign Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Campaign Input": {
+      "main": [
+        [
+          {
+            "node": "Route by Campaign Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Campaign Type": {
+      "main": [
+        [
+          {
+            "node": "Email Marketing AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email Marketing AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email Marketing AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email Marketing AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Marketing AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Process Campaign Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Campaign Results": {
+      "main": [
+        [
+          {
+            "node": "Store Campaign Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Campaign Data": {
+      "main": [
+        [
+          {
+            "node": "Calculate Campaign Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Campaign Metrics": {
+      "main": [
+        [
+          {
+            "node": "Format Agent Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Agent Response": {
+      "main": [
+        [
+          {
+            "node": "Check Performance Threshold",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Performance Threshold": {
+      "main": [
+        [
+          {
+            "node": "Notify Analytics Director",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Analytics Director": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly Campaign Review": {
+      "main": [
+        [
+          {
+            "node": "Get Active Campaigns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Active Campaigns": {
+      "main": [
+        [
+          {
+            "node": "Analyze Campaign Performance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Campaign Performance": {
+      "main": [
+        [
+          {
+            "node": "Action Required?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Action Required?": {
+      "main": [
+        [
+          {
+            "node": "Notify Marketing Director",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Email Marketing AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Campaign Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Email Marketing AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Marketing Knowledge Base": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Marketing AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Email Marketing Knowledge Base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ListMonk Create Campaign": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Marketing AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ListMonk Manage Subscribers": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Marketing AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Linear Create Task": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Marketing AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify Get Segments": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Marketing AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "email-marketing-v1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "vividwalls-mas"
+  },
+  "id": "email-marketing-agent-001",
+  "tags": [
+    {
+      "id": "marketing-agents",
+      "name": "Marketing Agents"
+    },
+    {
+      "id": "email-campaigns",
+      "name": "Email Campaigns"
+    },
+    {
+      "id": "listmonk-integration",
+      "name": "ListMonk Integration"
+    },
+    {
+      "id": "linear-integration",
+      "name": "Linear Integration"
+    }
+  ]
+}

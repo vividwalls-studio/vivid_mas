@@ -1,0 +1,124 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+puts "========================================="
+puts "Cleaning up disk space and restarting n8n"
+puts "========================================="
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        puts "\nConnected successfully!"
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}
+
+# Check disk space
+puts "\n1. Current disk usage:"
+send "df -h / | grep vda1\r"
+expect "root@*"
+
+# Clean up Docker
+puts "\n2. Cleaning up Docker system..."
+send "docker system prune -af --volumes\r"
+expect "root@*"
+
+# Clean up old logs
+puts "\n3. Cleaning up old logs..."
+send "find /var/log -type f -name '*.log' -mtime +7 -delete 2>/dev/null\r"
+expect "root@*"
+send "journalctl --vacuum-time=3d 2>/dev/null\r"
+expect "root@*"
+
+# Clean up apt cache
+puts "\n4. Cleaning apt cache..."
+send "apt-get clean\r"
+expect "root@*"
+send "apt-get autoremove -y\r"
+expect "root@*"
+
+# Check disk space again
+puts "\n5. Disk usage after cleanup:"
+send "df -h / | grep vda1\r"
+expect "root@*"
+
+# Remove any failed n8n containers
+puts "\n6. Removing failed containers..."
+send "docker rm n8n 2>/dev/null\r"
+expect "root@*"
+
+# Start n8n with the old stable version first
+puts "\n7. Starting n8n (stable version 1.104.1)..."
+send "cd /root/vivid_mas\r"
+expect "root@*"
+
+send "docker run -d --name n8n \\\r"
+send "  --network vivid_mas \\\r"
+send "  -p 5678:5678 \\\r"
+send "  -e DB_TYPE=postgresdb \\\r"
+send "  -e DB_POSTGRESDB_HOST=postgres \\\r"
+send "  -e DB_POSTGRESDB_PORT=5432 \\\r"
+send "  -e DB_POSTGRESDB_DATABASE=postgres \\\r"
+send "  -e DB_POSTGRESDB_USER=postgres \\\r"
+send "  -e DB_POSTGRESDB_PASSWORD=myqP9lSMLobnuIfkUpXQzZg07 \\\r"
+send "  -e N8N_ENCRYPTION_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZDAxYzZjZC1lNjY5LTQ4YWQtYTY5ZS1mMDU0YTY4NjU1YzQiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzUwNDQ5MzEzfQ.uBJrDT3a0pQdA5hA28Zf5egmhFLryv8DUNLvsoleXcs \\\r"
+send "  -e N8N_HOST=n8n.vividwalls.blog \\\r"
+send "  -e N8N_PORT=5678 \\\r"
+send "  -e N8N_PROTOCOL=https \\\r"
+send "  -e WEBHOOK_URL=https://n8n.vividwalls.blog/ \\\r"
+send "  -e GENERIC_TIMEZONE=America/New_York \\\r"
+send "  -v vivid_mas_n8n_storage:/home/node/.n8n \\\r"
+send "  -v /opt/mcp-servers:/opt/mcp-servers:ro \\\r"
+send "  --restart unless-stopped \\\r"
+send "  n8nio/n8n:1.104.1\r"
+expect "root@*"
+
+# Wait for startup
+puts "\n8. Waiting for n8n to start..."
+send "sleep 20\r"
+expect "root@*"
+
+# Check if running
+puts "\n9. Checking n8n status..."
+send "docker ps | grep n8n\r"
+expect "root@*"
+
+# Check version
+puts "\n10. Verifying n8n version..."
+send "docker exec n8n n8n --version 2>&1 | head -1\r"
+expect "root@*"
+
+# Test health
+puts "\n11. Testing n8n health..."
+send "curl -s http://localhost:5678/healthz\r"
+expect "root@*"
+
+# Check workflows
+puts "\n12. Verifying workflows..."
+send "docker exec postgres psql -U postgres -d postgres -c 'SELECT COUNT(*) FROM workflow_entity;'\r"
+expect "root@*"
+
+puts "\n========================================="
+puts "n8n restart complete!"
+puts "Access at: https://n8n.vividwalls.blog"
+puts "========================================="
+
+send "exit\r"
+expect eof

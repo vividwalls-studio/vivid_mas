@@ -1,0 +1,49 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check n8n MCP server source
+send "echo '=== N8N MCP Server Tools ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cd /opt/mcp-servers/n8n-mcp-server && ls -la src/\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/n8n-mcp-server#"
+
+# Check for credential-related files
+send "echo '\n=== Checking for Credential Tools ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/n8n-mcp-server#"
+
+send "find . -name '*.ts' -o -name '*.js' | xargs grep -l 'credential' | head -10\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/n8n-mcp-server#"
+
+# Check README
+send "echo '\n=== N8N MCP README ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/n8n-mcp-server#"
+
+send "cat README.md 2>/dev/null | grep -A 20 -i 'tools\\|credential' | head -30\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/n8n-mcp-server#"
+
+# Check index.js for exported tools
+send "echo '\n=== Exported Tools ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/n8n-mcp-server#"
+
+send "grep -E 'name:.*credential|credential.*tool' dist/index.js 2>/dev/null | head -5\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/n8n-mcp-server#"
+
+# Exit
+send "exit\r"
+expect eof

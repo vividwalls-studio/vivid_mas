@@ -1,0 +1,180 @@
+#!/usr/bin/expect -f
+
+# Script to import workflows to n8n on DigitalOcean droplet
+set timeout 120
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase for key" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "Are you sure you want to continue connecting" {
+        send "yes\r"
+        exp_continue
+    }
+    "root@*" {
+        send_user "\n✅ Connected to droplet\n"
+    }
+    timeout {
+        send_user "\n❌ SSH connection timeout\n"
+        exit 1
+    }
+}
+
+# Navigate to vivid_mas directory
+send "cd /root/vivid_mas\r"
+expect "root@*"
+
+# Create directory for workflow imports
+send_user "\n📁 Creating import directory...\n"
+send "mkdir -p /root/vivid_mas/workflow_imports\r"
+expect "root@*"
+
+# Create Campaign Manager workflow
+send_user "\n➕ Creating Campaign Manager Agent workflow...\n"
+send "cat > /root/vivid_mas/workflow_imports/campaign-manager.json << 'EOF'\r"
+send {
+{
+  "name": "VividWalls Campaign Manager Agent",
+  "nodes": [],
+  "connections": {},
+  "active": false,
+  "settings": {},
+  "tags": []
+}
+EOF
+}
+send "\r"
+expect "root@*"
+
+# Import workflows using n8n CLI
+send_user "\n📥 Importing workflows to n8n...\n"
+
+# First, let's check if n8n CLI is available
+send "docker exec n8n n8n --version\r"
+expect "root@*"
+
+# Import using n8n API with proper authentication
+send_user "\n🔑 Importing via n8n API...\n"
+
+# Get the API key from environment
+send "export N8N_API_KEY=\$(grep N8N_API_KEY /root/vivid_mas/.env | cut -d '=' -f2)\r"
+expect "root@*"
+
+# Create workflows via API
+send_user "\n📝 Creating workflows via API...\n"
+
+# Campaign Manager
+send "curl -X POST http://localhost:5678/api/v1/workflows \\\r"
+send "  -H \"X-N8N-API-KEY: \$N8N_API_KEY\" \\\r"
+send "  -H \"Content-Type: application/json\" \\\r"
+send "  -d '{\"name\":\"VividWalls Campaign Manager Agent\",\"nodes\":\[\],\"connections\":{},\"active\":false}' 2>/dev/null | python3 -m json.tool | head -10\r"
+expect "root@*"
+
+# Copy Writer
+send "curl -X POST http://localhost:5678/api/v1/workflows \\\r"
+send "  -H \"X-N8N-API-KEY: \$N8N_API_KEY\" \\\r"
+send "  -H \"Content-Type: application/json\" \\\r"
+send "  -d '{\"name\":\"VividWalls Copy Writer Agent\",\"nodes\":\[\],\"connections\":{},\"active\":false}' 2>/dev/null | python3 -m json.tool | head -10\r"
+expect "root@*"
+
+# Email Marketing
+send "curl -X POST http://localhost:5678/api/v1/workflows \\\r"
+send "  -H \"X-N8N-API-KEY: \$N8N_API_KEY\" \\\r"
+send "  -H \"Content-Type: application/json\" \\\r"
+send "  -d '{\"name\":\"VividWalls Email Marketing Agent\",\"nodes\":\[\],\"connections\":{},\"active\":false}' 2>/dev/null | python3 -m json.tool | head -10\r"
+expect "root@*"
+
+# Product Director
+send "curl -X POST http://localhost:5678/api/v1/workflows \\\r"
+send "  -H \"X-N8N-API-KEY: \$N8N_API_KEY\" \\\r"
+send "  -H \"Content-Type: application/json\" \\\r"
+send "  -d '{\"name\":\"VividWalls Product Director Agent\",\"nodes\":\[\],\"connections\":{},\"active\":false}' 2>/dev/null | python3 -m json.tool | head -10\r"
+expect "root@*"
+
+# Sales Agents
+send_user "\n📊 Creating Sales team workflows...\n"
+
+# Hospitality Sales
+send "curl -X POST http://localhost:5678/api/v1/workflows \\\r"
+send "  -H \"X-N8N-API-KEY: \$N8N_API_KEY\" \\\r"
+send "  -H \"Content-Type: application/json\" \\\r"
+send "  -d '{\"name\":\"VividWalls Hospitality Sales Agent\",\"nodes\":\[\],\"connections\":{},\"active\":false}' 2>/dev/null | python3 -m json.tool | head -10\r"
+expect "root@*"
+
+# Corporate Sales
+send "curl -X POST http://localhost:5678/api/v1/workflows \\\r"
+send "  -H \"X-N8N-API-KEY: \$N8N_API_KEY\" \\\r"
+send "  -H \"Content-Type: application/json\" \\\r"
+send "  -d '{\"name\":\"VividWalls Corporate Sales Agent\",\"nodes\":\[\],\"connections\":{},\"active\":false}' 2>/dev/null | python3 -m json.tool | head -10\r"
+expect "root@*"
+
+# Healthcare Sales
+send "curl -X POST http://localhost:5678/api/v1/workflows \\\r"
+send "  -H \"X-N8N-API-KEY: \$N8N_API_KEY\" \\\r"
+send "  -H \"Content-Type: application/json\" \\\r"
+send "  -d '{\"name\":\"VividWalls Healthcare Sales Agent\",\"nodes\":\[\],\"connections\":{},\"active\":false}' 2>/dev/null | python3 -m json.tool | head -10\r"
+expect "root@*"
+
+# Social Media Agents
+send_user "\n📱 Creating Social Media workflows...\n"
+
+# Pinterest
+send "curl -X POST http://localhost:5678/api/v1/workflows \\\r"
+send "  -H \"X-N8N-API-KEY: \$N8N_API_KEY\" \\\r"
+send "  -H \"Content-Type: application/json\" \\\r"
+send "  -d '{\"name\":\"VividWalls Pinterest Agent\",\"nodes\":\[\],\"connections\":{},\"active\":false}' 2>/dev/null | python3 -m json.tool | head -10\r"
+expect "root@*"
+
+# Twitter
+send "curl -X POST http://localhost:5678/api/v1/workflows \\\r"
+send "  -H \"X-N8N-API-KEY: \$N8N_API_KEY\" \\\r"
+send "  -H \"Content-Type: application/json\" \\\r"
+send "  -d '{\"name\":\"VividWalls Twitter Agent\",\"nodes\":\[\],\"connections\":{},\"active\":false}' 2>/dev/null | python3 -m json.tool | head -10\r"
+expect "root@*"
+
+# LinkedIn
+send "curl -X POST http://localhost:5678/api/v1/workflows \\\r"
+send "  -H \"X-N8N-API-KEY: \$N8N_API_KEY\" \\\r"
+send "  -H \"Content-Type: application/json\" \\\r"
+send "  -d '{\"name\":\"VividWalls LinkedIn Agent\",\"nodes\":\[\],\"connections\":{},\"active\":false}' 2>/dev/null | python3 -m json.tool | head -10\r"
+expect "root@*"
+
+# TikTok
+send "curl -X POST http://localhost:5678/api/v1/workflows \\\r"
+send "  -H \"X-N8N-API-KEY: \$N8N_API_KEY\" \\\r"
+send "  -H \"Content-Type: application/json\" \\\r"
+send "  -d '{\"name\":\"VividWalls TikTok Agent\",\"nodes\":\[\],\"connections\":{},\"active\":false}' 2>/dev/null | python3 -m json.tool | head -10\r"
+expect "root@*"
+
+# YouTube
+send "curl -X POST http://localhost:5678/api/v1/workflows \\\r"
+send "  -H \"X-N8N-API-KEY: \$N8N_API_KEY\" \\\r"
+send "  -H \"Content-Type: application/json\" \\\r"
+send "  -d '{\"name\":\"VividWalls YouTube Agent\",\"nodes\":\[\],\"connections\":{},\"active\":false}' 2>/dev/null | python3 -m json.tool | head -10\r"
+expect "root@*"
+
+# Verify workflow count
+send_user "\n📊 Verifying workflow count...\n"
+send "docker exec postgres psql -U postgres -d postgres -t -c 'SELECT COUNT(*) FROM workflow_entity;'\r"
+expect "root@*"
+
+# List new workflows
+send_user "\n📋 Listing newly created workflows...\n"
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT name, active FROM workflow_entity WHERE name LIKE 'VividWalls%' ORDER BY name;\" | head -20\r"
+expect "root@*"
+
+# Exit
+send_user "\n✅ Workflow import complete\n"
+send "exit\r"
+expect eof

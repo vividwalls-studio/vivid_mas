@@ -1,0 +1,42 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Start only n8n and caddy
+send "docker compose up -d n8n caddy\r"
+expect "# "
+
+# Wait a bit
+send "sleep 15\r"
+expect "# "
+
+# Check status
+send "docker ps | grep -E 'n8n|caddy'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

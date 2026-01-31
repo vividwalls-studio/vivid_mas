@@ -1,0 +1,49 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Find Twenty CRM compose file
+send "echo '=== Finding Twenty CRM location ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "find / -name 'docker-compose*.yml' -type f 2>/dev/null | xargs grep -l 'twentycrm' | head -5\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check docker inspect for Twenty
+send "echo '\n=== Checking Twenty container details ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker inspect twenty-server-1 | grep -A 10 'HostConfig' | grep -E '(HostPort|ContainerPort)'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check working directory
+send "echo '\n=== Twenty working directory ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker inspect twenty-server-1 | grep -A 5 'WorkingDir'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check compose project
+send "echo '\n=== Twenty compose project ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker inspect twenty-server-1 | grep -E 'com.docker.compose.(project|working_dir)'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

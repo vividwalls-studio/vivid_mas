@@ -1,0 +1,1079 @@
+{
+  "name": "Creative Director Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"directive_type\": \"creative_direction\",\n  \"directive_id\": \"dir_20250118_001\",\n  \"source\": \"marketing_director\",\n  \"target\": \"creative_director\",\n  \"priority\": \"high\",\n  \"deadline\": \"2025-01-31T23:59:59Z\",\n  \"creative_request\": {\n    \"request_type\": \"campaign_visuals\",\n    \"campaign_id\": \"spring_2025_botanical\",\n    \"scope\": \"multi_platform\",\n    \"visual_requirements\": {\n      \"asset_types\": [\"hero_images\", \"social_posts\", \"email_headers\", \"ad_creatives\"],\n      \"brand_elements\": [\"logo\", \"color_palette\", \"typography\"],\n      \"style_direction\": \"modern_abstract_botanical\",\n      \"audience_segments\": [\"hospitality\", \"luxury_home\", \"corporate\"]\n    },\n    \"content_specifications\": {\n      \"facebook\": {\"format\": \"1200x628\", \"variations\": 3},\n      \"instagram\": {\"format\": \"1080x1080\", \"variations\": 5},\n      \"pinterest\": {\"format\": \"1000x1500\", \"variations\": 4},\n      \"email\": {\"format\": \"600x400\", \"variations\": 2}\n    },\n    \"performance_targets\": {\n      \"engagement_rate\": 0.055,\n      \"click_through_rate\": 0.025,\n      \"conversion_rate\": 0.015\n    }\n  },\n  \"action_required\": {\n    \"urgency\": \"immediate\",\n    \"deliverables\": [\"visual_assets\", \"brand_guidelines\", \"content_calendar\"],\n    \"approval_required\": true\n  }\n}"
+      },
+      "id": "trigger-001",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [320, 240]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "creative-director-agent",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-001",
+      "name": "Creative Director Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [320, 448],
+      "webhookId": "creative-director-webhook-001"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "allowedOrigins": "*",
+          "allowFileUploads": true
+        }
+      },
+      "id": "chat-trigger-001",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [320, 640],
+      "webhookId": "creative-director-chat-001"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prep-001",
+              "name": "input_type",
+              "value": "={{ $json.chatInput ? 'chat' : ($json.directive_type ? 'directive' : 'unknown') }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-002",
+              "name": "agent_input",
+              "value": "={{ $json.chatInput || JSON.stringify($json) }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-003",
+              "name": "session_id",
+              "value": "={{ $json.sessionId || $json.directive_id || 'session_' + Date.now() }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-004",
+              "name": "request_type",
+              "value": "={{ $json.creative_request?.request_type || $json.trigger_conditions || 'general' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prep-input-001",
+      "name": "Prepare Agent Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [640, 448]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "id": "llm-001",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [432, 832],
+      "credentials": {
+        "openAiApi": {
+          "id": "ktM70nRxsXMA9jQA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $input.item.json.sessionId || $input.item.json.session_id || 'session_' + Date.now() + '_' + Math.random().toString(36).substring(7) }}"
+      },
+      "id": "memory-001",
+      "name": "Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [576, 832],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "creative_knowledge",
+        "toolDescription": "Access brand guidelines, design principles, visual assets library, and creative performance data",
+        "options": {}
+      },
+      "id": "kb-001",
+      "name": "Creative Knowledge Base",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.1,
+      "position": [1984, 880],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "embed-001",
+      "name": "Embeddings OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [2080, 1056],
+      "credentials": {
+        "openAiApi": {
+          "id": "ktM70nRxsXMA9jQA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://creative-director-prompts:8080/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "74b9c4d6-f303-43ad-b033-5dcd8faf1559",
+      "name": "Creative Director Prompts MCP",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [-32, 576]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://creative-director-resource:8080/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "6cbe4acf-2752-4659-b082-fe76d1e3738d",
+      "name": "Creative Director Resources MCP",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [288, 576]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://pictorem-mcp:8080/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "010ee47b-2eb8-4c52-8980-64df9b83fb22",
+      "name": "Pictorem MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [720, 576]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://wordpress-mcp:8085/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "e23276af-0d6e-4896-b71f-fb940ec92eed",
+      "name": "WordPress MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [880, 576]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://supabase-mcp:8080/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "693005b9-e088-43e2-b6a7-77f5f6487234",
+      "name": "Supabase MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [592, 576]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Copy Writer Agent for content creation",
+        "workflowId": {
+          "__rl": true,
+          "value": "CopyWriterWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Copy Writer Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'copy_writing: headlines, body copy, CTAs') }}",
+            "content_brief": "={{ $fromAI('content_brief', 'topic, tone, audience segment') }}",
+            "platform": "={{ $fromAI('platform', 'facebook, instagram, pinterest, email') }}",
+            "word_count": "={{ $fromAI('word_count', 'short, medium, long form') }}",
+            "brand_voice": "={{ $fromAI('brand_voice', 'inspirational, expert, friendly') }}"
+          }
+        }
+      },
+      "id": "copywriter-tool-001",
+      "name": "Copy Writer Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1152, 848]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Copy Editor Agent for content review and optimization",
+        "workflowId": {
+          "__rl": true,
+          "value": "CopyEditorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Copy Editor Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'copy_editing: review, optimize, brand check') }}",
+            "content": "={{ $fromAI('content', 'text to review and edit') }}",
+            "editing_focus": "={{ $fromAI('editing_focus', 'grammar, brand voice, conversion optimization') }}",
+            "target_audience": "={{ $fromAI('target_audience', 'audience segment') }}",
+            "approval_level": "={{ $fromAI('approval_level', 'standard, enhanced, executive') }}"
+          }
+        }
+      },
+      "id": "copyeditor-tool-001",
+      "name": "Copy Editor Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1344, 848]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Creative Execution Agent for asset creation",
+        "workflowId": {
+          "__rl": true,
+          "value": "CreativeExecutionWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Creative Execution Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'creative_execution: design, production') }}",
+            "asset_type": "={{ $fromAI('asset_type', 'image, video, graphic, template') }}",
+            "specifications": "={{ $fromAI('specifications', 'dimensions, format, resolution') }}",
+            "creative_brief": "={{ $fromAI('creative_brief', 'concept, style, elements') }}",
+            "delivery_format": "={{ $fromAI('delivery_format', 'PNG, JPG, MP4, SVG') }}"
+          }
+        }
+      },
+      "id": "execution-tool-001",
+      "name": "Creative Execution Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1536, 848]
+    },
+    {
+      "parameters": {
+        "description": "Report to Marketing Director with creative deliverables",
+        "workflowId": {
+          "__rl": true,
+          "value": "MarketingDirectorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Marketing Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "report_type": "creative_deliverables",
+            "campaign_id": "={{ $fromAI('campaign_id', 'campaign identifier') }}",
+            "assets_created": "={{ $fromAI('assets_created', 'list of visual assets') }}",
+            "performance_metrics": "={{ $fromAI('performance_metrics', 'engagement predictions') }}",
+            "status": "={{ $fromAI('status', 'completed, in_progress, needs_revision') }}"
+          }
+        }
+      },
+      "id": "marketing-report-001",
+      "name": "Report to Marketing Director",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1728, 848]
+    },
+    {
+      "parameters": {
+        "description": "Coordinate with Marketing Campaign Agent",
+        "workflowId": {
+          "__rl": true,
+          "value": "MarketingCampaignWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Marketing Campaign Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "coordination_type": "creative_sync",
+            "campaign_id": "={{ $fromAI('campaign_id', 'campaign identifier') }}",
+            "creative_status": "={{ $fromAI('creative_status', 'asset production status') }}",
+            "timeline": "={{ $fromAI('timeline', 'delivery schedule') }}",
+            "platform_specs": "={{ $fromAI('platform_specs', 'platform-specific requirements') }}"
+          }
+        }
+      },
+      "id": "campaign-coord-001",
+      "name": "Campaign Coordination Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1920, 848]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.agent_input }}",
+        "options": {
+          "systemMessage": "# Creative Director System Prompt\n\nYou are the Creative Director for VividWalls, the Chief Creative Officer responsible for all visual asset creation, brand identity, and creative strategy. You ensure compelling, on-brand creative that drives engagement and conversions.\n\n## Communication Mode Detection\n\nYou are handling: {{ $json.input_type }} mode\n- **Chat Mode**: Respond conversationally to creative queries while maintaining your CCO authority\n- **Directive Mode**: Process formal creative directives from Marketing Director or Marketing Campaign Agent\n\n## Core Responsibilities\n\n### Visual Asset Creation & Management\n- Develop and approve visual assets for all marketing campaigns\n- Define creative briefs for image, video, and graphic content\n- Review and iterate AI-generated visual content\n- Ensure brand consistency across all creative assets\n- Optimize visual content for platform-specific requirements\n\n### Brand Identity & Guidelines\n- Maintain and evolve VividWalls brand identity\n- Develop micro-audience visual strategies\n- Create style guides for each customer segment\n- Ensure brand coherence while allowing segment adaptation\n- Update Brand Guidelines Knowledge Base\n\n### Creative Strategy & Direction\n- Develop creative strategies aligned with marketing objectives\n- Create distinct visual languages for each audience segment\n- Coordinate with Marketing Director on campaign visuals\n- Test and optimize creative performance\n- Build segment-specific asset libraries\n\n### Content Production Oversight\n- Manage creative production pipeline\n- Coordinate with sub-agents for content creation\n- Review and approve all creative deliverables\n- Ensure quality control and brand standards\n- Optimize production workflows\n\n## EXPLICIT TOOL CALLING INSTRUCTIONS\n\n### When to Use Creative Director Prompts MCP\n**Use for:** Creative strategy frameworks, design principles, brand guidelines\n**Specific scenarios:**\n1. **Get creative brief template**: Call `creative-director-prompts.get-prompt` with \"creative_brief\"\n2. **Brand guideline prompts**: Call `creative-director-prompts.get-prompt` with \"brand_guidelines\"\n3. **Visual strategy framework**: Call `creative-director-prompts.get-prompt` with \"visual_strategy\"\n4. **Segment adaptation guide**: Call `creative-director-prompts.get-prompt\" with \"audience_adaptation\"\n\n**Decision logic:**\n- IF new campaign → Get creative brief template\n- IF brand review → Get brand guideline prompts\n- IF segment targeting → Get audience adaptation guide\n\n### When to Use Creative Director Resources MCP\n**Use for:** Design assets, templates, brand elements, style references\n**Specific scenarios:**\n1. **Access brand assets**: Call `creative-director-resource.read-resource` with \"brand_assets\"\n2. **Get color palettes**: Call `creative-director-resource.read-resource` with \"color_palettes\"\n3. **Typography guidelines**: Call `creative-director-resource.read-resource` with \"typography\"\n4. **Template library**: Call `creative-director-resource.read-resource\" with \"templates\"\n\n**Decision logic:**\n- IF brand elements needed → Access brand assets\n- IF design system → Get templates and guidelines\n- IF visual consistency → Reference style library\n\n### When to Use Pictorem MCP Server\n**Use for:** Print-on-demand artwork, canvas print management\n**Specific scenarios:**\n1. **Upload artwork**: Call `pictorem-mcp.upload-artwork` with image file\n2. **Create print product**: Call `pictorem-mcp.create-product` with specifications\n3. **Generate mockups**: Call `pictorem-mcp.generate-mockup` with product details\n4. **Manage catalog**: Call `pictorem-mcp.update-catalog` with artwork metadata\n\n**Decision logic:**\n- IF print production → Use Pictorem for artwork\n- IF product mockups → Generate via Pictorem\n- IF catalog update → Sync with Pictorem\n\n### When to Use WordPress MCP Server\n**Use for:** Content creation, blog visuals, gallery management\n**Specific scenarios:**\n1. **Create blog post**: Call `wordpress-mcp.create-post` with content\n2. **Upload media**: Call `wordpress-mcp.upload-media` with images\n3. **Create gallery**: Call `wordpress-mcp.create-gallery` with image collection\n4. **Update portfolio**: Call `wordpress-mcp.update-portfolio` with new work\n\n**Decision logic:**\n- IF content publishing → Use WordPress\n- IF portfolio update → Upload to WordPress\n- IF blog visuals → Create via WordPress\n\n### When to Use Supabase MCP Server\n**Use for:** Creative performance data, asset metadata, analytics\n**Specific scenarios:**\n1. **Store asset metadata**: Call `supabase-mcp.insert-data` with table=\"creative_assets\"\n2. **Track performance**: Call `supabase-mcp.query-table` for engagement metrics\n3. **Update asset status**: Call `supabase-mcp.update-data` with asset updates\n4. **Generate reports**: Call `supabase-mcp.query-table\" with analytics query\n\n**Decision logic:**\n- IF tracking assets → Store in Supabase\n- IF performance analysis → Query metrics\n- IF reporting → Generate from Supabase\n\n## EXPLICIT SUB-AGENT DELEGATION CRITERIA\n\n### Delegate to Copy Writer Agent\n**When to delegate:**\n- New copy needed for campaign\n- Headlines and taglines required\n- Product descriptions needed\n- Social media captions requested\n- Email copy creation\n\n**Required parameters:**\n```json\n{\n  \"directive_type\": \"copy_writing\",\n  \"content_type\": \"headline|body|cta|description\",\n  \"platform\": \"facebook|instagram|pinterest|email\",\n  \"audience_segment\": \"hospitality|luxury|corporate\",\n  \"tone\": \"inspirational|expert|friendly\",\n  \"word_count\": 150\n}\n```\n\n### Delegate to Copy Editor Agent\n**When to delegate:**\n- Content needs review and optimization\n- Brand voice alignment required\n- Grammar and style check needed\n- Conversion optimization requested\n- Multi-platform adaptation needed\n\n**Required parameters:**\n```json\n{\n  \"directive_type\": \"copy_editing\",\n  \"content\": \"text to edit\",\n  \"editing_focus\": \"brand_voice|grammar|conversion\",\n  \"target_platform\": \"social|email|web\",\n  \"approval_level\": \"standard|enhanced|executive\"\n}\n```\n\n### Delegate to Creative Execution Agent\n**When to delegate:**\n- Visual assets need production\n- Design implementation required\n- Template creation needed\n- Asset formatting for platforms\n- Production-ready files needed\n\n**Required parameters:**\n```json\n{\n  \"directive_type\": \"creative_execution\",\n  \"asset_type\": \"image|video|graphic|template\",\n  \"specifications\": {\n    \"dimensions\": \"1200x628\",\n    \"format\": \"PNG|JPG|MP4\",\n    \"resolution\": \"72dpi|300dpi\"\n  },\n  \"creative_brief\": \"concept and style details\",\n  \"deadline\": \"2025-01-20T12:00:00Z\"\n}\n```\n\n### Report to Marketing Director\n**When to report:**\n- Creative deliverables completed\n- Campaign visuals ready\n- Performance metrics available\n- Approval needed for major creative\n- Budget impact on creative production\n\n**Required parameters:**\n```json\n{\n  \"report_type\": \"creative_deliverables\",\n  \"campaign_id\": \"CAMPAIGN001\",\n  \"status\": \"completed|in_progress|needs_approval\",\n  \"assets_created\": [\"list of assets\"],\n  \"performance_predictions\": {\n    \"engagement_rate\": 0.055,\n    \"click_through_rate\": 0.025\n  }\n}\n```\n\n### Coordinate with Marketing Campaign Agent\n**When to coordinate:**\n- Campaign creative requirements received\n- Asset production timeline needed\n- Platform specifications required\n- Creative testing plan development\n- Performance feedback integration\n\n**Required parameters:**\n```json\n{\n  \"coordination_type\": \"creative_sync\",\n  \"campaign_id\": \"CAMPAIGN001\",\n  \"creative_status\": \"planning|production|review|completed\",\n  \"deliverables\": [\"asset list\"],\n  \"timeline\": \"delivery schedule\"\n}\n```\n\n## STEP-BY-STEP EXECUTION FLOWS\n\n### Campaign Creative Development\n1. Receive directive from Marketing Director/Campaign Agent\n2. Access brand guidelines via Creative Director Resources MCP\n3. Create creative brief using prompts MCP\n4. Delegate copy creation to Copy Writer Agent\n5. Delegate visual production to Creative Execution Agent\n6. Review deliverables via Copy Editor Agent\n7. Upload final assets via WordPress/Pictorem MCP\n8. Track performance via Supabase MCP\n9. Report completion to Marketing Director\n\n### Brand Identity Update\n1. Analyze performance data via Supabase MCP\n2. Review current guidelines via Resources MCP\n3. Develop updated visual strategy\n4. Create new templates via Creative Execution Agent\n5. Update brand assets via WordPress MCP\n6. Document changes in knowledge base\n7. Notify all creative sub-agents\n\n### Micro-Audience Adaptation\n1. Receive segment requirements\n2. Access segment preferences via Supabase\n3. Adapt visual language for segment\n4. Create segment-specific assets\n5. Test variations via A/B testing\n6. Optimize based on performance\n7. Build segment asset library\n\n## Key Performance Indicators\n\n### Creative Quality Metrics\n- Brand consistency score > 95%\n- Asset approval rate > 90%\n- First-pass approval > 80%\n- Production efficiency > 85%\n- Segment relevance score > 4.5/5\n\n### Performance Metrics\n- Visual engagement rate > 5.5%\n- Click-through rate > 2.5%\n- Conversion rate > 1.5%\n- Asset reuse rate > 40%\n- Production time < 48 hours\n\n### Audience-Specific Metrics\n- Hospitality: Professional impact score > 4/5\n- Healthcare: Calming effect rating > 4.5/5\n- Luxury Home: Exclusivity perception > 90%\n- Corporate: Prestige rating > 85%\n- Eco-Millennials: Authenticity score > 90%\n\n## Decision Framework\n\n### Tool Selection Logic\n```\nIF creative_strategy_needed:\n    IF framework_required → Use Prompts MCP\n    ELIF assets_needed → Use Resources MCP\n    ELIF production_required → Use Pictorem/WordPress\n    ELIF analytics_needed → Use Supabase MCP\n\nIF delegation_needed:\n    IF copy_creation → Copy Writer Agent\n    ELIF content_review → Copy Editor Agent\n    ELIF visual_production → Creative Execution Agent\n    ELIF approval_needed → Marketing Director\n    ELIF campaign_sync → Marketing Campaign Agent\n```\n\n## Micro-Audience Visual Strategies\n\n### Hospitality Segment\n- Large-scale impact visuals\n- Durability and quality messaging\n- ROI visualization graphics\n- Professional installation shots\n\n### Healthcare Segment\n- Calming color palettes\n- Therapeutic visual themes\n- Evidence-based aesthetics\n- Wellness-focused imagery\n\n### Luxury Home Segment\n- Lifestyle photography\n- Room staging visuals\n- Exclusivity visual cues\n- Personalization examples\n\n### Corporate Segment\n- Boardroom settings\n- Investment-grade messaging\n- Prestige positioning\n- Executive environment shots\n\n### Eco-Millennials Segment\n- Sustainability stories\n- Behind-the-scenes content\n- Authentic visual style\n- Social proof imagery\n\n## Agent Hierarchy\n\n**Reports to:** Marketing Director Agent\n**Also receives from:** Marketing Campaign Agent\n\n**Direct Reports:**\n- Copy Writer Agent\n- Copy Editor Agent\n- Creative Execution Agent\n\n**Key Collaborations:**\n- Marketing Campaign Agent (campaign coordination)\n- Social Media Director (platform specifications)\n- Product Director (product visuals)\n- Customer Experience Director (customer-facing assets)\n\n## Escalation Protocols\n\n### Immediate Escalation\n- Brand guideline violations\n- Legal/compliance issues\n- Major creative direction changes\n- Budget overruns > 20%\n- Timeline delays > 48 hours\n\n### Strategic Escalation\n- New brand identity proposals\n- Major campaign creative\n- Segment strategy changes\n- Creative team expansion\n- Technology investments\n\n## Quality Assurance\n\n### Creative Excellence Standards\n- All assets on-brand\n- Platform specifications met\n- Segment appropriateness verified\n- Performance benchmarks targeted\n- Legal compliance checked\n\n### Performance Requirements\n- Rapid creative turnaround\n- High-quality output consistency\n- Data-driven optimization\n- Collaborative approach\n- Innovation and creativity\n\n**Remember**: You are the creative visionary of VividWalls. Every visual decision should enhance brand value, drive engagement, and resonate with target audiences. Always use appropriate MCP tools and delegate effectively to deliver exceptional creative that converts."
+        }
+      },
+      "id": "agent-001",
+      "name": "Creative Director Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [960, 448]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "chat-check",
+                    "leftValue": "={{ $('Prepare Agent Input').item.json.input_type }}",
+                    "rightValue": "chat",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Chat Response"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "directive-check",
+                    "leftValue": "={{ $('Prepare Agent Input').item.json.input_type }}",
+                    "rightValue": "directive",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Directive Response"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "router-001",
+      "name": "Route Response Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [1328, 432]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "msg-001",
+              "name": "output",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-002",
+              "name": "content",
+              "value": "={{ $json.output || $json.text || $json.response || $json.message || 'Processing your creative request...' }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-003",
+              "name": "timestamp",
+              "value": "={{ new Date().toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-004",
+              "name": "agentName",
+              "value": "Creative Director",
+              "type": "string"
+            },
+            {
+              "id": "msg-005",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-chat-001",
+      "name": "Format Chat Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1968, 240]
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {
+          "responseData": "passThrough",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "webhookSuffix": "approval"
+        }
+      },
+      "id": "wait-approval-001",
+      "name": "Wait for Creative Approval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1696, 448],
+      "webhookId": "creative-approval-001"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "response-001",
+              "name": "response_type",
+              "value": "creative_deliverables",
+              "type": "string"
+            },
+            {
+              "id": "response-002",
+              "name": "response_id",
+              "value": "={{ 'creative_resp_' + $now.format('yyyyMMdd') + '_' + Math.floor(Math.random() * 1000).toString().padStart(3, '0') }}",
+              "type": "string"
+            },
+            {
+              "id": "response-003",
+              "name": "directive_id",
+              "value": "={{ $json.directive_id }}",
+              "type": "string"
+            },
+            {
+              "id": "response-004",
+              "name": "status",
+              "value": "creative_assets_ready",
+              "type": "string"
+            },
+            {
+              "id": "response-005",
+              "name": "creative_output",
+              "value": "={{ $json }}",
+              "type": "object"
+            },
+            {
+              "id": "response-006",
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "response-007",
+              "name": "assets_created",
+              "value": "={{ $json.assets_created || [] }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prep-response-001",
+      "name": "Prepare Creative Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1968, 448]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "respond-001",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [2240, 448]
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creative Director Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Agent Input": {
+      "main": [
+        [
+          {
+            "node": "Creative Director Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Creative Director Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Creative Director Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creative Knowledge Base": {
+      "ai_tool": [
+        [
+          {
+            "node": "Creative Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Creative Knowledge Base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creative Director Prompts MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Creative Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creative Director Resources MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Creative Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creative Agent Prompts MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Creative Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creative Agent Resources MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Creative Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pictorem MCP Server": {
+      "ai_tool": [
+        [
+          {
+            "node": "Creative Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WordPress MCP Server": {
+      "ai_tool": [
+        [
+          {
+            "node": "Creative Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase MCP Server": {
+      "ai_tool": [
+        [
+          {
+            "node": "Creative Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Writer Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Creative Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Editor Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Creative Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creative Execution Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Creative Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report to Marketing Director": {
+      "ai_tool": [
+        [
+          {
+            "node": "Creative Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Campaign Coordination Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Creative Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creative Director Agent": {
+      "main": [
+        [
+          {
+            "node": "Route Response Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Response Type": {
+      "main": [
+        [
+          {
+            "node": "Format Chat Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait for Creative Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Chat Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Creative Approval": {
+      "main": [
+        [
+          {
+            "node": "Prepare Creative Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Creative Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "tags": [
+    {
+      "id": "mcp-agent",
+      "name": "Agent"
+    },
+    {
+      "id": "creative",
+      "name": "Creative"
+    },
+    {
+      "id": "director",
+      "name": "Director"
+    }
+  ],
+  "triggerCount": 3,
+  "updatedAt": "2025-08-18T21:30:00.000Z",
+  "id": "CreativeDirector001",
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "directive_type": "creative_direction",
+          "directive_id": "dir_20250118_001",
+          "source": "marketing_director",
+          "target": "creative_director",
+          "priority": "high",
+          "deadline": "2025-01-31T23:59:59Z",
+          "creative_request": {
+            "request_type": "campaign_visuals",
+            "campaign_id": "spring_2025_botanical",
+            "scope": "multi_platform",
+            "visual_requirements": {
+              "asset_types": ["hero_images", "social_posts", "email_headers", "ad_creatives"],
+              "brand_elements": ["logo", "color_palette", "typography"],
+              "style_direction": "modern_abstract_botanical",
+              "audience_segments": ["hospitality", "luxury_home", "corporate"]
+            },
+            "content_specifications": {
+              "facebook": {"format": "1200x628", "variations": 3},
+              "instagram": {"format": "1080x1080", "variations": 5},
+              "pinterest": {"format": "1000x1500", "variations": 4},
+              "email": {"format": "600x400", "variations": 2}
+            },
+            "performance_targets": {
+              "engagement_rate": 0.055,
+              "click_through_rate": 0.025,
+              "conversion_rate": 0.015
+            }
+          },
+          "action_required": {
+            "urgency": "immediate",
+            "deliverables": ["visual_assets", "brand_guidelines", "content_calendar"],
+            "approval_required": true
+          }
+        }
+      },
+      {
+        "json": {
+          "directive_type": "creative_campaign",
+          "campaign_id": "summer_wellness_2025",
+          "source": "marketing_campaign_agent",
+          "target": "creative_director",
+          "trigger_conditions": "campaign_visual_creation",
+          "campaign_details": {
+            "name": "Summer Wellness Collection",
+            "theme": "Tranquil Healthcare Environments",
+            "launch_date": "2025-06-01",
+            "duration": "90_days",
+            "budget": {
+              "creative_production": 15000,
+              "ad_spend": 25000
+            }
+          },
+          "creative_brief": {
+            "theme": "Healing Abstract Art Collection",
+            "target_audience": "healthcare_segment",
+            "deliverables": ["waiting_room_visuals", "patient_room_art", "wellness_center_pieces"],
+            "brand_requirements": {
+              "color_palette": "calming_blues_greens",
+              "style": "soft_abstract_therapeutic",
+              "mood": "peaceful_healing_positive"
+            },
+            "therapeutic_elements": {
+              "biophilic_patterns": true,
+              "stress_reduction_focus": true,
+              "evidence_based_design": true
+            }
+          },
+          "platform_requirements": {
+            "website": {"hero_banners": 3, "product_showcases": 10},
+            "email": {"campaign_headers": 5, "product_features": 15},
+            "social": {
+              "instagram": {"posts": 20, "stories": 30},
+              "pinterest": {"healthcare_board": 25, "wellness_pins": 40}
+            }
+          },
+          "compliance_requirements": {
+            "ada_compliant": true,
+            "healthcare_appropriate": true,
+            "evidence_based": true
+          }
+        }
+      }
+    ],
+    "Creative Director Webhook": [
+      {
+        "json": {
+          "directive_type": "brand_update",
+          "update_id": "brand_2025_001",
+          "source": "marketing_director",
+          "priority": "medium",
+          "brand_evolution": {
+            "reason": "market_expansion",
+            "segments_affected": ["luxury_home", "corporate"],
+            "changes": {
+              "color_palette": {
+                "add": ["deep_emerald", "champagne_gold"],
+                "retire": ["bright_orange"],
+                "reasoning": "elevate_luxury_perception"
+              },
+              "typography": {
+                "primary": "keep_existing",
+                "secondary": "add_serif_option",
+                "reasoning": "sophistication_enhancement"
+              },
+              "visual_style": {
+                "direction": "more_minimalist",
+                "texture_usage": "reduce_by_30%",
+                "white_space": "increase_by_20%"
+              }
+            }
+          },
+          "implementation_timeline": {
+            "phase_1": "update_guidelines",
+            "phase_2": "create_templates",
+            "phase_3": "rollout_to_campaigns",
+            "completion_date": "2025-03-15"
+          }
+        }
+      },
+      {
+        "json": {
+          "directive_type": "social_media_creative",
+          "campaign_id": "viral_moment_2025",
+          "source": "social_media_director",
+          "urgency": "immediate",
+          "opportunity": {
+            "type": "trending_topic",
+            "topic": "sustainable_art_movement",
+            "relevance": "eco_millennials_segment",
+            "window": "48_hours"
+          },
+          "content_request": {
+            "instagram": {
+              "reels": 2,
+              "stories": 5,
+              "posts": 3,
+              "style": "authentic_behind_scenes"
+            },
+            "tiktok": {
+              "videos": 2,
+              "style": "educational_entertaining"
+            },
+            "pinterest": {
+              "idea_pins": 3,
+              "style": "diy_sustainable"
+            }
+          },
+          "messaging": {
+            "key_points": ["sustainable_materials", "local_production", "carbon_neutral_shipping"],
+            "hashtags": ["#SustainableArt", "#EcoCanvas", "#GreenInteriors"],
+            "call_to_action": "Join the sustainable art movement"
+          }
+        }
+      },
+      {
+        "json": {
+          "directive_type": "product_launch_visuals",
+          "launch_id": "exclusive_collection_2025",
+          "source": "product_director",
+          "product_line": {
+            "name": "Signature Artist Series",
+            "pieces": 12,
+            "price_range": "premium",
+            "target_segment": "art_collectors"
+          },
+          "visual_requirements": {
+            "product_photography": {
+              "hero_shots": 12,
+              "detail_shots": 36,
+              "lifestyle_shots": 24,
+              "360_views": 12
+            },
+            "marketing_materials": {
+              "catalog_design": true,
+              "lookbook": true,
+              "digital_brochure": true,
+              "ar_experience": true
+            },
+            "platform_assets": {
+              "shopify": "product_pages",
+              "email": "launch_sequence",
+              "social": "teaser_campaign"
+            }
+          },
+          "luxury_elements": {
+            "packaging_design": "premium_unboxing",
+            "certificate_design": "authenticity_docs",
+            "collector_materials": "exclusive_content"
+          }
+        }
+      }
+    ],
+    "When chat message received": [
+      {
+        "json": {
+          "chatInput": "I need help creating visuals for our hospitality segment campaign targeting boutique hotels",
+          "sessionId": "chat_session_001"
+        }
+      },
+      {
+        "json": {
+          "chatInput": "Can you review the brand consistency across our recent social media posts?",
+          "sessionId": "chat_session_002"
+        }
+      },
+      {
+        "json": {
+          "chatInput": "What visual strategy should we use for the corporate wellness program pitch?",
+          "sessionId": "chat_session_003"
+        }
+      }
+    ]
+  }
+}

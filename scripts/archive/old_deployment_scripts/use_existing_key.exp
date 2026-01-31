@@ -1,0 +1,77 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Stop n8n
+send "docker compose stop n8n\r"
+expect "# "
+
+# Show current and working keys
+send "echo '=== Current key in .env ==='\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env\r"
+expect "# "
+
+send "echo '=== Working key in vivid_mas_n8n_storage config ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine cat /data/config\r"
+expect "# "
+
+# Update .env to use the working key
+send "sed -i 's/N8N_ENCRYPTION_KEY=.*/N8N_ENCRYPTION_KEY=pAyfxPn9h2yqv32GtzSLA73h2IdZ1n88/' .env\r"
+expect "# "
+
+# Verify the change
+send "echo '=== Updated key in .env ==='\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env\r"
+expect "# "
+
+# Start n8n with the correct key
+send "docker compose up -d n8n\r"
+expect "# "
+
+# Wait for n8n to start
+send "echo 'Waiting for n8n to start with correct key...'\r"
+expect "# "
+send "sleep 20\r"
+expect "# "
+
+# Check n8n status
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Check logs
+send "docker logs n8n --tail 20 2>&1 | grep -E 'Initializing|ready|accessible|started|error' | tail -10\r"
+expect "# "
+
+# Test access
+send "curl -s http://localhost:5678 | head -5\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

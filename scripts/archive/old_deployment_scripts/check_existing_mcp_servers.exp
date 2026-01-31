@@ -1,0 +1,29 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet and check existing MCP servers
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check if /opt/mcp-servers exists and list contents
+send "ls -la /opt/mcp-servers/ 2>/dev/null || echo 'Directory does not exist'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# If directory exists, show detailed listing
+send "find /opt/mcp-servers -name 'package.json' -type f 2>/dev/null | grep -v node_modules | sort\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

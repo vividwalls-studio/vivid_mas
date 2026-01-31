@@ -1,0 +1,48 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect "Enter passphrase for key*"
+send "freedom\r"
+
+# Wait for prompt
+expect "root@*"
+
+# Connect Caddy to Twenty's network
+send "docker network connect twenty_default caddy\r"
+expect "root@*"
+
+# Test connection from Caddy to Twenty
+send "docker exec caddy ping -c 1 twenty-server-1\r"
+expect "root@*"
+
+# Try accessing Twenty through its container name
+send "docker exec caddy curl -I http://twenty-server-1:3000\r"
+expect "root@*"
+
+# Update Caddyfile to use container name instead of localhost
+send "cd /home/vivid/vivid_mas\r"
+expect "root@*"
+
+send "sed -i 's/reverse_proxy localhost:3000/reverse_proxy twenty-server-1:3000/' Caddyfile\r"
+expect "root@*"
+
+# Reload Caddy configuration
+send "docker exec caddy caddy reload --config /etc/caddy/Caddyfile\r"
+expect "root@*"
+
+# Wait a moment
+send "sleep 3\r"
+expect "root@*"
+
+# Test the URL
+send "curl -I https://crm.vividwalls.blog\r"
+expect "root@*"
+
+# Exit
+send "exit\r"
+expect eof

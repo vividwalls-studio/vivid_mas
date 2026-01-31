@@ -1,0 +1,114 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Create backup
+send "cp /opt/mcp-servers/n8n-mcp-config.json /opt/mcp-servers/n8n-mcp-config.json.backup-email\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Create Python script to update the config
+send "cat > /tmp/update_n8n_config.py << 'EOF'\r"
+expect ">"
+send "import json\r"
+expect ">"
+send "\r"
+expect ">"
+send "# Read current config\r"
+expect ">"
+send "with open('/opt/mcp-servers/n8n-mcp-config.json', 'r') as f:\r"
+expect ">"
+send "    config = json.load(f)\r"
+expect ">"
+send "\r"
+expect ">"
+send "# Add email marketing servers\r"
+expect ">"
+send "config['mcpServers']['email-marketing-prompts'] = {\r"
+expect ">"
+send "    'name': 'Email Marketing Prompts Server',\r"
+expect ">"
+send "    'description': 'Provides prompt templates and query generation for email marketing campaigns',\r"
+expect ">"
+send "    'command': 'node',\r"
+expect ">"
+send "    'args': ['/opt/mcp-servers/email-marketing-prompts/dist/index.js'],\r"
+expect ">"
+send "    'cwd': '/opt/mcp-servers/email-marketing-prompts',\r"
+expect ">"
+send "    'env': {\r"
+expect ">"
+send "        'LOG_LEVEL': 'info'\r"
+expect ">"
+send "    }\r"
+expect ">"
+send "}\r"
+expect ">"
+send "\r"
+expect ">"
+send "config['mcpServers']['email-marketing-resource'] = {\r"
+expect ">"
+send "    'name': 'Email Marketing Resource Server',\r"
+expect ">"
+send "    'description': 'Provides customer segmentation data and resources for email marketing',\r"
+expect ">"
+send "    'command': 'node',\r"
+expect ">"
+send "    'args': ['/opt/mcp-servers/email-marketing-resource/dist/index.js'],\r"
+expect ">"
+send "    'cwd': '/opt/mcp-servers/email-marketing-resource',\r"
+expect ">"
+send "    'env': {\r"
+expect ">"
+send "        'LOG_LEVEL': 'info'\r"
+expect ">"
+send "    }\r"
+expect ">"
+send "}\r"
+expect ">"
+send "\r"
+expect ">"
+send "# Write updated config\r"
+expect ">"
+send "with open('/opt/mcp-servers/n8n-mcp-config.json', 'w') as f:\r"
+expect ">"
+send "    json.dump(config, f, indent=2)\r"
+expect ">"
+send "\r"
+expect ">"
+send "print('Email marketing MCP servers added to n8n configuration')\r"
+expect ">"
+send "EOF\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Run the Python script
+send "python3 /tmp/update_n8n_config.py\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Verify the update
+send "echo '=== Updated n8n MCP configuration ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "jq '.mcpServers | keys' /opt/mcp-servers/n8n-mcp-config.json\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Clean up
+send "rm /tmp/update_n8n_config.py\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

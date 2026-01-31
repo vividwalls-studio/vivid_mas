@@ -1,0 +1,58 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Read config from n8n_storage volume
+send "echo '=== Config in n8n_storage volume ==='\r"
+expect "# "
+send "docker run --rm -v n8n_storage:/data alpine cat /data/config 2>&1\r"
+expect "# "
+
+# Read config from vivid_mas_n8n_storage volume
+send "echo '=== Config in vivid_mas_n8n_storage volume ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine cat /data/config 2>&1\r"
+expect "# "
+
+# Check current key in .env
+send "echo '=== Current key in .env ==='\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env | cut -c1-50\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env | cut -c51-100\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env | cut -c101-200\r"
+expect "# "
+
+# Check which volume is actually mounted to n8n
+send "echo '=== Volume mount for n8n ==='\r"
+expect "# "
+send "docker inspect n8n | grep -A5 -B5 'n8n_storage' | head -15\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

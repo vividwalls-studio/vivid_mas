@@ -1,0 +1,70 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Check all n8n containers (including stopped ones)
+send "echo '=== All n8n containers ==='\r"
+expect "# "
+send "docker ps -a | grep n8n | head -10\r"
+expect "# "
+
+# Check current n8n logs for encryption errors
+send "echo '=== Current n8n encryption errors ==='\r"
+expect "# "
+send "docker logs n8n 2>&1 | grep -i 'encryption' | tail -20\r"
+expect "# "
+
+# Check if we can find any successful startup logs from previous containers
+send "echo '=== Checking for previous successful n8n containers ==='\r"
+expect "# "
+send "docker ps -a | grep 'n8n.*Exited (0)' | head -5\r"
+expect "# "
+
+# Check system logs for n8n
+send "echo '=== System logs for n8n ==='\r"
+expect "# "
+send "journalctl -u docker --no-pager | grep -i 'n8n.*started\\|n8n.*ready' | tail -10 || echo 'No system logs found'\r"
+expect "# "
+
+# Check docker logs for when n8n was last working
+send "echo '=== Docker service logs ==='\r"
+expect "# "
+send "docker logs n8n 2>&1 | grep -E 'Initializing n8n|Editor UI is now accessible' | tail -10 || echo 'No success logs in current container'\r"
+expect "# "
+
+# Let's also check the database to see if workflows exist
+send "echo '=== Checking if workflows exist in database ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine ls -la /data/database.sqlite 2>&1 || echo 'No database found'\r"
+expect "# "
+
+# Check the size of database to confirm it has data
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine du -h /data/database.sqlite 2>&1 || echo 'Cannot check database size'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

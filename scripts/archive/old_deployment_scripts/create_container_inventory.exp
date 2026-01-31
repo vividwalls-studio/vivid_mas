@@ -1,0 +1,102 @@
+#!/usr/bin/expect -f
+
+set timeout 180
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Creating Container Inventory ==='\r"
+        expect "root@*"
+        
+        # Create inventory file
+        send "cat > /root/container_inventory.md << 'EOF'\r"
+        send "# VividWalls MAS Container Inventory\r"
+        send "Generated: $(date)\r\n"
+        send "## Container Details\r\n"
+        send "| Container Name | Container ID | Network | Status | Ports | Caddy URL |\r"
+        send "|----------------|--------------|---------|--------|-------|------------|\r"
+        send "EOF\r"
+        expect "root@*"
+        
+        # Get all containers with detailed info
+        send "docker ps -a --format '{{.Names}}|{{.ID}}|{{.Networks}}|{{.Status}}|{{.Ports}}' > /tmp/containers.txt\r"
+        expect "root@*"
+        
+        # Check Caddy config for URLs
+        send "echo '\n### Checking Caddy URLs...'\r"
+        expect "root@*"
+        
+        send "docker exec caddy cat /etc/caddy/Caddyfile 2>/dev/null | grep -E '^[a-zA-Z0-9.-]+\\.(vividwalls\\.blog|com)' | sed 's/ {//' > /tmp/caddy_urls.txt || echo 'No Caddy URLs found'\r"
+        expect "root@*"
+        
+        send "echo '\n### Container List:'\r"
+        expect "root@*"
+        
+        send "cat /tmp/containers.txt\r"
+        expect "root@*"
+        
+        send "echo '\n### Caddy URLs:'\r"
+        expect "root@*"
+        
+        send "cat /tmp/caddy_urls.txt\r"
+        expect "root@*"
+        
+        # Create detailed inventory
+        send "echo '\n### Creating detailed inventory...'\r"
+        expect "root@*"
+        
+        # Manually add known mappings
+        send "cat >> /root/container_inventory.md << 'EOF'\r"
+        send "| n8n | $(docker ps -aqf 'name=^n8n$') | vivid_mas | $(docker ps -f 'name=^n8n$' --format '{{.Status}}') | 5678 | https://n8n.vividwalls.blog |\r"
+        send "| neo4j-knowledge | $(docker ps -aqf 'name=neo4j-knowledge') | vivid_mas | $(docker ps -f 'name=neo4j-knowledge' --format '{{.Status}}') | 7474,7687 | https://neo4j.vividwalls.blog |\r"
+        send "| wordpress-multisite | $(docker ps -aqf 'name=wordpress-multisite') | vivid_mas | $(docker ps -f 'name=wordpress-multisite' --format '{{.Status}}') | 8080->80 | https://vividwalls.blog |\r"
+        send "| open-webui | $(docker ps -aqf 'name=open-webui') | vivid_mas | $(docker ps -f 'name=open-webui' --format '{{.Status}}') | 3000->8080 | https://openwebui.vividwalls.blog |\r"
+        send "| listmonk | $(docker ps -aqf 'name=^listmonk$') | vivid_mas | $(docker ps -f 'name=^listmonk$' --format '{{.Status}}') | 9003->9000 | https://listmonk.vividwalls.blog |\r"
+        send "| flowise | $(docker ps -aqf 'name=flowise') | vivid_mas | $(docker ps -f 'name=flowise' --format '{{.Status}}') | 3001 | https://flowise.vividwalls.blog |\r"
+        send "| qdrant | $(docker ps -aqf 'name=qdrant') | vivid_mas | $(docker ps -f 'name=qdrant' --format '{{.Status}}') | 6333 | https://qdrant.vividwalls.blog |\r"
+        send "| supabase-kong | $(docker ps -aqf 'name=supabase-kong') | vivid_mas | $(docker ps -f 'name=supabase-kong' --format '{{.Status}}') | 8000,8443 | https://supabase.vividwalls.blog |\r"
+        send "| supabase-analytics | $(docker ps -aqf 'name=supabase-analytics') | vivid_mas | $(docker ps -f 'name=supabase-analytics' --format '{{.Status}}') | 4000 | https://analytics.vividwalls.blog |\r"
+        send "| twenty-server-1 | $(docker ps -aqf 'name=twenty-server-1') | vivid_mas | $(docker ps -af 'name=twenty-server-1' --format '{{.Status}}') | - | https://crm.vividwalls.blog |\r"
+        send "| langfuse-web | $(docker ps -aqf 'name=langfuse-web') | vivid_mas | $(docker ps -af 'name=langfuse-web' --format '{{.Status}}') | - | https://langfuse.vividwalls.blog |\r"
+        send "| searxng | $(docker ps -aqf 'name=searxng') | vivid_mas | $(docker ps -af 'name=searxng' --format '{{.Status}}') | - | https://search.vividwalls.blog |\r"
+        send "EOF\r"
+        expect "root@*"
+        
+        send "echo '\n### Port Conflicts Analysis:'\r"
+        expect "root@*"
+        
+        send "cat >> /root/container_inventory.md << 'EOF'\r\n"
+        send "## Port Conflicts Found\r\n"
+        send "1. **Port 5433**: Used by 'postgres' container (contains n8n workflows)\r"
+        send "   - Blocking: vivid_mas-postgres-1 (appears to be unused)\r\n"
+        send "2. **Port 8080**: Used by 'wordpress-multisite'\r"
+        send "   - Blocking: searxng\r\n"
+        send "## Containers Not Running\r"
+        send "- vivid_mas-postgres-1 (Created) - Port conflict 5433\r"
+        send "- searxng (Created) - Port conflict 8080\r"
+        send "- vivid_mas-langfuse-web-1 (Restarting) - Missing ENCRYPTION_KEY\r"
+        send "- vivid_mas-langfuse-worker-1 (Restarting) - Missing ENCRYPTION_KEY\r"
+        send "- twenty-server-1 (Exited) - Database auth failed\r"
+        send "- twenty-worker-1 (Exited) - Database auth failed\r"
+        send "EOF\r"
+        expect "root@*"
+        
+        send "echo '\n### Container Inventory saved to /root/container_inventory.md'\r"
+        expect "root@*"
+        
+        send "cat /root/container_inventory.md\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

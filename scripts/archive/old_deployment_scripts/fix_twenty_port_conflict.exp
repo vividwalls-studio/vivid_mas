@@ -1,0 +1,86 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Navigate to Twenty directory
+send "cd /opt/twenty\r"
+expect "root@VividWalls-Studio-MAS:/opt/twenty#"
+
+# Check current docker-compose.yml
+send "echo '=== Current Twenty Port Configuration ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/twenty#"
+
+send "grep -A 5 'ports:' docker-compose.yml\r"
+expect "root@VividWalls-Studio-MAS:/opt/twenty#"
+
+# Stop Twenty CRM
+send "echo '\n=== Stopping Twenty CRM ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/twenty#"
+
+send "docker-compose down\r"
+expect "root@VividWalls-Studio-MAS:/opt/twenty#"
+
+# Backup current docker-compose
+send "cp docker-compose.yml docker-compose.yml.bak\r"
+expect "root@VividWalls-Studio-MAS:/opt/twenty#"
+
+# Update port from 3000 to 3010
+send "echo '\n=== Updating Twenty CRM port to 3010 ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/twenty#"
+
+send "sed -i 's/3000:3000/3010:3000/g' docker-compose.yml\r"
+expect "root@VividWalls-Studio-MAS:/opt/twenty#"
+
+# Verify the change
+send "echo '\n=== Verifying port change ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/twenty#"
+
+send "grep -A 5 'ports:' docker-compose.yml\r"
+expect "root@VividWalls-Studio-MAS:/opt/twenty#"
+
+# Start Twenty CRM with new port
+send "echo '\n=== Starting Twenty CRM on port 3010 ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/twenty#"
+
+send "docker-compose up -d\r"
+expect "root@VividWalls-Studio-MAS:/opt/twenty#"
+
+# Wait for containers to start
+send "sleep 10\r"
+expect "root@VividWalls-Studio-MAS:/opt/twenty#"
+
+# Check if Twenty is running
+send "echo '\n=== Checking Twenty CRM status ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/twenty#"
+
+send "docker ps | grep twenty\r"
+expect "root@VividWalls-Studio-MAS:/opt/twenty#"
+
+# Update Caddy configuration for Twenty
+send "echo '\n=== Updating Caddy for Twenty CRM ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/twenty#"
+
+send "cd /root/vivid_mas\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+# Check if Twenty is in Caddyfile
+send "grep -n 'twenty' Caddyfile || echo 'Twenty not in Caddyfile'\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+# Exit
+send "exit\r"
+expect eof

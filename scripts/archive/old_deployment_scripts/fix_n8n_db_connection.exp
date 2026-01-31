@@ -1,0 +1,90 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Stop n8n
+send "echo '=== Stopping n8n ==='\r"
+expect "# "
+send "docker compose stop n8n\r"
+expect "# "
+
+# Check current docker-compose configuration
+send "echo '=== Current n8n database configuration ==='\r"
+expect "# "
+send "grep -A10 'n8n:' docker-compose.yml | grep -E 'DB_POSTGRESDB_HOST|depends_on'\r"
+expect "# "
+
+# Update docker-compose to use postgres instead of db
+send "echo '=== Updating n8n to use postgres container ==='\r"
+expect "# "
+send "sed -i 's/DB_POSTGRESDB_HOST=db/DB_POSTGRESDB_HOST=postgres/g' docker-compose.yml\r"
+expect "# "
+
+# Verify the change
+send "echo '=== Verifying docker-compose update ==='\r"
+expect "# "
+send "grep 'DB_POSTGRESDB_HOST' docker-compose.yml\r"
+expect "# "
+
+# Check if n8n depends_on needs updating
+send "echo '=== Checking n8n dependencies ==='\r"
+expect "# "
+send "grep -A5 'n8n:' docker-compose.yml | grep -A3 'depends_on'\r"
+expect "# "
+
+# Start n8n with correct database connection
+send "echo '=== Starting n8n with correct database connection ==='\r"
+expect "# "
+send "docker compose up -d n8n\r"
+expect "# "
+
+# Wait for n8n to start
+send "echo 'Waiting for n8n to connect to correct database...'\r"
+expect "# "
+send "sleep 30\r"
+expect "# "
+
+# Check n8n status
+send "echo '=== Checking n8n status ==='\r"
+expect "# "
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Verify database connection
+send "echo '=== Verifying n8n is using correct database ==='\r"
+expect "# "
+send "docker logs n8n --tail 30 2>&1 | grep -E 'database|postgres|Initializing|ready|error' | tail -15\r"
+expect "# "
+
+# Test n8n access
+send "echo '=== Testing n8n access ==='\r"
+expect "# "
+send "curl -s http://localhost:5678 | grep -o '<title>.*</title>'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

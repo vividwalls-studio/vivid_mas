@@ -1,0 +1,77 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check if n8n is running
+send "echo '=== Checking n8n Docker Container ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker ps | grep n8n\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check n8n logs
+send "echo '\n=== Recent n8n Logs ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker logs n8n --tail 10 2>&1\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check n8n environment
+send "echo '\n=== n8n Environment Configuration ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker inspect n8n | jq '.[0].Config.Env' | grep -E '(N8N_|WEBHOOK_URL|PORT)'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check n8n port accessibility
+send "echo '\n=== Checking n8n Port ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "netstat -tlnp | grep 5678\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check n8n webhook URL
+send "echo '\n=== Testing n8n API ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "curl -s http://localhost:5678/healthz\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check MCP configuration file
+send "echo '\n=== Checking MCP Configuration ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "ls -la /opt/mcp-servers/n8n-mcp-config.json\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check n8n data persistence
+send "echo '\n=== Checking n8n Data Volume ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker volume ls | grep n8n\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check docker-compose configuration
+send "echo '\n=== Checking Docker Compose Config ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "find / -name 'docker-compose*.yml' -type f 2>/dev/null | xargs grep -l 'n8n' | head -5\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

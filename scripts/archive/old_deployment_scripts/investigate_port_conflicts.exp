@@ -1,0 +1,50 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Checking what is using port 5433 ==='\r"
+        expect "root@*"
+        
+        send "docker ps | grep 5433\r"
+        expect "root@*"
+        
+        send "echo '\n=== Checking what is using port 8080 ==='\r"
+        expect "root@*"
+        
+        send "docker ps | grep 8080\r"
+        expect "root@*"
+        
+        send "echo '\n=== All PostgreSQL containers ==='\r"
+        expect "root@*"
+        
+        send "docker ps -a | grep postgres\r"
+        expect "root@*"
+        
+        send "echo '\n=== Checking networks ==='\r"
+        expect "root@*"
+        
+        send "docker network ls | grep -E '(twenty|vivid)'\r"
+        expect "root@*"
+        
+        send "echo '\n=== Creating Twenty network if missing ==='\r"
+        expect "root@*"
+        
+        send "docker network create twenty_default 2>/dev/null || echo 'Network already exists or error'\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

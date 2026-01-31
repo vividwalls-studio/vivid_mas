@@ -1,0 +1,78 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# First, let's check what volumes contain n8n data
+send "echo '=== Checking which volume has n8n data ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine ls -la /data/.n8n/ 2>&1 | head -10\r"
+expect "# "
+
+# Check if there's a config file in the volume
+send "echo '=== Checking for existing config in volume ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine cat /data/.n8n/config 2>&1 | head -5\r"
+expect "# "
+
+# Stop n8n container
+send "docker compose stop n8n\r"
+expect "# "
+
+# Backup current .env
+send "cp .env .env.backup-keys-$(date +%Y%m%d-%H%M%S)\r"
+expect "# "
+
+# Update the N8N_ENCRYPTION_KEY in .env with the correct key
+send "sed -i 's|N8N_ENCRYPTION_KEY=.*|N8N_ENCRYPTION_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZDAxYzZjZC1lNjY5LTQ4YWQtYTY5ZS1mMDU0YTY4NjU1YzQiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzUwNDQ5MzEzfQ.uBJrDT3a0pQdA5hA28Zf5egmhFLryv8DUNLvsoleXcs|' .env\r"
+expect "# "
+
+# Verify the change
+send "echo '=== Verifying encryption key update ==='\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env\r"
+expect "# "
+
+# Start n8n again
+send "docker compose up -d n8n\r"
+expect "# "
+
+# Wait for n8n to start
+send "echo 'Waiting for n8n to start...'\r"
+expect "# "
+send "sleep 20\r"
+expect "# "
+
+# Check n8n status
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Check logs for any errors
+send "docker logs n8n --tail 30 2>&1 | grep -i 'error\\|started\\|ready' | tail -10\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

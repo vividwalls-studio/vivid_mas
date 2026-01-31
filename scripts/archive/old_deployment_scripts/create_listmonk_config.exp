@@ -1,0 +1,93 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check what's in the config directory
+send "echo '=== Config Directory Contents ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "ls -la /opt/mcp-servers/listmonk-email-marketing/config/\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Create the listmonk.toml config file
+send "echo '\n=== Creating ListMonk Config ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cat > /opt/mcp-servers/listmonk-email-marketing/config/listmonk.toml << 'EOF'\r"
+send "[app]\r"
+send "address = \"0.0.0.0:9000\"\r"
+send "\r"
+send "[db]\r"
+send "host = \"listmonk-postgres\"\r"
+send "port = 5432\r"
+send "user = \"listmonk\"\r"
+send "password = \"listmonk123\"\r"
+send "database = \"listmonk\"\r"
+send "ssl_mode = \"disable\"\r"
+send "max_open = 25\r"
+send "max_idle = 25\r"
+send "max_lifetime = \"300s\"\r"
+send "\r"
+send "[upload]\r"
+send "provider = \"filesystem\"\r"
+send "filesystem.upload_path = \"./uploads\"\r"
+send "filesystem.upload_uri = \"/uploads\"\r"
+send "EOF\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Verify the file was created
+send "echo '\n=== Verifying Config File ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cat /opt/mcp-servers/listmonk-email-marketing/config/listmonk.toml\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Restart ListMonk
+send "echo '\n=== Restarting ListMonk ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker restart listmonk\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Wait a bit
+send "sleep 10\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check status
+send "echo '\n=== Checking ListMonk Status ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker ps | grep listmonk\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check logs
+send "echo '\n=== ListMonk Logs ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker logs listmonk --tail 5\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Test API
+send "echo '\n=== Testing ListMonk API ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "curl -s http://localhost:9003/api/health\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

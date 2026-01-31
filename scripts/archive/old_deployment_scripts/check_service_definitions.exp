@@ -1,0 +1,52 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check service definitions and profiles
+send "echo '=== Checking Service Definitions ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cd /root/vivid_mas\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+# Check if services have profiles
+send "echo '\n--- Services with profiles ---'\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+send "grep -B 5 'profiles:' docker-compose.yml | grep -E '(ollama|open-webui|flowise|langfuse|searxng)' -A 5 | head -20\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+# Check container health and status
+send "echo '\n=== All Container Status Summary ==='\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+send "docker ps --format 'table {{.Names}}\\t{{.Status}}' | grep -v 'STATUS' | sort | head -30\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+# Supabase specific check
+send "echo '\n--- Supabase services check ---'\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+send "docker ps | grep supabase | wc -l\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+send "echo 'Supabase services running'\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+# Exit
+send "exit\r"
+expect eof

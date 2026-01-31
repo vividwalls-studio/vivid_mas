@@ -1,0 +1,49 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check n8n MCP configuration for email servers
+send "echo '=== Email-related MCP Servers in n8n Config ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cd /opt/mcp-servers && jq '.mcpServers | keys | map(select(contains(\"email\") or contains(\"listmonk\") or contains(\"sendgrid\")))' n8n-mcp-config.json\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers#"
+
+# Check specific email marketing servers
+send "echo '\n=== Email Marketing Prompts Server Config ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers#"
+
+send "jq '.mcpServers.\"email-marketing-prompts\"' n8n-mcp-config.json 2>/dev/null || echo 'Not configured'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers#"
+
+# Check email marketing resource server
+send "echo '\n=== Email Marketing Resource Server Config ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers#"
+
+send "jq '.mcpServers.\"email-marketing-resource\"' n8n-mcp-config.json 2>/dev/null || echo 'Not configured'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers#"
+
+# Count total MCP servers
+send "echo '\n=== Total MCP Servers Configured ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers#"
+
+send "jq '.mcpServers | length' n8n-mcp-config.json && echo ' servers configured'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers#"
+
+# Exit
+send "exit\r"
+expect eof

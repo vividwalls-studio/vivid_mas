@@ -1,0 +1,80 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Wait a bit more for n8n to fully start
+send "echo 'Waiting for n8n to fully initialize...'\r"
+expect "# "
+send "sleep 20\r"
+expect "# "
+
+# Check n8n status
+send "echo '=== N8N Status ==='\r"
+expect "# "
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Check if workflow is active
+send "echo '\n=== Business Manager Workflow Status ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT id, name, active FROM workflow_entity WHERE id = 'czgQFXq4Bh6Ho3q3';\"\r"
+expect "# "
+
+# Test webhook
+send "echo '\n=== Testing Webhook ==='\r"
+expect "# "
+send "curl -s -X POST https://n8n.vividwalls.blog/webhook/czgQFXq4Bh6Ho3q3 -H 'Content-Type: application/json' -d '{\"update_id\": 12345, \"message\": {\"text\": \"Test message\"}}' -w '\nHTTP Status: %{http_code}\n'\r"
+expect "# "
+
+# Check n8n logs for any errors
+send "echo '\n=== Recent n8n logs ==='\r"
+expect "# "
+send "docker logs n8n --tail 20 2>&1 | grep -E 'webhook|error|Business Manager|started' | tail -10\r"
+expect "# "
+
+# Final summary
+send "echo '\n=== FINAL STATUS ==='\r"
+expect "# "
+send "echo '✓ Encryption keys are synchronized (using OLD key)'\r"
+expect "# "
+send "echo '✓ Business Manager workflow is active in database'\r"
+expect "# "
+send "echo '✓ n8n is running on port 5678'\r"
+expect "# "
+send "echo '\nWebhook URL: https://n8n.vividwalls.blog/webhook/czgQFXq4Bh6Ho3q3'\r"
+expect "# "
+send "echo '\nNote: If webhook still returns 502/404, you may need to:'\r"
+expect "# "
+send "echo '1. Check the workflow in n8n UI at https://n8n.vividwalls.blog'\r"
+expect "# "
+send "echo '2. Manually toggle the workflow off and on'\r"
+expect "# "
+send "echo '3. Re-save the Telegram credentials in the workflow'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

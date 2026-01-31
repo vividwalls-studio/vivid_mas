@@ -1,0 +1,71 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Check current N8N_HOSTNAME setting
+send "grep N8N_HOSTNAME .env | head -5\r"
+expect "# "
+
+# Backup the current .env file
+send "cp .env .env.backup-webhook\r"
+expect "# "
+
+# Update the N8N_HOSTNAME
+send "sed -i 's/# N8N_HOSTNAME=.*/N8N_HOSTNAME=n8n.vividwalls.blog/' .env\r"
+expect "# "
+
+# Also ensure WEBHOOK_URL is set correctly in docker-compose.yml
+send "sed -i 's|WEBHOOK_URL=.*|WEBHOOK_URL=https://n8n.vividwalls.blog|' docker-compose.yml\r"
+expect "# "
+
+# Verify the changes
+send "grep N8N_HOSTNAME .env\r"
+expect "# "
+
+send "grep WEBHOOK_URL docker-compose.yml\r"
+expect "# "
+
+# Restart n8n to apply the changes
+send "docker compose restart n8n\r"
+expect "# "
+
+# Wait for n8n to restart
+send "echo 'Waiting for n8n to restart...'\r"
+expect "# "
+send "sleep 15\r"
+expect "# "
+
+# Check n8n status
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Check n8n logs for webhook URL
+send "docker logs n8n --tail 20 | grep -i webhook || echo 'No webhook logs yet'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

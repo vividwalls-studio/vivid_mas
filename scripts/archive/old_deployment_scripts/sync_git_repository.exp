@@ -1,0 +1,56 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Syncing Git Repository ==='\r"
+        expect "root@*"
+        
+        send "cd /root/vivid_mas\r"
+        expect "root@*"
+        
+        # Check git status
+        send "echo 'Current git status:'\r"
+        expect "root@*"
+        send "git status --short\r"
+        expect "root@*"
+        
+        # Check the docker-compose changes
+        send "echo '\n=== Docker-compose changes ==='\r"
+        expect "root@*"
+        send "git diff docker-compose.yml | head -20\r"
+        expect "root@*"
+        
+        # Add and commit the fixed docker-compose.yml
+        send "echo '\n=== Committing server fixes ==='\r"
+        expect "root@*"
+        send "git add docker-compose.yml\r"
+        expect "root@*"
+        
+        send "git commit -m 'Fix n8n database host configuration from db to postgres\n\nCorrected DB_POSTGRESDB_HOST=postgres as per CLAUDE.md requirements.\nThis ensures n8n connects to the main postgres container on port 5433\nwhich contains the production workflows.'\r"
+        expect "root@*"
+        
+        # Push to origin
+        send "echo '\n=== Pushing to GitHub ==='\r"
+        expect "root@*"
+        send "git push origin main\r"
+        expect "root@*"
+        
+        send "echo '\n=== Git sync complete ==='\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

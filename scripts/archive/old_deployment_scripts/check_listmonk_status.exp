@@ -1,0 +1,63 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check if ListMonk is running
+send "echo '=== ListMonk Docker Container Status ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker ps | grep -E 'listmonk|9003'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check all containers (including stopped)
+send "echo '\n=== All ListMonk Containers (including stopped) ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker ps -a | grep listmonk\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check docker-compose files for ListMonk
+send "echo '\n=== ListMonk Docker Compose Files ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "find /opt/mcp-servers -name '*listmonk*.yml' -o -name '*listmonk*.yaml' | head -10\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check ListMonk configuration
+send "echo '\n=== ListMonk Configuration ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "ls -la /opt/mcp-servers/listmonk-email-marketing/\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check if ListMonk is accessible
+send "echo '\n=== Testing ListMonk API ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "curl -s -o /dev/null -w '%{http_code}' http://localhost:9003/api/health && echo ' - ListMonk API accessible' || echo ' - ListMonk API not accessible'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check ListMonk logs if running
+send "echo '\n=== Recent ListMonk Logs ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker logs listmonk --tail 5 2>&1 || echo 'No ListMonk container found'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

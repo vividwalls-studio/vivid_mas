@@ -1,0 +1,70 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check what's in the config directory with hidden files
+send "echo '=== Config Directory Contents (including hidden) ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "ls -la /opt/mcp-servers/listmonk-email-marketing/config/\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check if config file exists elsewhere
+send "echo '\n=== Searching for listmonk.toml ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "find /opt/mcp-servers/listmonk-email-marketing -name 'listmonk.toml' -o -name '*.toml' | head -10\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check docker logs for any config-related errors
+send "echo '\n=== Docker Logs History ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker logs listmonk 2>&1 | grep -i 'config\\|toml' | tail -20\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check system logs for file deletions
+send "echo '\n=== System Logs - File Operations ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "journalctl -u docker --since '6 hours ago' | grep -i 'listmonk\\|config\\|toml' | tail -20\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check if the file was moved or renamed
+send "echo '\n=== Recent File Operations in Directory ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "find /opt/mcp-servers/listmonk-email-marketing -type f -mtime -1 -ls | grep -E 'config|toml'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check docker container mounts
+send "echo '\n=== Docker Container Mount Details ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker inspect listmonk | jq '.[0].Mounts' 2>/dev/null\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check if config is inside the container
+send "echo '\n=== Config Inside Container ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker exec listmonk ls -la /listmonk/config/ 2>&1 || echo 'Cannot access container'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

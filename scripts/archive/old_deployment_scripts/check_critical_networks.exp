@@ -1,0 +1,40 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Critical Service Networks ==='\r"
+        expect "root@*"
+        
+        send "docker ps --format 'table {{.Names}}\t{{.Networks}}' | grep -E 'NAMES|^n8n|^postgres|supabase'\r"
+        expect "root@*"
+        
+        send "echo '\n=== All Services on vivid_mas network ==='\r"
+        expect "root@*"
+        
+        send "docker ps --format '{{.Names}}: {{.Networks}}' | grep vivid_mas | wc -l\r"
+        expect "root@*"
+        send "echo 'services are on vivid_mas network'\r"
+        expect "root@*"
+        
+        send "echo '\n=== Services NOT on vivid_mas network ==='\r"
+        expect "root@*"
+        
+        send "docker ps --format '{{.Names}}: {{.Networks}}' | grep -v vivid_mas || echo 'All services are on vivid_mas!'\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

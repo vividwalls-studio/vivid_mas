@@ -1,0 +1,68 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Navigate to the MCP server directory
+send "echo '=== Updating ListMonk MCP Server Environment ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cd /opt/mcp-servers/listmonk-mcp-server\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Check if .env exists
+send "echo '\n=== Checking for existing .env ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+send "ls -la .env* 2>/dev/null || echo 'No .env files found'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Create/update .env file
+send "echo '\n=== Creating .env file ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+send "cat > .env << 'EOF'\r"
+send "# Listmonk API Configuration\r"
+send "LISTMONK_URL=http://localhost:9003\r"
+send "LISTMONK_USERNAME=admin\r"
+send "LISTMONK_PASSWORD=admin123\r"
+send "EOF\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Verify the file
+send "echo '\n=== Verifying .env ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+send "cat .env\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Rebuild if needed
+send "echo '\n=== Checking if rebuild needed ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+send "if [ -f package.json ]; then npm run build; else echo 'No package.json found'; fi\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Test connection to ListMonk
+send "echo '\n=== Testing ListMonk Connection ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+send "curl -s -u admin:admin123 http://localhost:9003/api/config | jq -r '.data.app.name' || echo 'Connection failed'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Exit
+send "exit\r"
+expect eof

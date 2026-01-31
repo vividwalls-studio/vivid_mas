@@ -1,0 +1,17 @@
+Compliance Area,Requirement,Priority
+Terms of Service,Always read and respect website ToS,High
+Terms of Service,Avoid clickwrap agreements when possible,Medium
+Terms of Service,Monitor for ToS changes,High
+Terms of Service,Document compliance efforts,Medium
+Robots.txt Compliance,Check robots.txt before scraping,High
+Robots.txt Compliance,Respect disallow directives,Medium
+Robots.txt Compliance,Follow crawl-delay instructions,Medium
+Robots.txt Compliance,Implement sitemap parsing,Medium
+Privacy Laws,GDPR compliance for EU data,High
+Privacy Laws,CCPA compliance for California residents,High
+Privacy Laws,Avoid collecting PII without consent,Medium
+Privacy Laws,Implement data minimization,Medium
+Copyright Protection,Only scrape publicly available data,Medium
+Copyright Protection,Respect copyright notices,Medium
+Copyright Protection,Use fair use principles,Medium
+Copyright Protection,Provide proper attribution,Medium

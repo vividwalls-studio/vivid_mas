@@ -1,0 +1,95 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Stop n8n
+send "echo '=== Stopping n8n ==='\r"
+expect "# "
+send "docker compose stop n8n\r"
+expect "# "
+
+# Update .env to use the correct key
+send "echo '=== Updating .env with correct encryption key ==='\r"
+expect "# "
+send "sed -i 's/N8N_ENCRYPTION_KEY=.*/N8N_ENCRYPTION_KEY=pAyfxPn9h2yqv32GtzSLA73h2IdZ1n88/' .env\r"
+expect "# "
+
+# Verify the change
+send "echo '=== Verifying .env update ==='\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env\r"
+expect "# "
+
+# Delete conflicting config files
+send "echo '=== Deleting config from n8n_storage volume ==='\r"
+expect "# "
+send "docker run --rm -v n8n_storage:/data alpine rm -f /data/config\r"
+expect "# "
+
+send "echo '=== Deleting config from vivid_mas_n8n_storage volume ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine rm -f /data/config\r"
+expect "# "
+
+# Start n8n with the correct key
+send "echo '=== Starting n8n with correct encryption key ==='\r"
+expect "# "
+send "docker compose up -d n8n\r"
+expect "# "
+
+# Wait for n8n to start
+send "echo 'Waiting for n8n to initialize...'\r"
+expect "# "
+send "sleep 30\r"
+expect "# "
+
+# Check n8n status
+send "echo '=== Checking n8n status ==='\r"
+expect "# "
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Check logs
+send "echo '=== Checking n8n logs ==='\r"
+expect "# "
+send "docker logs n8n --tail 30 2>&1 | grep -E 'Initializing|ready|accessible|started|error|Editor' | tail -15\r"
+expect "# "
+
+# Test access
+send "echo '=== Testing n8n access ==='\r"
+expect "# "
+send "curl -s http://localhost:5678 | grep -o '<title>.*</title>' || echo 'Not accessible yet'\r"
+expect "# "
+
+# Check webhook URL configuration
+send "echo '=== Checking webhook URL configuration ==='\r"
+expect "# "
+send "docker logs n8n 2>&1 | grep -i webhook | grep -i url | tail -5\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

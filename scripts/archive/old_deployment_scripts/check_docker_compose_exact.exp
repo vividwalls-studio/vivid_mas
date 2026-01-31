@@ -1,0 +1,49 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check the exact environment variables in docker-compose
+send "echo '=== Docker Compose Environment Variables ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cd /opt/mcp-servers/listmonk-email-marketing && grep -A 20 'LISTMONK_database' docker-compose.listmonk.yml\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Check if ListMonk is looking in the correct location
+send "echo '\n=== Checking ListMonk Working Directory ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker exec listmonk pwd 2>&1 || echo 'Container not running'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Let's check if the config file exists inside the container
+send "echo '\n=== Config Files Inside Container ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker exec listmonk ls -la /listmonk/config/ 2>&1 || echo 'Cannot check'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Check if there's a default config.toml in the image
+send "echo '\n=== Default Config in Image ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker exec listmonk find / -name 'config.toml' 2>/dev/null | head -5 || echo 'Cannot search'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Exit
+send "exit\r"
+expect eof

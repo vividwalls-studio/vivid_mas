@@ -1,0 +1,96 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Stop n8n
+send "echo '=== Stopping n8n ==='\r"
+expect "# "
+send "docker compose stop n8n\r"
+expect "# "
+
+# Remove any SQLite database from the n8n volume (we're using PostgreSQL)
+send "echo '=== Removing SQLite database from n8n volume ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine rm -f /data/database.sqlite 2>&1 || echo 'No SQLite to remove'\r"
+expect "# "
+
+# Check docker network for n8n
+send "echo '=== Checking docker network ==='\r"
+expect "# "
+send "docker network ls | grep vivid\r"
+expect "# "
+
+# Verify postgres is accessible as 'db'
+send "echo '=== Checking postgres alias ==='\r"
+expect "# "
+send "docker compose ps | grep postgres\r"
+expect "# "
+
+# Update docker-compose to ensure n8n uses correct network
+send "echo '=== Checking n8n service configuration ==='\r"
+expect "# "
+send "grep -A20 'n8n:' docker-compose.yml | grep -E 'networks|depends_on|DB_' | head -20\r"
+expect "# "
+
+# Start n8n with PostgreSQL configuration
+send "echo '=== Starting n8n with PostgreSQL ==='\r"
+expect "# "
+send "docker compose up -d n8n\r"
+expect "# "
+
+# Wait for n8n to start
+send "echo 'Waiting for n8n to connect to PostgreSQL...'\r"
+expect "# "
+send "sleep 30\r"
+expect "# "
+
+# Check n8n status
+send "echo '=== Checking n8n status ==='\r"
+expect "# "
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Check n8n logs for database connection
+send "echo '=== Checking n8n database connection ==='\r"
+expect "# "
+send "docker logs n8n --tail 50 2>&1 | grep -E 'database|postgres|workflow|Initializing|ready' | tail -20\r"
+expect "# "
+
+# Test n8n API
+send "echo '=== Testing n8n access ==='\r"
+expect "# "
+send "curl -s http://localhost:5678 | grep -o '<title>.*</title>' || echo 'Not accessible'\r"
+expect "# "
+
+# Verify workflows are accessible
+send "echo '=== Verifying workflow count via logs ==='\r"
+expect "# "
+send "docker logs n8n 2>&1 | grep -i 'workflow' | grep -i 'load\\|found\\|count' | tail -5\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

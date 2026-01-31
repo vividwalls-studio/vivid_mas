@@ -1,0 +1,36 @@
+{
+    email admin@vividwalls.blog
+    # Auto HTTPS is enabled by default, no need to specify
+}
+
+# =============================================================================
+# GLOBAL CONFIGURATION & IMPORTS
+# =============================================================================
+
+# Import all individual service configurations
+import sites-enabled/*.caddy
+
+# =============================================================================
+# MAIN DOMAIN & HEALTH CHECK
+# =============================================================================
+
+# Main domain redirect
+vividwalls.blog {
+    redir https://n8n.vividwalls.blog{uri} permanent
+}
+
+# Health check endpoint
+health.vividwalls.blog {
+    respond "VividWalls MAS - All Systems Operational" 200
+    header {
+        Content-Type "text/plain"
+        X-Timestamp "{http.time_now.unix}"
+    }
+}
+
+# =============================================================================
+# FALLBACK & ERROR HANDLING
+# =============================================================================
+
+# Catch-all removed - wildcard domains require DNS challenge
+# Each subdomain will get its own certificate automatically

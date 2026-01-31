@@ -1,0 +1,54 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Check n8n webhook URLs in logs
+send "echo '=== Checking webhook URLs in n8n logs ==='\r"
+expect "# "
+send "docker logs n8n 2>&1 | grep -i 'webhook.*url\\|webhook.*https' | tail -10\r"
+expect "# "
+
+# Test the Telegram webhook URL
+send "echo '=== Testing Telegram webhook URL ==='\r"
+expect "# "
+send "curl -s https://n8n.vividwalls.blog/webhook/czgQFXq4Bh6Ho3q3 | head -5\r"
+expect "# "
+
+# Check if the webhook is accessible from localhost
+send "echo '=== Testing webhook from localhost ==='\r"
+expect "# "
+send "curl -s http://localhost:5678/webhook/czgQFXq4Bh6Ho3q3 | head -5\r"
+expect "# "
+
+# Check current Telegram webhook status
+send "echo '=== Checking current Telegram webhook status ==='\r"
+expect "# "
+send "curl -s https://api.telegram.org/bot7988488328:AAFpSgwLqCQSo4O7hP1KekUt4W6DJIJRhrc/getWebhookInfo | python3 -m json.tool\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

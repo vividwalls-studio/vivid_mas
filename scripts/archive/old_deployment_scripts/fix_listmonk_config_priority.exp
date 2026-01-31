@@ -1,0 +1,64 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Rename the config.toml so ListMonk uses environment variables instead
+send "echo '=== Renaming config.toml to prevent override ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cd /opt/mcp-servers/listmonk-email-marketing/config && mv config.toml config.toml.disabled.bak\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing/config#"
+
+# Verify it's renamed
+send "ls -la\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing/config#"
+
+# Restart ListMonk to use environment variables
+send "echo '\n=== Restarting ListMonk ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing/config#"
+
+send "docker restart listmonk\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing/config#"
+
+# Wait for startup
+send "sleep 10\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing/config#"
+
+# Check logs
+send "echo '\n=== ListMonk Logs After Fix ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing/config#"
+
+send "docker logs listmonk --tail 15 2>&1\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing/config#"
+
+# Check status
+send "echo '\n=== Container Status ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing/config#"
+
+send "docker ps | grep listmonk\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing/config#"
+
+# Test API
+send "echo '\n=== Testing ListMonk API ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing/config#"
+
+send "curl -s http://localhost:9003/api/health || echo 'API not ready yet'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing/config#"
+
+# Exit
+send "exit\r"
+expect eof

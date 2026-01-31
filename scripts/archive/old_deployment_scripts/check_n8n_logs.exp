@@ -1,0 +1,34 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Check container status
+send "docker ps -a | grep n8n | head -3\r"
+expect "# "
+
+# Check logs
+send "docker logs n8n --tail 20\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

@@ -1,0 +1,54 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Checking postgres service in docker-compose ==='\r"
+        expect "root@*"
+        
+        send "cd /root/vivid_mas\r"
+        expect "root@*"
+        
+        # Find postgres service definition
+        send "grep -A10 -B2 'postgres:' docker-compose.yml | grep -A10 -B2 'container_name\\|ports:.*5433'\r"
+        expect "root@*"
+        
+        # Check langfuse dependencies
+        send "echo '\n=== Checking Langfuse dependencies ==='\r"
+        expect "root@*"
+        send "grep -A5 'langfuse-' docker-compose.yml | grep 'depends_on\\|postgres'\r"
+        expect "root@*"
+        
+        # Start only langfuse containers without dependencies
+        send "echo '\n=== Starting Langfuse without creating new postgres ==='\r"
+        expect "root@*"
+        send "docker start vivid_mas-langfuse-web-1 vivid_mas-langfuse-worker-1 2>/dev/null || echo 'Containers need to be created'\r"
+        expect "root@*"
+        
+        # Create containers if needed
+        send "docker run -d --name vivid_mas-langfuse-web-1 --network vivid_mas -e ENCRYPTION_KEY=\$(grep ENCRYPTION_KEY .env | cut -d= -f2) langfuse/langfuse:3\r"
+        expect "root@*"
+        
+        send "docker run -d --name vivid_mas-langfuse-worker-1 --network vivid_mas -e ENCRYPTION_KEY=\$(grep ENCRYPTION_KEY .env | cut -d= -f2) langfuse/langfuse-worker:3\r"
+        expect "root@*"
+        
+        send "echo '\n=== Final Status ==='\r"
+        expect "root@*"
+        send "docker ps | grep langfuse\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

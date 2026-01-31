@@ -1,0 +1,166 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# SECTION 1: Find all files that might contain encryption keys
+send "echo '=== SECTION 1: FINDING ALL ENCRYPTION KEY REFERENCES ==='\r"
+expect "# "
+
+send "echo '\n--- All .env files on the system ---'\r"
+expect "# "
+send "find /root -name '*.env*' -type f 2>/dev/null | head -20\r"
+expect "# "
+
+send "echo '\n--- All files containing N8N_ENCRYPTION_KEY ---'\r"
+expect "# "
+send "grep -r 'N8N_ENCRYPTION_KEY' /root/vivid_mas --exclude-dir=node_modules --exclude-dir=.git 2>/dev/null | head -20\r"
+expect "# "
+
+send "echo '\n--- All files containing old encryption key ---'\r"
+expect "# "
+send "grep -r 'pAyfxPn9h2yqv32GtzSLA73h2IdZ1n88' /root/vivid_mas --exclude-dir=node_modules --exclude-dir=.git 2>/dev/null | head -10\r"
+expect "# "
+
+send "echo '\n--- All files containing new encryption key ---'\r"
+expect "# "
+send "grep -r 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' /root/vivid_mas --exclude-dir=node_modules --exclude-dir=.git 2>/dev/null | head -10\r"
+expect "# "
+
+# SECTION 2: Docker configuration analysis
+send "echo '\n=== SECTION 2: DOCKER CONFIGURATION ANALYSIS ==='\r"
+expect "# "
+
+send "echo '\n--- Docker compose files ---'\r"
+expect "# "
+send "find /root/vivid_mas -name 'docker-compose*.yml' -type f | xargs ls -la\r"
+expect "# "
+
+send "echo '\n--- N8N service configuration in docker-compose ---'\r"
+expect "# "
+send "grep -A20 'n8n:' docker-compose.yml | grep -E 'N8N_ENCRYPTION_KEY|environment|env_file'\r"
+expect "# "
+
+send "echo '\n--- Docker volumes for n8n ---'\r"
+expect "# "
+send "docker volume ls | grep n8n\r"
+expect "# "
+
+send "echo '\n--- Contents of n8n volume ---'\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine find /data -type f -name '*.json' -o -name '*.sqlite' -o -name '*.db' | head -20\r"
+expect "# "
+
+# SECTION 3: Database analysis
+send "echo '\n=== SECTION 3: DATABASE ANALYSIS ==='\r"
+expect "# "
+
+send "echo '\n--- All databases in postgres ---'\r"
+expect "# "
+send "docker exec postgres psql -U postgres -c '\\l' | grep -E 'n8n|postgres'\r"
+expect "# "
+
+send "echo '\n--- Tables with potential encryption data ---'\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND (tablename LIKE '%credential%' OR tablename LIKE '%config%' OR tablename LIKE '%setting%');\"\r"
+expect "# "
+
+send "echo '\n--- Workflow entity count and encryption status ---'\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT COUNT(*) as total_workflows, COUNT(CASE WHEN active = true THEN 1 END) as active_workflows FROM workflow_entity;\"\r"
+expect "# "
+
+send "echo '\n--- Credentials with encryption info ---'\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT id, name, type, 'encrypted' as status FROM credentials_entity LIMIT 5;\"\r"
+expect "# "
+
+# SECTION 4: File system conflicts
+send "echo '\n=== SECTION 4: FILE SYSTEM CONFLICTS ==='\r"
+expect "# "
+
+send "echo '\n--- Backup files that might cause confusion ---'\r"
+expect "# "
+send "ls -la /root/vivid_mas/.env* | head -10\r"
+expect "# "
+
+send "echo '\n--- Check for multiple n8n installations ---'\r"
+expect "# "
+send "find /root -name 'n8n' -type d 2>/dev/null | grep -v node_modules | head -10\r"
+expect "# "
+
+send "echo '\n--- Check for config files in unexpected places ---'\r"
+expect "# "
+send "find /root/vivid_mas -name '*n8n*config*' -type f 2>/dev/null | head -10\r"
+expect "# "
+
+# SECTION 5: Current state verification
+send "echo '\n=== SECTION 5: CURRENT STATE VERIFICATION ==='\r"
+expect "# "
+
+send "echo '\n--- Current encryption key in use ---'\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env | head -1\r"
+expect "# "
+
+send "echo '\n--- N8N container environment ---'\r"
+expect "# "
+send "docker exec n8n printenv | grep -E 'N8N_ENCRYPTION_KEY|DB_TYPE|DB_POSTGRESDB' | head -10\r"
+expect "# "
+
+send "echo '\n--- Active workflow with webhook ---'\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT id, name, active FROM workflow_entity WHERE nodes::text LIKE '%webhook%' ORDER BY active DESC LIMIT 5;\"\r"
+expect "# "
+
+# Create summary file
+send "echo '\n=== CREATING INVESTIGATION SUMMARY ==='\r"
+expect "# "
+send "cat > /root/vivid_mas/n8n_encryption_investigation.md << 'EOF'\n"
+send "# N8N Encryption Key Investigation Summary\n\n"
+send "Date: $(date)\n\n"
+send "## Key Findings:\n\n"
+send "1. **Multiple Encryption Keys Found**:\n"
+send "   - Old key: pAyfxPn9h2yqv32GtzSLA73h2IdZ1n88\n"
+send "   - New key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\n\n"
+send "2. **Sources of Confusion**:\n"
+send "   - Multiple .env backup files with different keys\n"
+send "   - Credentials encrypted with old key still in database\n"
+send "   - Docker volume persistence maintaining old configurations\n\n"
+send "3. **Critical Files**:\n"
+send "   - /root/vivid_mas/.env (main configuration)\n"
+send "   - /root/vivid_mas/docker-compose.yml (service definitions)\n"
+send "   - PostgreSQL database (encrypted credentials)\n\n"
+send "4. **Prevention Measures**:\n"
+send "   - Always use the same encryption key\n"
+send "   - Document key changes in CLAUDE.md\n"
+send "   - Clean up old backup files\n"
+send "   - Re-encrypt credentials when changing keys\n"
+send "EOF\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

@@ -1,0 +1,82 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Backup current .env
+send "echo '=== Backing up current .env ==='\r"
+expect "# "
+send "cp .env .env.backup.new_key\r"
+expect "# "
+
+# Use the old encryption key
+send "echo '=== Switching to old encryption key ==='\r"
+expect "# "
+send "sed -i 's/N8N_ENCRYPTION_KEY=.*/N8N_ENCRYPTION_KEY=pAyfxPn9h2yqv32GtzSLA73h2IdZ1n88/' .env\r"
+expect "# "
+
+# Verify the change
+send "echo '\n=== Verifying encryption key change ==='\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env\r"
+expect "# "
+
+# Restart n8n with old key
+send "echo '\n=== Restarting n8n with old encryption key ==='\r"
+expect "# "
+send "docker compose restart n8n\r"
+expect "# "
+
+# Wait for n8n to start
+send "echo 'Waiting for n8n to start with old key...'\r"
+expect "# "
+send "sleep 30\r"
+expect "# "
+
+# Activate the workflow again
+send "echo '\n=== Activating Business Manager workflow ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"UPDATE workflow_entity SET active = true WHERE id = 'czgQFXq4Bh6Ho3q3';\"\r"
+expect "# "
+
+# Wait a bit for activation
+send "sleep 10\r"
+expect "# "
+
+# Test the webhook
+send "echo '\n=== Testing webhook with old encryption key ==='\r"
+expect "# "
+send "curl -s -X POST https://n8n.vividwalls.blog/webhook/czgQFXq4Bh6Ho3q3 -H 'Content-Type: application/json' -d '{}' -w '\nHTTP Status: %{http_code}\n'\r"
+expect "# "
+
+# Check logs
+send "echo '\n=== Checking n8n logs ==='\r"
+expect "# "
+send "docker logs n8n --tail 20 2>&1 | grep -i 'webhook\\|czgQFXq4Bh6Ho3q3\\|Business Manager\\|error' | tail -10\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

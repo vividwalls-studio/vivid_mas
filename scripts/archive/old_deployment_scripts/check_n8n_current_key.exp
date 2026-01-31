@@ -1,0 +1,50 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Check what key n8n container is actually using
+send "echo '=== Current n8n container environment ==='\r"
+expect "# "
+send "docker inspect n8n 2>/dev/null | grep -A1 'N8N_ENCRYPTION_KEY' | tail -1 | sed 's/.*\"\(.*\)\",*/\1/'\r"
+expect "# "
+
+# Check main .env file
+send "echo '\n=== Main .env file key ==='\r"
+expect "# "
+send "grep '^N8N_ENCRYPTION_KEY' /root/vivid_mas/.env | cut -d'=' -f2\r"
+expect "# "
+
+# Check if there's a config file in the volume
+send "echo '\n=== Checking for config in volume ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine ls -la /data/.n8n/ 2>/dev/null || echo 'No .n8n directory'\r"
+expect "# "
+
+# Check recent logs
+send "echo '\n=== Recent n8n logs ==='\r"
+expect "# "
+send "docker logs n8n --tail 10 2>&1 | grep -E '(encryption|key|config|error)' -i\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

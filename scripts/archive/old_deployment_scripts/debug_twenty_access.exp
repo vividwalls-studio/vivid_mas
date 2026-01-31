@@ -1,0 +1,37 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect "Enter passphrase for key*"
+send "freedom\r"
+
+# Wait for prompt
+expect "root@*"
+
+# Test direct connection to Twenty from host
+send "curl -I http://172.19.0.4:3000\r"
+expect "root@*"
+
+# Check Caddy error logs
+send "docker logs caddy 2>&1 | grep -i error | tail -10\r"
+expect "root@*"
+
+# Try wget from Caddy container (alpine has wget not curl)
+send "docker exec caddy wget -qO- --spider http://twenty-server-1:3000 2>&1\r"
+expect "root@*"
+
+# Check the current Caddyfile entry for crm
+send "grep -A2 'crm.vividwalls.blog' /home/vivid/vivid_mas/Caddyfile\r"
+expect "root@*"
+
+# Test with explicit network address
+send "docker exec caddy wget -qO- --spider http://172.19.0.4:3000 2>&1\r"
+expect "root@*"
+
+# Exit
+send "exit\r"
+expect eof

@@ -1,0 +1,49 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+# SSH into the droplet
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect "Enter passphrase for key*"
+send "freedom\r"
+
+# Wait for prompt
+expect "root@*"
+
+# Check docker-compose setup
+send "cd /home/vivid/vivid_mas\r"
+expect "root@*"
+
+# Check if Caddy is defined in docker-compose
+send "grep -A5 'caddy:' docker-compose.yml\r"
+expect "root@*"
+
+# Restart using docker-compose
+send "docker-compose restart caddy\r"
+expect "root@*"
+
+# If that doesn't work, start it manually
+send "docker ps | grep caddy || docker-compose up -d caddy\r"
+expect "root@*"
+
+# Wait for startup
+send "sleep 10\r"
+expect "root@*"
+
+# Check logs
+send "docker logs caddy --tail=30 2>&1 | grep -i -E '(crm|enabling automatic TLS)'\r"
+expect "root@*"
+
+# Try accessing Twenty locally first
+send "curl -I http://localhost:3000\r"
+expect "root@*"
+
+# Try the domain
+send "curl -I https://crm.vividwalls.blog || curl -I http://crm.vividwalls.blog\r"
+expect "root@*"
+
+# Exit
+send "exit\r"
+expect eof

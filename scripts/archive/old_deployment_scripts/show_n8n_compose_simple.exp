@@ -1,0 +1,42 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Show the n8n service configuration from docker-compose.yml
+send "echo '=== N8N Service Configuration ==='\r"
+expect "# "
+send "grep -A 50 'n8n:' docker-compose.yml | grep -B 50 'container_name: n8n' | head -60\r"
+expect "# "
+
+# Show environment section specifically
+send "echo '=== N8N Environment Variables ==='\r"
+expect "# "
+send "grep -A 30 'n8n:' docker-compose.yml | grep -A 25 'environment:' | head -30\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

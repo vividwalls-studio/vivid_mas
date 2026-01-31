@@ -1,0 +1,60 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Check n8n container status
+send "echo '=== N8N Container Status ==='\r"
+expect "# "
+send "docker ps -a | grep n8n | head -5\r"
+expect "# "
+
+# Check current encryption key in .env
+send "echo '=== Current Encryption Key in .env ==='\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env | cut -d= -f2 | tail -c 50\r"
+expect "# "
+
+# Check n8n logs for errors or success
+send "echo '=== N8N Recent Logs ==='\r"
+expect "# "
+send "docker logs n8n --tail 50 2>&1 | grep -E 'ready|accessible|started|error|Error|ERROR|encryption|Encryption' | tail -20\r"
+expect "# "
+
+# Check if n8n is accessible
+send "echo '=== Testing N8N Access ==='\r"
+expect "# "
+send "curl -s -o /dev/null -w '%{http_code}' http://localhost:5678 || echo 'Not accessible'\r"
+expect "# "
+
+# Check if there are any workflow files
+send "echo '=== Checking for Workflows ==='\r"
+expect "# "
+send "docker exec n8n ls -la /home/node/.n8n/database.sqlite 2>&1 || echo 'Database not accessible'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

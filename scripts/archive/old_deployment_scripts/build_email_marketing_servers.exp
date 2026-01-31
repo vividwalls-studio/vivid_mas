@@ -1,0 +1,115 @@
+#!/usr/bin/expect -f
+
+set timeout 600
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Build Email Marketing Prompts Server
+send "echo '=== Building Email Marketing Prompts Server ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cd /opt/mcp-servers/email-marketing-prompts\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/email-marketing-prompts#"
+
+# Check if package.json exists
+send "ls -la package.json\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/email-marketing-prompts#"
+
+# Install dependencies
+send "echo 'Installing dependencies...'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/email-marketing-prompts#"
+
+send "npm install\r"
+expect {
+    "root@VividWalls-Studio-MAS:/opt/mcp-servers/email-marketing-prompts#" {
+        # Installation complete
+    }
+    timeout {
+        puts "\nTimeout during npm install for prompts server"
+    }
+}
+
+# Build the TypeScript project
+send "echo 'Building TypeScript...'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/email-marketing-prompts#"
+
+send "npm run build\r"
+expect {
+    "root@VividWalls-Studio-MAS:/opt/mcp-servers/email-marketing-prompts#" {
+        # Build complete
+    }
+    timeout {
+        puts "\nTimeout during build for prompts server"
+    }
+}
+
+# Verify build output
+send "ls -la dist/\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/email-marketing-prompts#"
+
+# Build Email Marketing Resource Server
+send "echo '=== Building Email Marketing Resource Server ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/email-marketing-prompts#"
+
+send "cd /opt/mcp-servers/email-marketing-resource\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/email-marketing-resource#"
+
+# Check if package.json exists
+send "ls -la package.json\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/email-marketing-resource#"
+
+# Install dependencies
+send "echo 'Installing dependencies...'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/email-marketing-resource#"
+
+send "npm install\r"
+expect {
+    "root@VividWalls-Studio-MAS:/opt/mcp-servers/email-marketing-resource#" {
+        # Installation complete
+    }
+    timeout {
+        puts "\nTimeout during npm install for resource server"
+    }
+}
+
+# Build the TypeScript project
+send "echo 'Building TypeScript...'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/email-marketing-resource#"
+
+send "npm run build\r"
+expect {
+    "root@VividWalls-Studio-MAS:/opt/mcp-servers/email-marketing-resource#" {
+        # Build complete
+    }
+    timeout {
+        puts "\nTimeout during build for resource server"
+    }
+}
+
+# Verify build output
+send "ls -la dist/\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/email-marketing-resource#"
+
+# Add to n8n MCP configuration
+send "echo '=== Adding to n8n MCP configuration ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/email-marketing-resource#"
+
+# Create backup of current config
+send "cp /opt/mcp-servers/n8n-mcp-config.json /opt/mcp-servers/n8n-mcp-config.json.backup-$(date +%Y%m%d-%H%M%S)\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/email-marketing-resource#"
+
+# Exit
+send "exit\r"
+expect eof

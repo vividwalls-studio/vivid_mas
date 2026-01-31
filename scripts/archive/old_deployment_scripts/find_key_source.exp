@@ -1,0 +1,72 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Stop n8n first
+send "docker stop n8n\r"
+expect "# "
+
+# Check docker-compose.yml for env_file or other sources
+send "echo '=== Docker compose environment configuration ==='\r"
+expect "# "
+send "grep -A20 'n8n:' /root/vivid_mas/docker-compose.yml | grep -E '(env_file|environment|N8N_ENCRYPTION)'\r"
+expect "# "
+
+# Check for any .env files that might be loaded
+send "echo '\n=== Checking for env_file references ==='\r"
+expect "# "
+send "cd /root/vivid_mas && ls -la .env*\r"
+expect "# "
+
+# Check if there are multiple docker-compose files
+send "echo '\n=== All docker-compose files ==='\r"
+expect "# "
+send "find /root/vivid_mas -name 'docker-compose*.yml' -type f\r"
+expect "# "
+
+# Check for override files
+send "echo '\n=== Checking for override files ==='\r"
+expect "# "
+send "ls -la /root/vivid_mas/docker-compose.override.yml 2>/dev/null || echo 'No override file'\r"
+expect "# "
+
+# Check docker daemon config
+send "echo '\n=== Docker daemon config ==='\r"
+expect "# "
+send "cat /etc/docker/daemon.json 2>/dev/null || echo 'No daemon.json'\r"
+expect "# "
+
+# Check for systemd overrides
+send "echo '\n=== Systemd docker overrides ==='\r"
+expect "# "
+send "ls -la /etc/systemd/system/docker.service.d/ 2>/dev/null || echo 'No systemd overrides'\r"
+expect "# "
+
+# Check if n8n generates its own key
+send "echo '\n=== Check if n8n auto-generates keys ==='\r"
+expect "# "
+send "docker run --rm -it n8nio/n8n:latest n8n --help 2>&1 | grep -i 'encryption' || echo 'No encryption help found'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

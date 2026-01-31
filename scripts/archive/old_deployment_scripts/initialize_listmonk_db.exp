@@ -1,0 +1,90 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Stop and remove the problematic container
+send "echo '=== Removing ListMonk Container ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker stop listmonk && docker rm listmonk\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check if we have the install command
+send "echo '\n=== Running ListMonk with Install Command ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cd /opt/mcp-servers/listmonk-email-marketing\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Run ListMonk with install flag using environment variables
+send "docker run --rm --network vivid_mas \\\r"
+send "  -e LISTMONK_database__host=listmonk-postgres \\\r"
+send "  -e LISTMONK_database__port=5432 \\\r"
+send "  -e LISTMONK_database__user=listmonk \\\r"
+send "  -e LISTMONK_database__password=listmonk123 \\\r"
+send "  -e LISTMONK_database__database=listmonk \\\r"
+send "  -e LISTMONK_database__ssl_mode=disable \\\r"
+send "  listmonk/listmonk:latest ./listmonk --install --yes\r"
+expect -timeout 30 {
+    "installation complete" {
+        send "echo 'Installation successful'\r"
+    }
+    "already exists" {
+        send "echo 'Already installed'\r"
+    }
+    timeout {
+        send "\003"
+        send "echo 'Installation timeout or error'\r"
+    }
+}
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Now start with docker-compose
+send "echo '\n=== Starting ListMonk with Docker Compose ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker-compose -f docker-compose.listmonk.yml up -d listmonk\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Wait for startup
+send "sleep 10\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Check status
+send "echo '\n=== Container Status ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker ps | grep listmonk\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Check logs
+send "echo '\n=== ListMonk Logs ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker logs listmonk --tail 15 2>&1\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Test API
+send "echo '\n=== Testing ListMonk API ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "curl -s http://localhost:9003/api/health\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Exit
+send "exit\r"
+expect eof

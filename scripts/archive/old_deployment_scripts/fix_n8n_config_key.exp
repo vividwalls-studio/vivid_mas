@@ -1,0 +1,68 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Stop n8n first
+send "docker compose stop n8n\r"
+expect "# "
+
+# Backup the old config file
+send "echo '=== Backing up old config ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine mv /data/config /data/config.backup-$(date +%s) 2>&1\r"
+expect "# "
+
+# Verify config was moved
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine ls -la /data/config* 2>&1\r"
+expect "# "
+
+# Start n8n again - it should create a new config with the current encryption key
+send "echo '=== Starting n8n with current encryption key ==='\r"
+expect "# "
+send "docker compose up -d n8n\r"
+expect "# "
+
+# Wait for n8n to start
+send "echo 'Waiting for n8n to start...'\r"
+expect "# "
+send "sleep 30\r"
+expect "# "
+
+# Check n8n status
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Check if n8n is running properly now
+send "docker logs n8n --tail 20 2>&1 | grep -E 'Editor is now accessible|n8n ready|started|error' || echo 'Checking...'\r"
+expect "# "
+
+# Test access
+send "curl -s http://localhost:5678 | grep -o '<title>.*</title>' || echo 'Not ready yet'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

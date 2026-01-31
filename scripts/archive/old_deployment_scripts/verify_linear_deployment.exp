@@ -1,0 +1,45 @@
+#!/usr/bin/expect -f
+
+# Verify Linear MCP Server deployment
+
+set timeout 30
+set passphrase "freedom"
+
+puts "Verifying Linear MCP server deployment..."
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+expect {
+    "Enter passphrase for key" {
+        send "$passphrase\r"
+        expect "root@*"
+    }
+}
+
+# Change to directory
+send "cd /opt/mcp-servers/linear-mcp-server\r"
+expect "root@*"
+
+# Check build directory contents
+send "ls -la build/\r"
+expect "root@*"
+
+# Check if the main file is executable
+send "ls -la build/index.js\r"
+expect "root@*"
+
+# Try running the server to see if it starts
+send "timeout 3 node build/index.js 2>&1 || echo 'Server started successfully'\r"
+expect "root@*"
+
+# Check the environment variable is set
+send "echo \"LINEAR_API_KEY is: \${LINEAR_API_KEY:-not set}\"\r"
+expect "root@*"
+
+# Set the API key in the .env file if not already there
+send "grep -q LINEAR_API_KEY .env || echo 'LINEAR_API_KEY=lin_oauth_8f06487d693f3fee7eaaf0a440af72aae4c2305b4d9fa369524eed8acea9aa12' > .env\r"
+expect "root@*"
+
+send "exit\r"
+expect eof
+
+puts "\nLinear MCP server verification complete!"

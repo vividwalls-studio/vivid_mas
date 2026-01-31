@@ -1,0 +1,44 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Check docker-compose.yml modification time ==='\r"
+        expect "root@*"
+        
+        send "ls -la /root/vivid_mas/docker-compose.yml\r"
+        expect "root@*"
+        
+        send "echo '\n=== Check git log on server ==='\r"
+        expect "root@*"
+        
+        send "cd /root/vivid_mas && git log --oneline -5\r"
+        expect "root@*"
+        
+        send "echo '\n=== Check git status ==='\r"
+        expect "root@*"
+        
+        send "git status --short\r"
+        expect "root@*"
+        
+        send "echo '\n=== Compare n8n host config ==='\r"
+        expect "root@*"
+        
+        send "diff -u <(grep -A5 'x-n8n' /root/vivid_mas/docker-compose.yml | grep DB_POSTGRESDB_HOST) <(echo '    - DB_POSTGRESDB_HOST=db')\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

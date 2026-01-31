@@ -1,0 +1,62 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Find n8n configuration
+send "echo '=== Finding n8n Configuration ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "find /root -name '*mcp*.json' -type f 2>/dev/null | grep -v node_modules | head -10\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check n8n container volumes
+send "echo '\n=== Checking n8n Container Volumes ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker inspect n8n | jq '.\[0\].Mounts' | grep -A 2 -B 2 mcp || echo 'No MCP mounts found'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check n8n environment
+send "echo '\n=== Checking n8n Environment ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker exec n8n env | grep -i mcp || echo 'No MCP env vars'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check if n8n has a config directory
+send "echo '\n=== Checking n8n Config Directory ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker exec n8n ls -la /home/node/.n8n/ 2>/dev/null | head -10 || echo 'Cannot access n8n config'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Summary
+send "echo '\n=== Summary ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo 'ListMonk is running at: http://localhost:9003'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo 'ListMonk MCP server built at: /opt/mcp-servers/listmonk-mcp-server/build/index.js'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo 'Credentials: admin / admin123'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

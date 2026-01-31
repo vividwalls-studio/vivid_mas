@@ -1,0 +1,73 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check Twenty logs
+send "cd /root/twenty-crm\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+send "echo '=== Checking Twenty server container ==='\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+send "docker ps -a | grep twenty-crm-server\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+send "echo '\n=== Twenty server logs ==='\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+send "docker logs twenty-crm-server-1 --tail 20\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+# Check if port 3010 is in use
+send "echo '\n=== Checking port 3010 ==='\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+send "ss -tlnp | grep 3010 || echo 'Port 3010 not in use'\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+# Restart Twenty server
+send "echo '\n=== Restarting Twenty server ==='\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+send "docker-compose restart server\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+send "sleep 10\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+# Check status again
+send "docker-compose ps\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+# Update Caddyfile
+send "echo '\n=== Updating Caddyfile ==='\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+send "cd /root/vivid_mas\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+# Add Twenty entry if not exists
+send "grep -q 'twenty.vividwalls.blog' Caddyfile || echo -e '\\n# Twenty CRM\\ntwenty.vividwalls.blog {\\n    reverse_proxy localhost:3010\\n}' >> Caddyfile\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+# Reload Caddy
+send "docker exec caddy caddy reload --config /etc/caddy/Caddyfile\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+# Exit
+send "exit\r"
+expect eof

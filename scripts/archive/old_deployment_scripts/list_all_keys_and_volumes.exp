@@ -1,0 +1,84 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# List all docker volumes
+send "echo '=== ALL DOCKER VOLUMES ==='\r"
+expect "# "
+send "docker volume ls | grep -E 'n8n|VOLUME' | head -20\r"
+expect "# "
+
+# Key 1: In .env file
+send "echo '\n=== KEY 1: In .env file ==='\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env\r"
+expect "# "
+
+# Key 2: In n8n_storage volume
+send "echo '\n=== KEY 2: In n8n_storage volume (/data/config) ==='\r"
+expect "# "
+send "docker run --rm -v n8n_storage:/data alpine cat /data/config 2>&1\r"
+expect "# "
+
+# Key 3: In vivid_mas_n8n_storage volume
+send "echo '\n=== KEY 3: In vivid_mas_n8n_storage volume (/data/config) ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine cat /data/config 2>&1\r"
+expect "# "
+
+# Check which volume is mounted to n8n container
+send "echo '\n=== VOLUME MOUNTED TO N8N CONTAINER ==='\r"
+expect "# "
+send "docker inspect n8n | grep -A2 -B2 'n8n_storage' | grep -E 'Source|Destination|Type' | head -10\r"
+expect "# "
+
+# Check all n8n-related volumes
+send "echo '\n=== DETAILED VOLUME LIST ==='\r"
+expect "# "
+send "docker volume ls | grep n8n\r"
+expect "# "
+
+# Check localai_n8n_storage volume if it exists
+send "echo '\n=== Checking localai_n8n_storage volume ==='\r"
+expect "# "
+send "docker run --rm -v localai_n8n_storage:/data alpine ls -la /data/config 2>&1 || echo 'No config in localai_n8n_storage'\r"
+expect "# "
+
+# Summary
+send "echo '\n=== SUMMARY ==='\r"
+expect "# "
+send "echo 'Key in .env: JWT format starting with eyJ...'\r"
+expect "# "
+send "echo 'Key in n8n_storage: Same as .env'\r"
+expect "# "
+send "echo 'Key in vivid_mas_n8n_storage: pAyfxPn9h2yqv32GtzSLA73h2IdZ1n88'\r"
+expect "# "
+send "echo 'Volume mounted to n8n: vivid_mas_n8n_storage:/home/node/.n8n'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

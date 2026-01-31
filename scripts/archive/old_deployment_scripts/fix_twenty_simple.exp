@@ -1,0 +1,76 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Fixing Twenty CRM ==='\r"
+        expect "root@*"
+        
+        send "cd /opt/twenty/packages/twenty-docker\r"
+        expect "root@*"
+        
+        # Backup and update .env
+        send "cp .env .env.backup\r"
+        expect "root@*"
+        
+        # Create a working .env with database credentials
+        send "cat > .env.new << 'EOF'\r"
+        send "# Twenty CRM Configuration\r"
+        send "PG_DATABASE_USER=twenty\r"
+        send "PG_DATABASE_PASSWORD=twentycrm2025\r"
+        send "PG_DATABASE_HOST=twenty-db-1\r"
+        send "PG_DATABASE_PORT=5432\r"
+        send "PG_DATABASE_NAME=default\r"
+        send "FRONTEND_BASE_URL=https://crm.vividwalls.blog\r"
+        send "BACKEND_BASE_URL=https://crm.vividwalls.blog\r"
+        send "SIGN_IN_PREFILLED=false\r"
+        send "STORAGE_S3_ENDPOINT=\r"
+        send "STORAGE_S3_REGION=\r"
+        send "STORAGE_S3_NAME=\r"
+        send "EOF\r"
+        expect "root@*"
+        
+        # Append any other settings from original
+        send "grep -v '^#PG_DATABASE' .env | grep -v '^$' >> .env.new\r"
+        expect "root@*"
+        
+        send "mv .env.new .env\r"
+        expect "root@*"
+        
+        # Show config
+        send "echo 'Database configuration set:'\r"
+        expect "root@*"
+        send "grep '^PG_' .env\r"
+        expect "root@*"
+        
+        # Start containers
+        send "echo '\nStarting Twenty CRM...'\r"
+        expect "root@*"
+        send "docker-compose down\r"
+        expect "root@*"
+        send "docker-compose up -d\r"
+        expect "root@*"
+        
+        # Check status
+        send "sleep 15\r"
+        expect "root@*"
+        send "echo '\n=== Status ==='\r"
+        expect "root@*"
+        send "docker ps | grep twenty | grep -v grep\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

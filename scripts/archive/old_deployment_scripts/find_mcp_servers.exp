@@ -1,0 +1,45 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Finding MCP Servers Location ==='\r"
+        expect "root@*"
+        
+        # Check /opt/mcp-servers
+        send "ls -la /opt/mcp-servers/ 2>/dev/null | head -20 || echo '/opt/mcp-servers not found'\r"
+        expect "root@*"
+        
+        # Check in vivid_mas
+        send "echo '\nChecking /root/vivid_mas/services/mcp-servers:'\r"
+        expect "root@*"
+        send "ls -la /root/vivid_mas/services/mcp-servers/core/ 2>/dev/null | grep twenty || echo 'No twenty-mcp-server in vivid_mas'\r"
+        expect "root@*"
+        
+        # Check what MCP servers ARE deployed
+        send "echo '\nMCP servers that ARE deployed:'\r"
+        expect "root@*"
+        send "find /opt -name '*mcp-server*' -type d 2>/dev/null | head -10\r"
+        expect "root@*"
+        
+        # Check n8n's view of MCP servers
+        send "echo '\nChecking n8n container access to MCP servers:'\r"
+        expect "root@*"
+        send "docker exec n8n ls /opt/mcp-servers 2>&1 || echo 'n8n cannot access /opt/mcp-servers'\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

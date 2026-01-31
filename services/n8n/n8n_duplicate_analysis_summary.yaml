@@ -1,0 +1,232 @@
+duplicate_analysis:
+  summary:
+    duplicate_groups: 18
+    workflows_to_remove: 33
+    merge_candidates: 10
+    
+  duplicate_groups:
+    # Exact Duplicates
+    - group_id: "71bbc4e5"
+      group_type: "exact"
+      workflows:
+        - name: "Business Manager Agent"
+          path: "services/agents/clean_update_data.json"
+          quality_scores:
+            completeness: 70
+            correctness: 100
+            documentation: 50
+            overall: 81
+          unique_features: []
+          
+        - name: "Business Manager Agent"
+          path: "services/agents/normalized_update_data.json"
+          quality_scores:
+            completeness: 70
+            correctness: 100
+            documentation: 50
+            overall: 81
+          unique_features: []
+          
+      recommendation:
+        keep: "clean_update_data.json"
+        remove: ["normalized_update_data.json"]
+        merge_features: []
+        justification: "Exact duplicate. Keep more recent file with same content."
+        
+    # Version Variants - Business Manager
+    - group_id: "3a6bf899"
+      group_type: "version"
+      workflows:
+        - name: "Business Manager Agent"
+          path: "services/agents/business_manager_updated_complete.json"
+          quality_scores:
+            completeness: 75
+            correctness: 100
+            documentation: 55
+            overall: 83
+          unique_features:
+            - "MCP Client Tool integration"
+            - "Most comprehensive (85 nodes)"
+            - "Latest implementation"
+            
+        - name: "Business Manager Agent"
+          path: "services/agents/Business Manager Agent.json"
+          quality_scores:
+            completeness: 70
+            correctness: 100
+            documentation: 50
+            overall: 81
+          unique_features:
+            - "Telegram tool configuration"
+            - "Original schedule triggers"
+            
+        - name: "Business Manager Agent"
+          path: "services/agents/business_manager_workflow.json"
+          quality_scores:
+            completeness: 70
+            correctness: 100
+            documentation: 50
+            overall: 81
+          unique_features:
+            - "Workflow automation features"
+            
+      recommendation:
+        keep: "business_manager_updated_complete.json"
+        remove: 
+          - "Business Manager Agent.json"
+          - "business_manager_workflow.json"
+          - "business_manager_current.json"
+        merge_features:
+          - "Telegram tool settings from Business Manager Agent.json"
+          - "Schedule triggers from business_manager_workflow.json"
+        justification: "Most complete and recent version with MCP integration. Contains 85 nodes vs 83 in others."
+        
+    # Version Variants - Marketing Director
+    - group_id: "f2d89a1c"
+      group_type: "version"
+      workflows:
+        - name: "Marketing Director Agent"
+          path: "services/agents/marketing_director_agent.json"
+          quality_scores:
+            completeness: 72
+            correctness: 100
+            documentation: 60
+            overall: 82
+          unique_features:
+            - "Stable implementation"
+            - "Proper naming convention"
+            - "Complete tool set"
+            
+        - name: "Marketing Director Agent"
+          path: "services/agents/Marketing Director Agent (1).json"
+          quality_scores:
+            completeness: 75
+            correctness: 100
+            documentation: 55
+            overall: 82
+          unique_features:
+            - "Additional workflow tools"
+            - "More nodes (42 vs 36)"
+            
+        - name: "Marketing Director MCP Workflow"
+          path: "services/agents/marketing_director_mcp_workflow.json"
+          quality_scores:
+            completeness: 73
+            correctness: 100
+            documentation: 65
+            overall: 83
+          unique_features:
+            - "Enhanced MCP configurations"
+            - "Testing implementations"
+            
+      recommendation:
+        keep: "marketing_director_agent.json"
+        remove:
+          - "Marketing Director Agent (1).json"
+          - "marketing_director_mcp_workflow.json"
+          - "marketing_director_mcp_integration_example.json"
+        merge_features:
+          - "Additional workflow tools from (1) version"
+          - "MCP configurations from mcp_workflow version"
+        justification: "Best balance of stability and features. Proper naming convention."
+        
+    # Version Variants - Sales Director
+    - group_id: "e94ce0ea"
+      group_type: "version"
+      workflows:
+        - name: "Sales Director Agent (Enhanced)"
+          path: "services/agents/sales_director_agent_enhanced.json"
+          quality_scores:
+            completeness: 78
+            correctness: 100
+            documentation: 70
+            overall: 85
+          unique_features:
+            - "Specialist persona integration"
+            - "MongoDB for persona management"
+            - "Enhanced MCP tools"
+            
+        - name: "Sales Director Agent"
+          path: "services/agents/sales_director_agent.json"
+          quality_scores:
+            completeness: 70
+            correctness: 100
+            documentation: 60
+            overall: 80
+          unique_features:
+            - "Vector store configuration"
+            - "Original documentation notes"
+            
+      recommendation:
+        keep: "sales_director_agent_enhanced.json"
+        remove: ["sales_director_agent.json"]
+        merge_features:
+          - "Vector store settings from original"
+          - "Documentation sticky notes"
+        justification: "Enhanced version includes specialist personas and better organization."
+        
+    # Functional Duplicates - Knowledge Gatherers
+    - group_id: "kg_agents"
+      group_type: "functional"
+      workflows:
+        - name: "Marketing Knowledge Gatherer"
+          path: "services/agents/marketing_knowledge_gatherer_agent.json"
+          quality_scores:
+            completeness: 65
+            correctness: 100
+            documentation: 40
+            overall: 75
+          unique_features:
+            - "Marketing-specific prompts"
+            
+        - name: "Facebook Marketing Knowledge Gatherer"
+          path: "services/agents/facebook_marketing_knowledge_gatherer_agent.json"
+          quality_scores:
+            completeness: 65
+            correctness: 100
+            documentation: 40
+            overall: 75
+          unique_features:
+            - "Facebook-specific data extraction"
+            
+        - name: "Pinterest Marketing Knowledge Gatherer"
+          path: "services/agents/pinterest_marketing_knowledge_gatherer_agent.json"
+          quality_scores:
+            completeness: 65
+            correctness: 100
+            documentation: 40
+            overall: 75
+          unique_features:
+            - "Pinterest-specific data extraction"
+            
+      recommendation:
+        keep: "Create unified knowledge_gatherer_template.json"
+        remove:
+          - "All individual knowledge gatherer agents"
+        merge_features:
+          - "Platform-specific configurations as parameters"
+          - "Domain-specific prompts as templates"
+        justification: "Consolidate into single configurable template to reduce maintenance."
+        
+  removal_impact:
+    safe_to_remove:
+      - "normalized_update_data.json"
+      - "final_research_reports_supabase_node.json"
+      - "director_id_mappings.json"
+      - "business_manager_current.json"
+      - "streamlined_supabase_research_reports_node.json"
+      - "updated_research_reports_supabase_node.json"
+      - "corrected_research_reports_supabase_node.json"
+      - "duplicate knowledge gatherer agents"
+      
+    requires_feature_merge:
+      - "marketing_director_mcp_workflow.json"
+      - "sales_director_agent.json"
+      - "Business Manager Agent.json"
+      - "marketing_campaign_agent.json"
+      
+    requires_further_review:
+      - "business_manager_updated_complete.json"
+      - "Various director enhanced versions"
+      - "MCP integration examples"
+      - "Social media director variants"

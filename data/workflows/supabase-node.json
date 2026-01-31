@@ -1,0 +1,91 @@
+{
+    "nodes": [
+      {
+        "parameters": {
+          "tableId": "research_reports",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "report_type",
+                "fieldValue": "="
+              },
+              {
+                "fieldId": "report_scope"
+              },
+              {
+                "fieldId": "status"
+              },
+              {
+                "fieldId": "version"
+              },
+              {
+                "fieldId": "title"
+              },
+              {
+                "fieldId": "executive_summary"
+              },
+              {
+                "fieldId": "full_report"
+              },
+              {
+                "fieldId": "hypotheses"
+              },
+              {
+                "fieldId": "target_market"
+              },
+              {
+                "fieldId": "competitors"
+              },
+              {
+                "fieldId": "research_parameters"
+              },
+              {
+                "fieldId": "data_sources"
+              },
+              {
+                "fieldId": "tags"
+              },
+              {
+                "fieldId": "keywords"
+              },
+              {
+                "fieldId": "categories"
+              },
+              {
+                "fieldId": "keywords"
+              },
+              {
+                "fieldId": "industry_sectors"
+              }
+            ]
+          }
+        },
+        "id": "a0241345-1540-4517-990f-a3d382545c7a",
+        "name": "Create Research Report",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          624,
+          -64
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "JRmat9sYdS807Ueq",
+            "name": "Supabase account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Create Research Report": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "pinData": {},
+    "meta": {
+      "templateCredsSetupCompleted": true,
+      "instanceId": "88e14a0db4fd1c8e7615c38ef4c35db0326b6cec4cd4d223b18aa896525269ac"
+    }
+  }

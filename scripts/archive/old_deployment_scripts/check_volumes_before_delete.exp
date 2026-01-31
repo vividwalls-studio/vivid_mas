@@ -1,0 +1,71 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Check n8n_storage volume for any databases or important data
+send "echo '=== Checking n8n_storage volume for databases ==='\r"
+expect "# "
+send "docker run --rm -v n8n_storage:/data alpine find /data -name '*.sqlite' -o -name '*.db' 2>&1\r"
+expect "# "
+
+# Check full contents of n8n_storage
+send "echo '=== Full contents of n8n_storage ==='\r"
+expect "# "
+send "docker run --rm -v n8n_storage:/data alpine ls -la /data/\r"
+expect "# "
+
+# Check vivid_mas_n8n_storage volume for any databases
+send "echo '=== Checking vivid_mas_n8n_storage volume for databases ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine find /data -name '*.sqlite' -o -name '*.db' 2>&1\r"
+expect "# "
+
+# Check full contents of vivid_mas_n8n_storage
+send "echo '=== Full contents of vivid_mas_n8n_storage ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine ls -la /data/\r"
+expect "# "
+
+# Check if there are any workflows in JSON format
+send "echo '=== Checking for workflow files in n8n_storage ==='\r"
+expect "# "
+send "docker run --rm -v n8n_storage:/data alpine find /data -name '*.json' | grep -v node_modules | head -10\r"
+expect "# "
+
+send "echo '=== Checking for workflow files in vivid_mas_n8n_storage ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine find /data -name '*.json' | grep -v node_modules | head -10\r"
+expect "# "
+
+# Check the workflows directory specifically
+send "echo '=== Checking workflows directory in vivid_mas_n8n_storage ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine ls -la /data/workflows/ 2>&1 || echo 'No workflows directory'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

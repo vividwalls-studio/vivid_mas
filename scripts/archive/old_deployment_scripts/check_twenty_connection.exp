@@ -1,0 +1,37 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect "Enter passphrase for key*"
+send "freedom\r"
+
+# Wait for prompt
+expect "root@*"
+
+# Check if Twenty is running
+send "docker ps | grep twenty\r"
+expect "root@*"
+
+# Check Twenty server health
+send "docker logs twenty-server-1 --tail=10\r"
+expect "root@*"
+
+# Test Twenty directly
+send "curl -I http://localhost:3000\r"
+expect "root@*"
+
+# Check network connectivity between Caddy and Twenty
+send "docker network ls\r"
+expect "root@*"
+
+# Check which network Twenty is on
+send "docker inspect twenty-server-1 | grep -A5 NetworkMode\r"
+expect "root@*"
+
+# Exit
+send "exit\r"
+expect eof

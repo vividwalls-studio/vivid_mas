@@ -1,0 +1,73 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Stop n8n first
+send "docker compose stop n8n\r"
+expect "# "
+
+# Show current and backup keys
+send "echo '=== Current key (that is failing) ==='\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env\r"
+expect "# "
+
+send "echo '=== Original key from backup ==='\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env.backup-keys\r"
+expect "# "
+
+# Restore the original .env file
+send "cp .env.backup-keys .env\r"
+expect "# "
+
+# Verify the restoration
+send "echo '=== Restored key ==='\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env\r"
+expect "# "
+
+# Start n8n again with the original key
+send "docker compose up -d n8n\r"
+expect "# "
+
+# Wait for n8n to start
+send "echo 'Waiting for n8n to start with original key...'\r"
+expect "# "
+send "sleep 20\r"
+expect "# "
+
+# Check n8n status
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Check if n8n started successfully
+send "docker logs n8n --tail 20 2>&1 | grep -E 'Editor is now accessible|n8n ready|started|error' || echo 'Checking...'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

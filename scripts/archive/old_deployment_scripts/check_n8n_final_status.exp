@@ -1,0 +1,66 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Check n8n status
+send "echo '=== N8N Status ==='\r"
+expect "# "
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Check logs
+send "echo '=== N8N Logs ==='\r"
+expect "# "
+send "docker logs n8n --tail 30 2>&1 | grep -E 'Editor is now accessible|n8n ready|Initializing n8n|started|Starting|error|Error' | tail -15\r"
+expect "# "
+
+# Test n8n access
+send "echo '=== Testing N8N Access ==='\r"
+expect "# "
+send "curl -s http://localhost:5678 | grep -o '<title>.*</title>' || echo 'Not accessible yet'\r"
+expect "# "
+
+# Check webhook URL in logs
+send "echo '=== Checking Webhook URL in logs ==='\r"
+expect "# "
+send "docker logs n8n 2>&1 | grep -i webhook | tail -5 || echo 'No webhook logs'\r"
+expect "# "
+
+# Now let's find where the config file with the other key is stored
+send "echo '=== Finding n8n config files ==='\r"
+expect "# "
+send "docker exec n8n find /home/node -name config 2>&1 | grep -v 'Permission denied'\r"
+expect "# "
+
+# Check n8n storage volume
+send "echo '=== Checking n8n_storage volume ==='\r"
+expect "# "
+send "docker run --rm -v n8n_storage:/data alpine find /data -name config -type f 2>&1\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

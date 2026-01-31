@@ -1,0 +1,58 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Check why n8n is crashing
+send "echo '=== N8N Crash Logs ==='\r"
+expect "# "
+send "docker logs n8n --tail 50 2>&1 | grep -B5 -A5 'error\\|Error\\|crash\\|fatal'\r"
+expect "# "
+
+# Check if there's a port conflict
+send "echo '\n=== Port Conflicts ==='\r"
+expect "# "
+send "netstat -tulpn | grep 5678\r"
+expect "# "
+
+# Check docker compose config
+send "echo '\n=== N8N Environment Variables ==='\r"
+expect "# "
+send "docker compose config | grep -A30 'n8n:' | grep -E 'PORT|HOST|environment'\r"
+expect "# "
+
+# Restart n8n with logs
+send "echo '\n=== Restarting n8n with verbose logs ==='\r"
+expect "# "
+send "docker compose restart n8n\r"
+expect "# "
+send "sleep 10\r"
+expect "# "
+send "docker logs n8n --tail 30\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

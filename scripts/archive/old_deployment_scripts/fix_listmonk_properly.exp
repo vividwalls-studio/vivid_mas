@@ -1,0 +1,148 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Navigate to directory
+send "cd /opt/mcp-servers/listmonk-email-marketing\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Stop everything
+send "echo '=== Stopping ListMonk ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker-compose -f docker-compose.listmonk.yml down\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Remove the bad config
+send "rm -f config.toml\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Create a proper config.toml
+send "echo '\n=== Creating Proper Config ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "cat > config.toml << 'ENDCONFIG'\r"
+send "\[app\]\r"
+send "address = \"0.0.0.0:9000\"\r"
+send "admin_username = \"admin\"\r"
+send "admin_password = \"admin123\"\r"
+send "\r"
+send "\[db\]\r"
+send "host = \"listmonk-postgres\"\r"
+send "port = 5432\r"
+send "user = \"listmonk\"\r"
+send "password = \"listmonk123\"\r"
+send "database = \"listmonk\"\r"
+send "ssl_mode = \"disable\"\r"
+send "max_open = 25\r"
+send "max_idle = 25\r"
+send "max_lifetime = \"300s\"\r"
+send "params = \"\"\r"
+send "ENDCONFIG\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Start postgres
+send "echo '\n=== Starting PostgreSQL ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker-compose -f docker-compose.listmonk.yml up -d listmonk-postgres\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "sleep 15\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Initialize database
+send "echo '\n=== Initializing Database ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker run --rm --network vivid_mas -v \$(pwd)/config.toml:/listmonk/config.toml listmonk/listmonk:latest ./listmonk --install --yes\r"
+expect -timeout 60 {
+    "installation complete" {
+        send "echo 'Installation successful'\r"
+    }
+    "already exists" {
+        send "echo 'Database already initialized'\r"
+    }
+    "error" {
+        send "echo 'Installation error occurred'\r"
+    }
+    timeout {
+        send "\003"
+        send "echo 'Installation timeout'\r"
+    }
+}
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Start ListMonk
+send "echo '\n=== Starting ListMonk ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker-compose -f docker-compose.listmonk.yml up -d\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Wait for startup
+send "sleep 20\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Check status
+send "echo '\n=== Container Status ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker ps -a | grep listmonk\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Check logs
+send "echo '\n=== ListMonk Logs ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker logs listmonk --tail 20 2>&1 | grep -v 'Launching listmonk'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Test API
+send "echo '\n=== Testing ListMonk API ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "curl -s http://localhost:9003/api/health || echo 'API not accessible'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Test web interface
+send "echo '\n=== Testing Web Interface ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "curl -s -o /dev/null -w 'Local HTTP Status: %{http_code}\\n' http://localhost:9003/\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Test external HTTPS access
+send "echo '\n=== Testing External HTTPS Access ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "curl -s -o /dev/null -w 'External HTTPS Status: %{http_code}\\n' https://listmonk.vividwalls.blog/\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# If successful, show access URL
+send "echo '\n=== Access ListMonk ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "echo 'If running, access at: https://listmonk.vividwalls.blog/'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "echo 'Default login: admin / admin123'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Exit
+send "exit\r"
+expect eof

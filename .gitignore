@@ -9,6 +9,7 @@
 .env.*
 !.env.example
 !.env.*.example
+.env-backups/
 
 # Node modules
 node_modules/
@@ -41,8 +42,8 @@ Thumbs.db
 # MCP configuration (contains API keys)
 mcp.json
 !mcp.json.example
-services/mcp-servers/MCP_CLIENT_CONFIGURATION_GUIDE.md
-docs/MCP_SERVERS_COMPLETE_DOCUMENTATION_UPDATED.md
+# Logs
+logs/*.log
 
 # Temporary files
 *.tmp
@@ -67,6 +68,15 @@ docker/volumes/
 # Archive files with secrets
 archive/throwaway-scripts-20250612/
 archive/backups/
+archive/frontend-versions/
+archive/cognee-comparison/
+
+# Config backups
+configs/env/*.bak
+configs/env/*.backup*
+
+# Droplet backups (large)
+droplet_backup/
 
 # Large image files
 marketing-creatives/*.psd

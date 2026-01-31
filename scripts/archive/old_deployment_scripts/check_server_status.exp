@@ -1,0 +1,50 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Docker Container Status ==='\r"
+        expect "root@*"
+        
+        send "docker ps -a --format 'table {{.Names}}\t{{.Status}}'\r"
+        expect "root@*"
+        
+        send "echo '\n=== Checking Caddy ==='\r"
+        expect "root@*"
+        
+        send "docker ps | grep caddy\r"
+        expect "root@*"
+        
+        send "echo '\n=== Checking Neo4j ==='\r"
+        expect "root@*"
+        
+        send "docker ps | grep neo4j\r"
+        expect "root@*"
+        
+        send "echo '\n=== Recent Docker Events ==='\r"
+        expect "root@*"
+        
+        send "docker events --since '1h' --until '1s' | head -20\r"
+        expect "root@*"
+        
+        send "echo '\n=== Caddy Logs (last 20 lines) ==='\r"
+        expect "root@*"
+        
+        send "docker logs caddy --tail 20 2>&1\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

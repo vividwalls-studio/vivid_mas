@@ -1,0 +1,8 @@
+#!/usr/bin/expect -f
+
+set timeout 20
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13 "cat /etc/caddy/Caddyfile"
+expect "Enter passphrase for key '/Users/kinglerbercy/.ssh/digitalocean':"
+send "freedom\r"
+expect eof
+

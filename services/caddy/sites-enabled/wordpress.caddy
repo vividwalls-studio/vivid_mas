@@ -1,0 +1,38 @@
+# WordPress
+{$WORDPRESS_HOSTNAME} {
+    # Enable compression for bandwidth savings
+    encode zstd gzip
+
+    # Security headers
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy strict-origin-when-cross-origin
+        Strict-Transport-Security "max-age=31536000"
+        Permissions-Policy "accelerometer=(),camera=(),geolocation=(),gyroscope=(),magnetometer=(),microphone=(),payment=(),usb=()"
+        -Server
+    }
+
+    # Cache control for static assets
+    @static path /wp-content/* /wp-includes/*
+    header @static Cache-Control "public, max-age=31536000, immutable"
+
+    # Health check endpoint
+    handle /health {
+        respond "OK" 200
+    }
+
+    # Logging
+    log {
+        output file /var/log/caddy/wordpress.log
+        format json
+    }
+
+    # Reverse proxy to WordPress
+    reverse_proxy wordpress-multisite:80 {
+        header_up X-Forwarded-Port {http.request.port}
+        header_up X-Real-IP {http.request.remote.host}
+        header_up Connection "close"
+    }
+}

@@ -1,0 +1,90 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Check n8n's PostgreSQL configuration
+send "echo '=== N8N PostgreSQL Configuration ==='\r"
+expect "# "
+send "docker exec n8n printenv | grep -E 'DB_|POSTGRES' | sort\r"
+expect "# "
+
+# Check which postgres container n8n connects to
+send "echo '\\n=== Checking n8n network connections ==='\r"
+expect "# "
+send "docker inspect n8n | grep -A20 'Networks' | grep -E 'Name|NetworkMode'\r"
+expect "# "
+
+# Check main postgres container for n8n tables
+send "echo '\\n=== Checking main postgres container for n8n tables ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c 'SELECT schemaname, tablename FROM pg_tables WHERE schemaname NOT IN (\\'pg_catalog\\', \\'information_schema\\');' | grep -E 'workflow|n8n|execution' | head -20\r"
+expect "# "
+
+# Count workflows in main postgres
+send "echo '\\n=== Counting workflows in main postgres ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c 'SELECT COUNT(*) FROM workflow_entity;' 2>&1 || echo 'No workflow_entity table'\r"
+expect "# "
+
+# Check Supabase for n8n tables  
+send "echo '\\n=== Checking Supabase postgres for n8n tables ==='\r"
+expect "# "
+send "docker exec supabase-db psql -U postgres -d postgres -c \"SELECT schemaname, tablename FROM pg_tables WHERE tablename LIKE '%workflow%' OR tablename LIKE '%n8n%';\" | head -20\r"
+expect "# "
+
+# Extract the large backup to check its content
+send "echo '\\n=== Extracting backup to check content ==='\r"
+expect "# "
+send "mkdir -p /tmp/n8n-backup-check\r"
+expect "# "
+send "cd /tmp/n8n-backup-check\r"
+expect "# "
+send "tar -xzf /root/n8n_backup/n8n_data_backup_20250531_121550.tar.gz ./database.sqlite 2>&1 || echo 'No database.sqlite in backup'\r"
+expect "# "
+
+# Check if workflows directory exists in backup
+send "echo '\\n=== Checking for workflows in backup ==='\r"
+expect "# "
+send "tar -tzf /root/n8n_backup/n8n_data_backup_20250531_121550.tar.gz | grep -E '^\\./workflows/' | head -10\r"
+expect "# "
+
+# Count workflow files in backup
+send "echo '\\n=== Counting workflow files in backup ==='\r"
+expect "# "
+send "tar -tzf /root/n8n_backup/n8n_data_backup_20250531_121550.tar.gz | grep -E '^\\./workflows/.*\\.json$' | grep -v '\\._' | wc -l\r"
+expect "# "
+
+# Check docker-compose for postgres connection details
+send "echo '\\n=== PostgreSQL connection in docker-compose ==='\r"
+expect "# "
+send "cd /root/vivid_mas\r"
+expect "# "
+send "grep -A10 -B10 'DB_POSTGRESDB' docker-compose.yml | grep -E 'DB_|postgres|5432'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

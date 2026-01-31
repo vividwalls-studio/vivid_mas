@@ -1,0 +1,51 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Removing Duplicate Containers ==='\r"
+        expect "root@*"
+        
+        # Stop and remove duplicate postgres container
+        send "echo 'Stopping vivid_mas-postgres-1...'\r"
+        expect "root@*"
+        send "docker stop vivid_mas-postgres-1 2>/dev/null || echo 'Already stopped'\r"
+        expect "root@*"
+        
+        send "echo 'Removing vivid_mas-postgres-1...'\r"
+        expect "root@*"
+        send "docker rm vivid_mas-postgres-1\r"
+        expect "root@*"
+        
+        # Stop and remove searxng container (in Created state)
+        send "echo '\nRemoving searxng container...'\r"
+        expect "root@*"
+        send "docker rm searxng\r"
+        expect "root@*"
+        
+        # Also remove the twenty-caddy that's in Created state
+        send "echo '\nRemoving twenty-caddy container...'\r"
+        expect "root@*"
+        send "docker rm twenty-caddy\r"
+        expect "root@*"
+        
+        send "echo '\n=== Verifying containers removed ==='\r"
+        expect "root@*"
+        send "docker ps -a | grep -E 'vivid_mas-postgres-1|searxng|twenty-caddy' || echo 'All duplicate containers removed successfully'\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

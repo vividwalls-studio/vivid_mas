@@ -1,0 +1,80 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to correct directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Check current key in .env
+send "echo '=== Current key in .env ==='\r"
+expect "# "
+send "grep '^N8N_ENCRYPTION_KEY' .env | cut -c1-80\r"
+expect "# "
+
+# Stop n8n with docker-compose
+send "echo '\n=== Stopping n8n with docker-compose down ==='\r"
+expect "# "
+send "docker compose down n8n\r"
+expect "# "
+
+# Wait a bit
+send "sleep 5\r"
+expect "# "
+
+# Start n8n with docker-compose up
+send "echo '\n=== Starting n8n with docker-compose up ==='\r"
+expect "# "
+send "docker compose up -d n8n\r"
+expect "# "
+
+# Wait for startup
+send "sleep 20\r"
+expect "# "
+
+# Check if n8n is running
+send "echo '\n=== Checking n8n status ==='\r"
+expect "# "
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Check what key the container has
+send "echo '\n=== Verifying container has same key ==='\r"
+expect "# "
+send "docker exec n8n printenv N8N_ENCRYPTION_KEY | cut -c1-80\r"
+expect "# "
+
+# Check logs for any encryption errors
+send "echo '\n=== Checking for encryption errors in logs ==='\r"
+expect "# "
+send "docker logs n8n --tail 20 2>&1 | grep -i 'encryption\\|key\\|config' || echo 'No encryption errors found'\r"
+expect "# "
+
+# Test if n8n is accessible
+send "echo '\n=== Testing n8n web interface ==='\r"
+expect "# "
+send "curl -s http://localhost:5678 | grep -o '<title>.*</title>' || echo 'n8n not accessible'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

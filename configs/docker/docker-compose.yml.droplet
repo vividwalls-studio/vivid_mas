@@ -1,0 +1,108 @@
+version: '3.8'
+
+# Include all service-specific docker-compose files
+# PHASE 1 - Core Infrastructure (start first)
+include:
+  - ./services/postgres/docker-compose.yml      # PostgreSQL + Redis (shared)
+  - ./services/clickhouse/docker-compose.yml    # Analytics database
+  - ./services/minio/docker-compose.yml         # Object storage
+  - ./services/qdrant/docker-compose.yml        # Vector database
+  - ./services/neo4j/docker-compose.yml         # Knowledge graph
+  - ./services/ollama/docker-compose.yml        # Local LLM server
+  
+# PHASE 2 - Isolated Application Stacks (independent databases)
+  - ./services/supabase/docker-compose.yml      # Backend platform (own PostgreSQL)
+  - ./services/listmonk/docker-compose.yml      # Email marketing (own database)
+  - ./services/twenty/docker-compose.yml        # CRM (own PostgreSQL + Redis)
+  - ./services/postiz/docker-compose.yml        # Social media (own PostgreSQL + Redis)
+  - ./services/wordpress/docker-compose.yml     # WordPress (own MySQL)
+  
+# PHASE 3 - Services depending on shared infrastructure
+  - ./services/n8n/docker-compose.yml           # Workflow automation (shared PostgreSQL)
+  - ./services/langfuse/docker-compose.yml      # LLM observability (shared PostgreSQL)
+  - ./services/vividwalls_erp/docker-compose.yml        # E-commerce backend (shared PostgreSQL)
+
+# PHASE 4 - Application-dependent services
+  - ./services/vividwalls_erp-storefront/docker-compose.yml  # E-commerce frontend (depends on vividwalls_erp)
+  
+# PHASE 5 - Independent utilities
+  - ./services/flowise/docker-compose.yml       # No-code AI workflows
+  - ./services/crawl4ai/docker-compose.yml      # Web scraping
+  - ./services/searxng/docker-compose.yml       # Search engine
+  
+# PHASE 6 - Reverse proxy (start last)
+  - ./services/caddy/docker-compose.yml         # Reverse proxy (waits for all services)
+
+# PHASE 7 - Remote/External Services (via Docker Context)
+# Note: These require Docker contexts to be configured for remote servers
+# Example: docker context create remote-server --docker "host=ssh://user@remote-server"
+# Usage: docker --context remote-server compose -f ./remote-services/app-server/docker-compose.yml up -d
+
+# CRITICAL: All services must use the vivid_mas network
+networks:
+  default:
+    name: vivid_mas
+    external: true
+
+# Service configurations are now managed in individual compose files
+
+services:
+  # Placeholder service to make the compose file valid
+  # All actual services are included via the include statements above
+  placeholder:
+    image: alpine:latest
+    container_name: vivid_mas_placeholder
+    command: "echo 'VividWalls MAS - All services loaded via includes'"
+    deploy:
+      replicas: 0  # This service will not actually run
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+
+volumes:
+  # All volumes are now defined in their respective service compose files
+  # This ensures no conflicts and proper isolation between services
+
+# =============================================================================
+# STARTUP ORDER & DEPENDENCIES
+# =============================================================================
+# Services are configured with proper depends_on to ensure correct startup order:
+#
+# PHASE 1 - Core Infrastructure (start first):
+#   - postgres, redis (shared database & cache)
+#   - clickhouse, minio, qdrant, neo4j (independent data stores)
+#
+# PHASE 2 - Isolated Application Stacks (after infrastructure):
+#   - supabase (complete backend platform)
+#   - listmonk → listmonk_db
+#   - twenty-server → twenty-postgres + twenty-redis  
+#   - postiz → postiz-postgres + postiz-redis
+#   - wordpress-multisite → wordpress-mysql
+#   - open-webui → ollama
+#
+# PHASE 3 - Services Depending on Shared Infrastructure:
+#   - n8n → postgres + redis (workflow automation)
+#   - langfuse → postgres (LLM observability)
+#   - vividwalls_erp → postgres + redis (e-commerce backend)
+#
+# PHASE 4 - Application-Dependent Services:
+#   - vividwalls_erp-storefront → vividwalls_erp (e-commerce frontend)
+#
+# PHASE 5 - Independent Utilities (anytime after Phase 1):
+#   - flowise, crawl4ai, searxng
+#
+# PHASE 6 - Reverse Proxy (start last):
+#   - caddy (waits for all web services to be healthy)
+#
+# Usage: `docker-compose up -d` will now respect dependencies automatically
+# Network: All services use the external 'vivid_mas' network
+
+# =============================================================================
+# NOTES
+# =============================================================================
+# 1. All service definitions moved to individual compose files for modularity
+# 2. Dependencies enforced via depends_on with required: true and health checks
+# 3. All services MUST be on the vivid_mas network
+# 4. Critical: n8n has /opt/mcp-servers volume mount for MCP integration
+# 5. Critical: Services use proper service names for cross-service communication

@@ -1,0 +1,99 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+set correct_key "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZDAxYzZjZC1lNjY5LTQ4YWQtYTY5ZS1mMDU0YTY4NjU1YzQiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzUwNDQ5MzEzfQ.uBJrDT3a0pQdA5hA28Zf5egmhFLryv8DUNLvsoleXcs"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Stop n8n first
+send "docker stop n8n\r"
+expect "# "
+
+# Backup current .env
+send "echo '=== Backing up current .env ==='\r"
+expect "# "
+send "cp .env .env.backup-key-fix\r"
+expect "# "
+
+# Check current key in .env
+send "echo '\n=== Current key in .env ==='\r"
+expect "# "
+send "grep '^N8N_ENCRYPTION_KEY' .env\r"
+expect "# "
+
+# Update the .env file with correct key
+send "echo '\n=== Updating .env with correct key ==='\r"
+expect "# "
+send "sed -i 's|^N8N_ENCRYPTION_KEY=.*|N8N_ENCRYPTION_KEY=$correct_key|' .env\r"
+expect "# "
+
+# Verify the update
+send "echo '\n=== Verifying .env update ==='\r"
+expect "# "
+send "grep '^N8N_ENCRYPTION_KEY' .env\r"
+expect "# "
+
+# Clean up any auto-generated config
+send "echo '\n=== Cleaning up auto-generated configs ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine rm -rf /data/.n8n/config\r"
+expect "# "
+
+# Check docker-compose.yml uses environment variable properly
+send "echo '\n=== Checking docker-compose.yml environment section ==='\r"
+expect "# "
+send "grep -B2 -A10 '^  n8n:' docker-compose.yml | grep -A5 'environment:'\r"
+expect "# "
+
+# Start n8n with docker-compose (it should read from .env)
+send "echo '\n=== Starting n8n with docker-compose ==='\r"
+expect "# "
+send "docker compose up -d n8n caddy\r"
+expect "# "
+
+# Wait for startup
+send "sleep 20\r"
+expect "# "
+
+# Check if n8n is running
+send "echo '\n=== Checking n8n status ==='\r"
+expect "# "
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Check what key the container actually has
+send "echo '\n=== Verifying container has correct key ==='\r"
+expect "# "
+send "docker exec n8n printenv N8N_ENCRYPTION_KEY\r"
+expect "# "
+
+# Check logs
+send "echo '\n=== Recent n8n logs ==='\r"
+expect "# "
+send "docker logs n8n --tail 20 2>&1\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

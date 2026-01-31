@@ -1,0 +1,88 @@
+#!/usr/bin/expect -f
+
+set timeout 180
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== COMPREHENSIVE CONTAINER ANALYSIS ==='\r"
+        expect "root@*"
+        
+        send "echo '\n### 1. All Docker Networks ###'\r"
+        expect "root@*"
+        send "docker network ls\r"
+        expect "root@*"
+        
+        send "echo '\n### 2. All Containers with Networks ###'\r"
+        expect "root@*"
+        send "docker ps -a --format 'table {{.Names}}\t{{.Networks}}\t{{.Status}}' | head -40\r"
+        expect "root@*"
+        
+        send "echo '\n### 3. Port Bindings (All Containers) ###'\r"
+        expect "root@*"
+        send "docker ps -a --format 'table {{.Names}}\t{{.Ports}}' | head -40\r"
+        expect "root@*"
+        
+        send "echo '\n### 4. Failed/Exited Containers Logs ###'\r"
+        expect "root@*"
+        
+        send "echo '\n--- Twenty Server Logs ---'\r"
+        expect "root@*"
+        send "docker logs twenty-server-1 --tail 20 2>&1\r"
+        expect "root@*"
+        
+        send "echo '\n--- Twenty Worker Logs ---'\r"
+        expect "root@*"
+        send "docker logs twenty-worker-1 --tail 20 2>&1\r"
+        expect "root@*"
+        
+        send "echo '\n--- Langfuse Worker Logs ---'\r"
+        expect "root@*"
+        send "docker logs vivid_mas-langfuse-worker-1 --tail 20 2>&1\r"
+        expect "root@*"
+        
+        send "echo '\n### 5. Docker Compose Files Check ###'\r"
+        expect "root@*"
+        send "ls -la /root/vivid_mas/docker-compose*.yml\r"
+        expect "root@*"
+        
+        send "echo '\n### 6. Network Inspection ###'\r"
+        expect "root@*"
+        send "docker network inspect vivid_mas | grep -A 5 -B 5 'Containers'\r"
+        expect "root@*"
+        
+        send "echo '\n### 7. Port Conflicts Check ###'\r"
+        expect "root@*"
+        send "netstat -tulpn | grep -E ':(5432|5433|5434|8080|8081|3000|3001|3002|3003|3004)'\r"
+        expect "root@*"
+        
+        send "echo '\n### 8. Docker Events (Last Hour) ###'\r"
+        expect "root@*"
+        send "docker events --since '1h' --until '1s' | grep -E '(die|kill|stop|start|restart)' | tail -20\r"
+        expect "root@*"
+        
+        send "echo '\n### 9. System Resources ###'\r"
+        expect "root@*"
+        send "df -h | grep -E '(^/|Filesystem)'\r"
+        expect "root@*"
+        send "free -h\r"
+        expect "root@*"
+        
+        send "echo '\n### 10. Docker Compose Projects ###'\r"
+        expect "root@*"
+        send "docker ps -a --format '{{.Label \"com.docker.compose.project\"}}' | sort | uniq -c\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

@@ -1,0 +1,90 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Check n8n environment configuration for database type
+send "echo '=== Checking n8n environment for database configuration ==='\r"
+expect "# "
+send "grep -E 'DB_TYPE|DATABASE|EXECUTIONS_MODE|N8N_USER_FOLDER' docker-compose.yml | head -20\r"
+expect "# "
+
+# Check .env file for database configuration
+send "echo '\\n=== Checking .env for database configuration ==='\r"
+expect "# "
+send "grep -E 'DB_TYPE|DATABASE|EXECUTIONS_MODE|N8N_USER_FOLDER' .env | head -20\r"
+expect "# "
+
+# Count actual workflow JSON files in vivid_mas_n8n_storage
+send "echo '\\n=== Counting workflow JSON files in vivid_mas_n8n_storage ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine find /data/workflows -name '*.json' | wc -l\r"
+expect "# "
+
+# List all workflow files
+send "echo '\\n=== Listing all workflow files in vivid_mas_n8n_storage ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine ls -la /data/workflows/*.json | wc -l\r"
+expect "# "
+
+# Check the large backup file content
+send "echo '\\n=== Examining large backup file content ==='\r"
+expect "# "
+send "tar -tzf /root/n8n_backup/n8n_data_backup_20250531_121550.tar.gz | head -30\r"
+expect "# "
+
+# Count workflow files in the backup
+send "echo '\\n=== Counting workflow files in backup ==='\r"
+expect "# "
+send "tar -tzf /root/n8n_backup/n8n_data_backup_20250531_121550.tar.gz | grep -c '.json' || echo '0'\r"
+expect "# "
+
+# Check if n8n is using PostgreSQL
+send "echo '\\n=== Checking for PostgreSQL configuration ==='\r"
+expect "# "
+send "docker ps | grep postgres\r"
+expect "# "
+
+# Check Supabase for n8n tables
+send "echo '\\n=== Checking if n8n uses Supabase ==='\r"
+expect "# "
+send "docker exec supabase-db psql -U postgres -d postgres -c '\\\\dt' | grep -i n8n | head -10\r"
+expect "# "
+
+# Check for workflow_entity table
+send "echo '\\n=== Checking for workflow tables in Supabase ==='\r"
+expect "# "
+send "docker exec supabase-db psql -U postgres -d postgres -c '\\\\dt' | grep -i workflow | head -10\r"
+expect "# "
+
+# Look for any other n8n volumes
+send "echo '\\n=== Looking for all docker volumes with n8n data ==='\r"
+expect "# "
+send "docker volume ls -q | while read vol; do size=\\$(docker run --rm -v \\$vol:/data alpine du -sh /data 2>/dev/null | cut -f1); if [ \"\\$size\" != \"\" ] && [ \"\\$size\" != \"0\" ]; then echo \"Volume: \\$vol - Size: \\$size\"; docker run --rm -v \\$vol:/data alpine find /data -name '*.json' -o -name '*.sqlite' 2>/dev/null | head -3; fi; done | grep -B1 -A3 -i 'workflow\\|n8n'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

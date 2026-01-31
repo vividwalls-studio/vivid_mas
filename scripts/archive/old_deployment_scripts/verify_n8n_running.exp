@@ -1,0 +1,38 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Check n8n status
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Check if n8n is accessible
+send "curl -s http://localhost:5678 | grep -o '<title>.*</title>' | head -1\r"
+expect "# "
+
+# Test webhook endpoint
+send "curl -s -X POST https://n8n.vividwalls.blog/webhook/czgQFXq4Bh6Ho3q3 -H 'Content-Type: application/json' -d '{\"message\": \"test\"}' -w '\\nHTTP Status: %{http_code}\\n'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

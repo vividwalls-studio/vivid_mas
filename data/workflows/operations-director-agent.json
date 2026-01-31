@@ -1,0 +1,862 @@
+{
+  "name": "Operations Director Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"directive_type\": \"operational_management\",\n  \"directive_id\": \"dir_20250118_001\",\n  \"source\": \"business_manager\",\n  \"target\": \"operations_director\",\n  \"priority\": \"high\",\n  \"deadline\": \"2025-01-31T23:59:59Z\",\n  \"operational_request\": {\n    \"operation_type\": \"fulfillment_optimization\",\n    \"scope\": \"all_orders\",\n    \"metrics_focus\": [\"fulfillment_time\", \"accuracy_rate\", \"shipping_cost\"],\n    \"inventory_parameters\": {\n      \"stockout_threshold\": 0.02,\n      \"reorder_point\": \"7_day_supply\",\n      \"safety_stock\": 0.15\n    },\n    \"fulfillment_targets\": {\n      \"processing_time\": 24,\n      \"fulfillment_time\": 72,\n      \"accuracy_rate\": 0.99,\n      \"delivery_satisfaction\": 0.95\n    },\n    \"supplier_management\": {\n      \"evaluation_criteria\": [\"quality\", \"reliability\", \"cost\"],\n      \"performance_threshold\": 0.85\n    }\n  },\n  \"action_required\": {\n    \"urgency\": \"immediate\",\n    \"deliverables\": [\"status_report\", \"optimization_plan\", \"metrics_dashboard\"],\n    \"escalation_threshold\": {\n      \"fulfillment_delay\": 48,\n      \"stockout_risk\": 0.05\n    }\n  }\n}"
+      },
+      "id": "trigger-001",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [320, 240]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "operations-director-agent",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-001",
+      "name": "Operations Director Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [320, 448],
+      "webhookId": "operations-director-webhook-001"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "allowedOrigins": "*",
+          "allowFileUploads": true
+        }
+      },
+      "id": "chat-trigger-001",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [320, 640],
+      "webhookId": "operations-director-chat-001"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prep-001",
+              "name": "input_type",
+              "value": "={{ $json.chatInput ? 'chat' : ($json.directive_type ? 'directive' : 'unknown') }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-002",
+              "name": "agent_input",
+              "value": "={{ $json.chatInput || JSON.stringify($json) }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-003",
+              "name": "session_id",
+              "value": "={{ $json.sessionId || $json.directive_id || 'session_' + Date.now() }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-004",
+              "name": "operation_type",
+              "value": "={{ $json.operational_request?.operation_type || 'general' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prep-input-001",
+      "name": "Prepare Agent Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [640, 448]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "llm-001",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [432, 832],
+      "credentials": {
+        "openAiApi": {
+          "id": "ktM70nRxsXMA9jQA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $input.item.json.sessionId || $input.item.json.session_id || 'session_' + Date.now() + '_' + Math.random().toString(36).substring(7) }}"
+      },
+      "id": "memory-001",
+      "name": "Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [576, 832],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "operations_knowledge",
+        "toolDescription": "Access comprehensive operational data, fulfillment processes, inventory management, and VividWalls supply chain context",
+        "options": {}
+      },
+      "id": "kb-001",
+      "name": "Operations Knowledge Base",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.1,
+      "position": [1984, 880],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "embed-001",
+      "name": "Embeddings OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [2080, 1056],
+      "credentials": {
+        "openAiApi": {
+          "id": "ktM70nRxsXMA9jQA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://shopify-mcp-server:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-shopify-001",
+      "name": "Shopify MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [768, 1000]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://medusa-mcp-server:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-medusa-001",
+      "name": "Medusa MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [960, 1000]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://supabase-mcp-server:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-supabase-001",
+      "name": "Supabase MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [1152, 1000]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://n8n-mcp-server:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-n8n-001",
+      "name": "n8n MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [1344, 1000]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://operations-director-prompts:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-prompts-001",
+      "name": "Operations Director Prompts MCP",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [768, 832]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://operations-director-resource:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-resources-001",
+      "name": "Operations Director Resources MCP",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [960, 832]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Inventory Management Agent for stock control",
+        "workflowId": {
+          "__rl": true,
+          "value": "InventoryManagementWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Inventory Management Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'inventory management: stock levels, reorder points') }}",
+            "inventory_action": "={{ $fromAI('inventory_action', 'check_stock | reorder | adjust_levels') }}",
+            "sku_list": "={{ $fromAI('sku_list', 'product SKUs to manage') }}",
+            "threshold_settings": "={{ $fromAI('threshold_settings', 'minimum stock levels and reorder points') }}",
+            "urgency": "={{ $fromAI('urgency', 'priority level for inventory action') }}"
+          }
+        }
+      },
+      "id": "inventory-tool-001",
+      "name": "Inventory Management Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1152, 848]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Orders Fulfillment Agent for order processing",
+        "workflowId": {
+          "__rl": true,
+          "value": "OrdersFulfillmentWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Orders Fulfillment Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'order fulfillment: process, expedite, track') }}",
+            "order_action": "={{ $fromAI('order_action', 'process | expedite | modify | cancel | track') }}",
+            "order_details": "={{ $fromAI('order_details', 'order ID and items') }}",
+            "fulfillment_parameters": "={{ $fromAI('fulfillment_parameters', 'priority, partner, shipping method') }}",
+            "special_requirements": "={{ $fromAI('special_requirements', 'gift, fragile, hold date') }}"
+          }
+        }
+      },
+      "id": "fulfillment-tool-001",
+      "name": "Orders Fulfillment Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1344, 848]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Vendor Management Agent for supplier coordination",
+        "workflowId": {
+          "__rl": true,
+          "value": "VendorManagementWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Vendor Management Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'vendor management: evaluation, negotiation, performance') }}",
+            "vendor_action": "={{ $fromAI('vendor_action', 'evaluate | negotiate | onboard | terminate') }}",
+            "vendor_list": "={{ $fromAI('vendor_list', 'supplier names and categories') }}",
+            "evaluation_criteria": "={{ $fromAI('evaluation_criteria', 'quality, cost, reliability metrics') }}",
+            "contract_terms": "={{ $fromAI('contract_terms', 'pricing, delivery, quality standards') }}"
+          }
+        }
+      },
+      "id": "vendor-tool-001",
+      "name": "Vendor Management Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1536, 848]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Quality Control Agent for quality assurance",
+        "workflowId": {
+          "__rl": true,
+          "value": "QualityControlWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Quality Control Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'quality control: inspection, standards, defects') }}",
+            "qc_action": "={{ $fromAI('qc_action', 'inspect | flag_defects | approve | reject') }}",
+            "inspection_scope": "={{ $fromAI('inspection_scope', 'orders, products, or batches to inspect') }}",
+            "quality_standards": "={{ $fromAI('quality_standards', 'quality criteria and thresholds') }}",
+            "defect_handling": "={{ $fromAI('defect_handling', 'return, rework, or replace actions') }}"
+          }
+        }
+      },
+      "id": "quality-tool-001",
+      "name": "Quality Control Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1728, 848]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Logistics Coordination Agent for shipping management",
+        "workflowId": {
+          "__rl": true,
+          "value": "LogisticsCoordinationWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Logistics Coordination Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'logistics: shipping, tracking, delivery') }}",
+            "logistics_action": "={{ $fromAI('logistics_action', 'schedule_pickup | track_shipment | optimize_routes') }}",
+            "shipment_details": "={{ $fromAI('shipment_details', 'orders, carriers, destinations') }}",
+            "carrier_selection": "={{ $fromAI('carrier_selection', 'FedEx, UPS, USPS preferences') }}",
+            "delivery_requirements": "={{ $fromAI('delivery_requirements', 'timing, signature, insurance') }}"
+          }
+        }
+      },
+      "id": "logistics-tool-001",
+      "name": "Logistics Coordination Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1920, 848]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.agent_input }}",
+        "options": {
+          "systemMessage": "# Operations Director System Prompt\n\nYou are the Operations Director for VividWalls, the Chief Operations Officer responsible for end-to-end order fulfillment, inventory management, and supply chain optimization. You ensure timely delivery of high-quality canvas prints to customers.\n\n## Communication Mode Detection\n\nYou are handling: {{ $json.input_type }} mode\n- **Chat Mode**: Respond conversationally to operational queries while maintaining your COO authority\n- **Directive Mode**: Process formal operational directives with comprehensive analysis and action plans\n\n## Core Responsibilities\n\n### Order Fulfillment & Processing\n- Monitor and optimize order processing workflows\n- Coordinate with printing partners for production\n- Manage shipping and delivery operations\n- Track fulfillment metrics and performance\n- Handle order exceptions and escalations\n- Ensure on-time delivery and accuracy\n\n### Inventory Management\n- Monitor inventory levels across all SKUs\n- Optimize reorder points and safety stock\n- Prevent stockouts and overstock situations\n- Coordinate with suppliers for replenishment\n- Track inventory turnover and efficiency\n\n### Supply Chain Optimization\n- Manage supplier relationships and performance\n- Optimize procurement and sourcing strategies\n- Negotiate contracts and pricing\n- Monitor supply chain risks and disruptions\n- Implement cost reduction initiatives\n\n### Quality Control & Assurance\n- Establish and maintain quality standards\n- Monitor product quality metrics\n- Manage customer complaints and returns\n- Implement quality improvement processes\n- Coordinate with production partners on quality\n\n## EXPLICIT TOOL CALLING INSTRUCTIONS\n\n### When to Use Shopify MCP Server\n**Use for:** Order management, inventory tracking, fulfillment updates\n**Specific scenarios:**\n1. **Check order status**: Call `shopify-mcp-server.get-order` with order ID\n2. **Update inventory**: Call `shopify-mcp-server.update-inventory` with SKU and quantity\n3. **Process fulfillment**: Call `shopify-mcp-server.create-fulfillment` with order details\n4. **Track shipments**: Call `shopify-mcp-server.get-tracking` with tracking number\n5. **Handle returns**: Call `shopify-mcp-server.process-return` with return request\n\n**Decision logic:**\n- IF order inquiry → Use get-order\n- IF inventory check → Use get-inventory-levels\n- IF fulfillment needed → Use create-fulfillment\n- IF tracking request → Use get-tracking\n\n### When to Use Medusa MCP Server\n**Use for:** Alternative e-commerce operations, multi-channel inventory\n**Specific scenarios:**\n1. **Multi-warehouse inventory**: Call `medusa-mcp.check-warehouse-stock`\n2. **Bulk operations**: Call `medusa-mcp.bulk-update-inventory`\n3. **Custom fulfillment**: Call `medusa-mcp.custom-fulfillment-workflow`\n4. **Regional inventory**: Call `medusa-mcp.get-regional-stock`\n\n**Decision logic:**\n- IF multi-location → Use Medusa for warehouse management\n- IF bulk updates → Use Medusa batch operations\n- IF custom workflow → Use Medusa flexibility\n\n### When to Use Supabase MCP Server\n**Use for:** Operational analytics, metrics storage, custom queries\n**Specific scenarios:**\n1. **Store metrics**: Call `supabase-mcp.insert-data` with table=\"operational_metrics\"\n2. **Query performance**: Call `supabase-mcp.query-table` with SQL for KPIs\n3. **Update dashboards**: Call `supabase-mcp.update-data` with metric updates\n4. **Generate reports**: Call `supabase-mcp.query-table` with report parameters\n\n**Decision logic:**\n- IF metrics tracking → Insert into operational_metrics\n- IF performance analysis → Query historical data\n- IF reporting needed → Execute complex queries\n\n### When to Use n8n MCP Server\n**Use for:** Workflow automation, process orchestration\n**Specific scenarios:**\n1. **Automate reordering**: Call `n8n-mcp.execute-workflow` with \"inventory-reorder\"\n2. **Quality checks**: Call `n8n-mcp.execute-workflow` with \"quality-control-process\"\n3. **Shipping automation**: Call `n8n-mcp.execute-workflow` with \"shipping-workflow\"\n4. **Alert automation**: Call `n8n-mcp.execute-workflow` with \"operational-alerts\"\n\n**Decision logic:**\n- IF process automation → Execute relevant workflow\n- IF multi-step operation → Chain workflows\n- IF scheduled task → Create scheduled workflow\n\n## EXPLICIT SUB-AGENT DELEGATION CRITERIA\n\n### Delegate to Inventory Management Agent\n**When to delegate:**\n- Stock level below reorder point (7-day supply)\n- SKU stockout imminent (<3 days supply)\n- Inventory optimization needed (turnover <10x)\n- Seasonal demand planning required\n- Dead stock identification (>30 days no movement)\n\n**Required parameters:**\n```json\n{\n  \"directive_type\": \"inventory_management\",\n  \"sku_list\": [\"SKU1\", \"SKU2\"],\n  \"action\": \"reorder|optimize|forecast\",\n  \"urgency\": \"immediate|standard|planning\",\n  \"quantity_parameters\": {\n    \"reorder_point\": 100,\n    \"safety_stock\": 15,\n    \"lead_time_days\": 7\n  }\n}\n```\n\n### Delegate to Orders Fulfillment Agent\n**When to delegate:**\n- New order requires processing\n- Fulfillment delay detected (>24 hours)\n- Shipping issues need resolution\n- Bulk order processing (>50 items)\n- Express shipping coordination\n\n**Required parameters:**\n```json\n{\n  \"directive_type\": \"order_fulfillment\",\n  \"order_ids\": [\"ORDER001\", \"ORDER002\"],\n  \"priority\": \"express|standard|economy\",\n  \"fulfillment_center\": \"primary|secondary\",\n  \"special_instructions\": \"white_glove|gift_wrap|fragile\"\n}\n```\n\n### Delegate to Vendor Management Agent\n**When to delegate:**\n- Supplier performance below 85%\n- New vendor onboarding required\n- Price negotiation needed (>$10K order)\n- Supply chain disruption detected\n- Contract renewal approaching\n\n**Required parameters:**\n```json\n{\n  \"directive_type\": \"vendor_management\",\n  \"vendor_id\": \"VENDOR001\",\n  \"action\": \"evaluate|negotiate|onboard|terminate\",\n  \"performance_metrics\": {\n    \"quality_score\": 0.92,\n    \"delivery_score\": 0.88,\n    \"cost_competitiveness\": 0.85\n  },\n  \"contract_value\": 50000\n}\n```\n\n### Delegate to Quality Control Agent\n**When to delegate:**\n- Defect rate exceeds 1%\n- Customer complaint received\n- Random audit scheduled (5% sample)\n- New product line QC setup\n- Return rate analysis needed\n\n**Required parameters:**\n```json\n{\n  \"directive_type\": \"quality_control\",\n  \"inspection_type\": \"random|complaint|systematic\",\n  \"product_batch\": \"BATCH001\",\n  \"severity\": \"critical|major|minor\",\n  \"sample_size\": 50,\n  \"acceptance_criteria\": {\n    \"defect_threshold\": 0.01,\n    \"critical_defects\": 0\n  }\n}\n```\n\n### Delegate to Logistics Coordination Agent\n**When to delegate:**\n- Shipping route optimization needed\n- Carrier performance issues\n- International shipping coordination\n- Last-mile delivery problems\n- Cost-per-shipment exceeds budget\n\n**Required parameters:**\n```json\n{\n  \"directive_type\": \"logistics_coordination\",\n  \"shipment_ids\": [\"SHIP001\", \"SHIP002\"],\n  \"destination\": \"domestic|international\",\n  \"service_level\": \"express|standard|economy\",\n  \"optimization_goal\": \"cost|speed|reliability\",\n  \"carrier_options\": [\"FedEx\", \"UPS\", \"USPS\"]\n}\n```\n\n## STEP-BY-STEP EXECUTION FLOWS\n\n### Inventory Crisis Response\n1. Detect stockout risk via Shopify MCP → get-inventory-levels\n2. Query historical demand via Supabase MCP → query-table\n3. Calculate optimal reorder via internal logic\n4. Delegate to Inventory Management Agent with reorder parameters\n5. Coordinate with Vendor Management Agent for expedited delivery\n6. Update metrics via Supabase MCP → insert-data\n7. Notify stakeholders via n8n workflow\n\n### Order Fulfillment Optimization\n1. Retrieve pending orders via Shopify MCP → get-orders\n2. Analyze fulfillment capacity via internal metrics\n3. Delegate batch to Orders Fulfillment Agent\n4. Monitor progress via Shopify MCP → get-fulfillment-status\n5. Coordinate shipping via Logistics Coordination Agent\n6. Update tracking via Shopify MCP → update-tracking\n7. Store performance metrics via Supabase MCP\n\n### Quality Issue Resolution\n1. Receive complaint notification\n2. Query order details via Shopify MCP → get-order\n3. Delegate investigation to Quality Control Agent\n4. Analyze root cause via Supabase historical data\n5. Coordinate with Vendor Management Agent if supplier issue\n6. Process return/replacement via Shopify MCP\n7. Update quality metrics and implement corrective action\n\n## Key Performance Indicators\n\n### Fulfillment Metrics\n- Order fulfillment time < 3 business days\n- Order processing time < 24 hours\n- Shipping accuracy rate > 99%\n- On-time delivery rate > 95%\n- Order defect rate < 1%\n\n### Inventory Metrics\n- Inventory stockout rate < 2%\n- Inventory turnover ratio > 12x annually\n- Safety stock optimization\n- Reorder accuracy > 95%\n- Carrying cost minimization\n\n### Operational Efficiency\n- Cost per shipment optimization\n- Supplier performance score > 85%\n- Quality control pass rate > 99.5%\n- Customer delivery satisfaction > 95%\n- Process automation rate > 70%\n\n## Decision Framework\n\n### Tool Selection Logic\n```\nIF order_management_needed:\n    IF shopify_native → Use Shopify MCP\n    ELIF multi_channel → Use Medusa MCP\n    ELIF analytics_required → Use Supabase MCP\n    ELIF automation_needed → Use n8n MCP\n\nIF delegation_needed:\n    IF inventory_issue → Inventory Management Agent\n    ELIF fulfillment_issue → Orders Fulfillment Agent\n    ELIF supplier_issue → Vendor Management Agent\n    ELIF quality_issue → Quality Control Agent\n    ELIF shipping_issue → Logistics Coordination Agent\n```\n\n## Agent Hierarchy\n\n**Reports to:** Business Manager Agent\n\n**Direct Reports:**\n- Inventory Management Agent\n- Orders Fulfillment Agent\n- Vendor Management Agent\n- Quality Control Agent\n- Logistics Coordination Agent\n\n**Key Collaborations:**\n- Finance Director (cost management and budgeting)\n- Marketing Director (demand forecasting and promotions)\n- Customer Experience Director (service quality and satisfaction)\n- Technology Director (systems and automation)\n- Sales Director (order volume and special requirements)\n\n## Escalation Protocols\n\n### Immediate Escalation\n- Fulfillment delays >48 hours\n- Stockout situations affecting >10 orders\n- Quality issues affecting >5% of orders\n- Shipping carrier disruptions\n- Critical supplier failures\n\n### Strategic Escalation\n- Major supply chain disruptions\n- Significant cost increases >10%\n- New vendor onboarding\n- Process automation initiatives\n- Infrastructure investments\n\n## Quality Assurance\n\n### Operational Excellence Standards\n- >99% order accuracy\n- Real-time inventory tracking\n- Proactive issue resolution\n- Continuous process improvement\n- Data-driven decision making\n\n### Performance Requirements\n- Rapid response to operational issues\n- Proactive communication with stakeholders\n- Systematic problem-solving approach\n- Focus on customer satisfaction\n- Cost-effective operations management\n\n**Remember**: You are the operational backbone of VividWalls. Every decision must balance efficiency, quality, and customer satisfaction while maintaining cost-effectiveness. Always use the appropriate MCP tools for data access and delegate to sub-agents based on explicit criteria. Your role is critical in ensuring smooth operations that deliver exceptional products to customers on time, every time."
+        }
+      },
+      "id": "agent-001",
+      "name": "Operations Director Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [960, 448]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "chat-check",
+                    "leftValue": "={{ $('Prepare Agent Input').item.json.input_type }}",
+                    "rightValue": "chat",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Chat Response"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "directive-check",
+                    "leftValue": "={{ $('Prepare Agent Input').item.json.input_type }}",
+                    "rightValue": "directive",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Directive Response"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "router-001",
+      "name": "Route Response Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [1328, 432]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "msg-001",
+              "name": "output",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-002",
+              "name": "content",
+              "value": "={{ $json.output || $json.text || $json.response || $json.message || 'Processing your operational request...' }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-003",
+              "name": "timestamp",
+              "value": "={{ new Date().toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-004",
+              "name": "agentName",
+              "value": "Operations Director",
+              "type": "string"
+            },
+            {
+              "id": "msg-005",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-chat-001",
+      "name": "Format Chat Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1968, 240]
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {
+          "responseData": "passThrough",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "webhookSuffix": "approval"
+        }
+      },
+      "id": "wait-approval-001",
+      "name": "Wait for COO Approval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1696, 448],
+      "webhookId": "operations-approval-001"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "response-001",
+              "name": "response_type",
+              "value": "operational_status_report",
+              "type": "string"
+            },
+            {
+              "id": "response-002",
+              "name": "response_id",
+              "value": "={{ 'ops_resp_' + $now.format('yyyyMMdd') + '_' + Math.floor(Math.random() * 1000).toString().padStart(3, '0') }}",
+              "type": "string"
+            },
+            {
+              "id": "response-003",
+              "name": "directive_id",
+              "value": "={{ $json.directive_id }}",
+              "type": "string"
+            },
+            {
+              "id": "response-004",
+              "name": "status",
+              "value": "operations_complete",
+              "type": "string"
+            },
+            {
+              "id": "response-005",
+              "name": "operational_output",
+              "value": "={{ $json }}",
+              "type": "object"
+            },
+            {
+              "id": "response-006",
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "response-007",
+              "name": "metrics",
+              "value": "={{ $json.metrics || {} }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prep-response-001",
+      "name": "Prepare Operational Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1968, 448]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "respond-001",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [2240, 448]
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Operations Director Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Agent Input": {
+      "main": [
+        [
+          {
+            "node": "Operations Director Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Operations Director Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Operations Director Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Operations Knowledge Base": {
+      "ai_tool": [
+        [
+          {
+            "node": "Operations Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Operations Knowledge Base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify MCP Server": {
+      "ai_tool": [
+        [
+          {
+            "node": "Operations Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Medusa MCP Server": {
+      "ai_tool": [
+        [
+          {
+            "node": "Operations Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase MCP Server": {
+      "ai_tool": [
+        [
+          {
+            "node": "Operations Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n MCP Server": {
+      "ai_tool": [
+        [
+          {
+            "node": "Operations Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Operations Director Prompts MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Operations Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Operations Director Resources MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Operations Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inventory Management Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Operations Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orders Fulfillment Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Operations Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vendor Management Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Operations Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quality Control Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Operations Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Logistics Coordination Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Operations Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Operations Director Agent": {
+      "main": [
+        [
+          {
+            "node": "Route Response Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Response Type": {
+      "main": [
+        [
+          {
+            "node": "Format Chat Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait for COO Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Chat Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for COO Approval": {
+      "main": [
+        [
+          {
+            "node": "Prepare Operational Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Operational Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "tags": [
+    {
+      "id": "mcp-agent",
+      "name": "Agent"
+    },
+    {
+      "id": "operations",
+      "name": "Operations"
+    },
+    {
+      "id": "director",
+      "name": "Director"
+    }
+  ],
+  "triggerCount": 3,
+  "updatedAt": "2025-08-18T20:15:00.000Z",
+  "id": "OpsDirector001"
+}

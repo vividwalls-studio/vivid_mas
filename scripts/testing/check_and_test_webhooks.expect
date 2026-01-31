@@ -1,0 +1,67 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+puts "Connecting to DigitalOcean droplet..."
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        puts "\nConnected successfully!"
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}
+
+# Check disk space
+puts "\nChecking disk space..."
+send "df -h /\r"
+expect "root@*"
+
+# Clean up some space
+puts "\nCleaning up Docker resources..."
+send "docker system prune -f\r"
+expect "root@*"
+
+# Check disk space again
+send "df -h /\r"
+expect "root@*"
+
+# Navigate to project directory
+send "cd /root/vivid_mas\r"
+expect "root@*"
+
+# Check active workflows directly from database
+puts "\nChecking active workflows..."
+send "docker exec postgres psql -U postgres -d postgres -t -c \"SELECT name FROM workflow_entity WHERE active = true;\"\r"
+expect "root@*"
+
+# Get workflow count
+puts "\nGetting workflow count..."
+send "docker exec postgres psql -U postgres -d postgres -t -c \"SELECT COUNT(*) FROM workflow_entity;\"\r"
+expect "root@*"
+
+# Check n8n container health
+puts "\nChecking n8n health..."
+send "curl -s http://localhost:5678/healthz\r"
+expect "root@*"
+
+# Exit
+puts "\nDone!"
+send "exit\r"
+expect eof

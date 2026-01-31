@@ -1,0 +1,90 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Find ALL encryption key references
+send "echo '=== FINDING ALL N8N ENCRYPTION KEYS IN SYSTEM ==='\r"
+expect "# "
+
+# 1. Check all .env files
+send "echo '\n--- All .env files with N8N_ENCRYPTION_KEY ---'\r"
+expect "# "
+send "find / -name '.env*' -type f 2>/dev/null | xargs grep -l 'N8N_ENCRYPTION_KEY' 2>/dev/null\r"
+expect "# "
+
+# Show the actual keys
+send "echo '\n--- Actual encryption keys in .env files ---'\r"
+expect "# "
+send "find / -name '.env*' -type f 2>/dev/null | xargs grep 'N8N_ENCRYPTION_KEY' 2>/dev/null | grep -v '^#'\r"
+expect "# "
+
+# 2. Check docker containers for env vars
+send "echo '\n--- Docker container environment variables ---'\r"
+expect "# "
+send "docker ps -a --format 'table {{.Names}}' | tail -n +2 | while read container; do echo \"Container: \$container\"; docker inspect \$container 2>/dev/null | grep -A1 'N8N_ENCRYPTION_KEY' | grep -v 'N8N_ENCRYPTION_KEY' | sed 's/.*\"\(.*\)\".*/\1/' | grep -v '^--\$'; done\r"
+expect "# "
+
+# 3. Check all config files in volumes
+send "echo '\n--- Config files in docker volumes ---'\r"
+expect "# "
+send "docker volume ls -q | while read vol; do echo \"Volume: \$vol\"; docker run --rm -v \$vol:/data alpine find /data -name 'config*' -type f 2>/dev/null; done\r"
+expect "# "
+
+# 4. Check n8n volume specifically
+send "echo '\n--- N8N volume config contents ---'\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine cat /data/.n8n/config 2>/dev/null || echo 'No config file'\r"
+expect "# "
+
+# 5. Check for any backup or old config files
+send "echo '\n--- Backup or old config files ---'\r"
+expect "# "
+send "find /root -name '*config*' -path '*n8n*' -type f 2>/dev/null\r"
+expect "# "
+
+# 6. Check systemd or init files
+send "echo '\n--- Systemd/init files with encryption keys ---'\r"
+expect "# "
+send "grep -r 'N8N_ENCRYPTION_KEY' /etc/systemd/ /etc/init.d/ 2>/dev/null || echo 'None found'\r"
+expect "# "
+
+# 7. Check bash history for key changes
+send "echo '\n--- Bash history with encryption key commands ---'\r"
+expect "# "
+send "grep 'N8N_ENCRYPTION_KEY' ~/.bash_history 2>/dev/null | tail -20\r"
+expect "# "
+
+# 8. Check docker-compose files
+send "echo '\n--- Docker compose files ---'\r"
+expect "# "
+send "find / -name 'docker-compose*.yml' -type f 2>/dev/null | xargs grep -l 'N8N_ENCRYPTION_KEY' 2>/dev/null\r"
+expect "# "
+
+# 9. Check for any n8n directories
+send "echo '\n--- All n8n directories ---'\r"
+expect "# "
+send "find / -type d -name '*n8n*' 2>/dev/null | grep -v '/proc' | grep -v '/sys'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

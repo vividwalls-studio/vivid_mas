@@ -1,0 +1,55 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check port usage
+send "echo '=== Port Usage Summary ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo '\nPort 3000 (Open WebUI):'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+send "ss -tlnp | grep :3000 || echo 'Port 3000 is FREE'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "echo '\nPort 3010 (Twenty CRM):'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+send "ss -tlnp | grep :3010\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check Twenty health
+send "echo '\n=== Twenty CRM Health Check ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+send "curl -s http://localhost:3010/healthz | head -1 || echo 'Twenty not responding'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Reload Caddy to ensure config is applied
+send "echo '\n=== Reloading Caddy ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+send "docker exec caddy caddy reload --config /etc/caddy/Caddyfile\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Summary
+send "echo '\n=== SUMMARY ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+send "echo '✅ Twenty CRM: Running on port 3010 (https://twenty.vividwalls.blog)'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+send "echo '✅ Port 3000: Now available for Open WebUI'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "reasoning-engine": {
+      "name": "Agent Reasoning Engine MCP Server",
+      "description": "Provides advanced reasoning capabilities and knowledge retrieval for AI agents",
+      "command": "python",
+      "args": [
+        "/opt/mcp-servers/reasoning-engine/reasoning_engine_mcp.py"
+      ],
+      "cwd": "/opt/mcp-servers/reasoning-engine",
+      "env": {
+        "SUPABASE_URL": "https://supabase.vividwalls.blog",
+        "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzQ5NjA0MDkxLCJleHAiOjIwNjQ5NjQwOTF9.I-ofdpcJwdSKKZ5rRN_DSnfp98iBH862UruU6XsNkcI",
+        "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3NDk2MDQwOTEsImV4cCI6MjA2NDk2NDA5MX0.Ypo0XwGmjHXsr7HCAIYtAAShR8FKYada8PcgdcA3SQw",
+        "NEO4J_URI": "bolt://vividwalls-neo4j:7687",
+        "NEO4J_USER": "neo4j",
+        "NEO4J_PASSWORD": "vividwalls2024",
+        "NEO4J_DATABASE": "neo4j",
+        "OPENAI_API_KEY": "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",
+        "REDIS_URL": "redis://vividwalls-redis:6379",
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+} 

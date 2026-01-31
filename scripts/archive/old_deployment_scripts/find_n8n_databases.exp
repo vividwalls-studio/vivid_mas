@@ -1,0 +1,66 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Find all SQLite databases in all n8n volumes
+send "echo '=== Finding all SQLite databases in n8n volumes ==='\r"
+expect "# "
+send "docker volume ls | grep -E 'n8n|N8N' | awk '{print \$2}' | while read vol; do echo \"\\n=== Volume: \$vol ===\"; docker run --rm -v \$vol:/data alpine find /data -name '*.sqlite' -o -name '*.db' -o -name 'database*' 2>&1 | while read file; do if [ ! -z \"\$file\" ]; then echo \"\$file\"; docker run --rm -v \$vol:/data alpine ls -lh \"\$file\" 2>&1; fi; done; done\r"
+expect "# "
+
+# Check the current n8n container for database location
+send "echo '\\n=== Database in current n8n container ==='\r"
+expect "# "
+send "docker exec n8n find /home/node/.n8n -name '*.sqlite' -o -name '*.db' -o -name 'database*' 2>&1\r"
+expect "# "
+
+# Check if database exists in default location
+send "echo '\\n=== Checking default database location ==='\r"
+expect "# "
+send "docker exec n8n ls -lh /home/node/.n8n/database.sqlite 2>&1 || echo 'No database at default location'\r"
+expect "# "
+
+# Check all docker volumes for large databases
+send "echo '\\n=== Finding all large database files (>1MB) ==='\r"
+expect "# "
+send "docker volume ls | awk '{print \$2}' | grep -v VOLUME | while read vol; do docker run --rm -v \$vol:/data alpine find /data -name '*.sqlite' -size +1M 2>&1 | while read file; do if [ ! -z \"\$file\" ] && [ \"\$file\" != \"find:\" ]; then echo \"Volume: \$vol - \$file\"; docker run --rm -v \$vol:/data alpine ls -lh \"\$file\" 2>&1; fi; done; done | head -20\r"
+expect "# "
+
+# Check n8n logs for database path
+send "echo '\\n=== Checking n8n logs for database path ==='\r"
+expect "# "
+send "docker logs n8n 2>&1 | grep -i 'database\\|sqlite' | grep -v 'node_modules' | head -10\r"
+expect "# "
+
+# Count workflows in vivid_mas_n8n_storage
+send "echo '\\n=== Counting workflows in vivid_mas_n8n_storage ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine find /data/workflows -name '*.json' 2>&1 | wc -l\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

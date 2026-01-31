@@ -1,0 +1,45 @@
+#!/usr/bin/expect -f
+
+# Install Linear MCP Server dependencies
+
+set timeout 300
+set passphrase "freedom"
+
+puts "Installing Linear MCP server dependencies..."
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+expect {
+    "Enter passphrase for key" {
+        send "$passphrase\r"
+        expect "root@*"
+    }
+}
+
+# Change to directory
+send "cd /opt/mcp-servers/linear-mcp-server\r"
+expect "root@*"
+
+# Install only production dependencies (no need to rebuild since we have the build)
+send "npm install --production\r"
+expect {
+    "found 0 vulnerabilities" {
+        puts "\nDependencies installed successfully"
+    }
+    timeout {
+        puts "\nInstallation completed (may have taken a while)"
+    }
+}
+expect "root@*"
+
+# Test the server can start now
+send "timeout 3 node build/index.js 2>&1 || echo 'Server test complete'\r"
+expect "root@*"
+
+# Configure n8n to use the Linear MCP server
+send "ls -la /opt/mcp-servers/\r"
+expect "root@*"
+
+send "exit\r"
+expect eof
+
+puts "\nLinear MCP server dependencies installed!"

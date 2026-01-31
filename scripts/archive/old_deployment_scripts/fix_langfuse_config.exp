@@ -1,0 +1,67 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Fixing Langfuse Configuration ==='\r"
+        expect "root@*"
+        
+        # Generate encryption key
+        send "echo 'Generating ENCRYPTION_KEY for Langfuse...'\r"
+        expect "root@*"
+        send "LANGFUSE_ENCRYPTION_KEY=$(openssl rand -hex 32)\r"
+        expect "root@*"
+        send "echo \"Generated key: \$LANGFUSE_ENCRYPTION_KEY\"\r"
+        expect "root@*"
+        
+        # Check if .env exists and add the key
+        send "echo '\nAdding ENCRYPTION_KEY to .env file...'\r"
+        expect "root@*"
+        send "cd /root/vivid_mas\r"
+        expect "root@*"
+        
+        # Check if ENCRYPTION_KEY already exists
+        send "grep -q '^ENCRYPTION_KEY=' .env 2>/dev/null || echo \"ENCRYPTION_KEY=\$LANGFUSE_ENCRYPTION_KEY\" >> .env\r"
+        expect "root@*"
+        
+        # Export for docker-compose
+        send "export ENCRYPTION_KEY=\$LANGFUSE_ENCRYPTION_KEY\r"
+        expect "root@*"
+        
+        # Stop the restarting containers
+        send "echo '\nStopping Langfuse containers...'\r"
+        expect "root@*"
+        send "docker stop vivid_mas-langfuse-web-1 vivid_mas-langfuse-worker-1\r"
+        expect "root@*"
+        
+        # Start them with the new config
+        send "echo '\nStarting Langfuse containers with new config...'\r"
+        expect "root@*"
+        send "docker-compose up -d langfuse-web langfuse-worker\r"
+        expect "root@*"
+        
+        # Wait a moment
+        send "sleep 5\r"
+        expect "root@*"
+        
+        # Check status
+        send "echo '\n=== Checking Langfuse container status ==='\r"
+        expect "root@*"
+        send "docker ps | grep langfuse\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

@@ -1,0 +1,50 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Test the Telegram webhook
+send "echo '=== Testing Telegram webhook URL ==='\r"
+expect "# "
+send "curl -s https://n8n.vividwalls.blog/webhook/czgQFXq4Bh6Ho3q3 -w '\\nHTTP Status: %{http_code}\\n' | tail -2\r"
+expect "# "
+
+# Check current Telegram webhook info
+send "echo '\\n=== Current Telegram webhook info ==='\r"
+expect "# "
+send "curl -s https://api.telegram.org/bot7988488328:AAFpSgwLqCQSo4O7hP1KekUt4W6DJIJRhrc/getWebhookInfo | python3 -m json.tool | grep -E 'url|pending_update_count|last_error'\r"
+expect "# "
+
+# Test workflow execution
+send "echo '\\n=== Testing workflow execution count ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c 'SELECT COUNT(*) FROM execution_entity WHERE workflow_id = (SELECT id FROM workflow_entity WHERE name LIKE \\'%Business Manager%\\' LIMIT 1);' 2>&1 || echo 'No executions found'\r"
+expect "# "
+
+# Check if webhooks are enabled in n8n
+send "echo '\\n=== Checking webhook configuration in n8n ==='\r"
+expect "# "
+send "docker exec n8n printenv | grep -i webhook\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

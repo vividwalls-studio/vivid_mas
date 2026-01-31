@@ -1,0 +1,50 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect "Enter passphrase for key*"
+send "freedom\r"
+
+# Wait for prompt
+expect "root@*"
+
+# List current networks
+send "docker network ls\r"
+expect "root@*"
+
+# Connect Twenty CRM containers to vivid_mas network
+send "docker network connect vivid_mas twenty-server-1\r"
+expect "root@*"
+
+send "docker network connect vivid_mas twenty-db-1\r"
+expect "root@*"
+
+send "docker network connect vivid_mas twenty-redis-1\r"
+expect "root@*"
+
+# Verify connections
+send "docker inspect twenty-server-1 | grep -A20 Networks\r"
+expect "root@*"
+
+# Check if Caddy is already on vivid_mas network
+send "docker inspect caddy | grep -A20 Networks | grep vivid_mas\r"
+expect "root@*"
+
+# List all containers on vivid_mas network
+send "docker network inspect vivid_mas | grep -A5 Containers\r"
+expect "root@*"
+
+# Test connectivity between Twenty and other services
+send "docker exec twenty-server-1 ping -c 1 n8n 2>/dev/null || echo 'n8n not reachable'\r"
+expect "root@*"
+
+send "docker exec twenty-server-1 ping -c 1 supabase_postgres 2>/dev/null || echo 'supabase not reachable'\r"
+expect "root@*"
+
+# Exit
+send "exit\r"
+expect eof

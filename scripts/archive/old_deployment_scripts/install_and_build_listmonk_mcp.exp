@@ -1,0 +1,72 @@
+#!/usr/bin/expect -f
+
+set timeout 180
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Navigate to the MCP server directory
+send "cd /opt/mcp-servers/listmonk-mcp-server\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Install dependencies
+send "echo '=== Installing Dependencies ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+send "npm install\r"
+expect -timeout 120 "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Install TypeScript globally if needed
+send "echo '\n=== Installing TypeScript ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+send "npm install -g typescript\r"
+expect -timeout 60 "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Build the project
+send "echo '\n=== Building ListMonk MCP Server ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+send "npm run build\r"
+expect -timeout 60 "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Check build output
+send "echo '\n=== Checking Build Output ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+send "ls -la build/\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Configure n8n MCP
+send "echo '\n=== Configuring n8n MCP ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Create or update n8n MCP config directory
+send "mkdir -p /root/.n8n\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Check existing MCP config
+send "if \[ -f /root/.n8n/mcp.json \]; then cat /root/.n8n/mcp.json | jq .; else echo 'No MCP config found'; fi\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Test the MCP server
+send "echo '\n=== Testing MCP Server ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+send "node build/index.js --version 2>&1 || echo 'Test failed'\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-mcp-server#"
+
+# Exit
+send "exit\r"
+expect eof

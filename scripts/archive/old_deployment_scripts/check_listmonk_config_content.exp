@@ -1,0 +1,56 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check the actual config.toml content
+send "echo '=== Current config.toml Content ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cat /opt/mcp-servers/listmonk-email-marketing/config/config.toml\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check if ListMonk is looking for the right file
+send "echo '\n=== Docker Container Config Mount ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker inspect listmonk --format '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{println}}{{end}}'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check if we can see the config inside the container
+send "echo '\n=== Config Files Inside Container ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker exec listmonk ls -la /listmonk/ 2>&1 || echo 'Container not accessible'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Let's see the last working config
+send "echo '\n=== Backup Config Content ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "head -20 /opt/mcp-servers/listmonk-email-marketing/config/config.toml.backup\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check current config for database settings
+send "echo '\n=== Current DB Settings in config.toml ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "grep -A 10 '\\[db\\]' /opt/mcp-servers/listmonk-email-marketing/config/config.toml\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

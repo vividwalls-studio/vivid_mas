@@ -1,0 +1,61 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Test different endpoints
+send "echo '=== Testing ListMonk Endpoints ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Test root endpoint
+send "echo '\n--- Testing root endpoint ---'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+send "curl -s -o /dev/null -w '%{http_code}\\n' http://localhost:9003/\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Test admin endpoint
+send "echo '\n--- Testing admin endpoint ---'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+send "curl -s -o /dev/null -w '%{http_code}\\n' http://localhost:9003/admin/\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Test api endpoint
+send "echo '\n--- Testing api endpoint ---'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+send "curl -s -o /dev/null -w '%{http_code}\\n' http://localhost:9003/api/\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Test public endpoint
+send "echo '\n--- Testing public endpoint ---'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+send "curl -s -o /dev/null -w '%{http_code}\\n' http://localhost:9003/public/\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check container logs for endpoint info
+send "echo '\n=== Checking ListMonk Container Logs ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+send "docker logs listmonk 2>&1 | grep -E '(http|started|listening)' | tail -5\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Test from outside with different path
+send "echo '\n=== Testing External Access with Admin Path ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+send "curl -s -o /dev/null -w 'HTTPS Status: %{http_code}\\n' https://listmonk.vividwalls.blog/admin/\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

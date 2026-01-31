@@ -1,0 +1,68 @@
+#!/usr/bin/expect -f
+
+set timeout 300
+
+# SSH into the droplet
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect "Enter passphrase for key*"
+send "freedom\r"
+
+# Wait for prompt
+expect "root@*"
+
+# Update Caddy configuration
+send "cd /home/vivid/vivid_mas\r"
+expect "root@*"
+
+send "cp Caddyfile Caddyfile.backup-twenty\r"
+expect "root@*"
+
+# Check if Twenty CRM is already in Caddyfile
+send "grep -q 'crm.vividwalls.blog' Caddyfile || echo 'NEED_TO_ADD'\r"
+expect "root@*"
+
+# Add Twenty CRM to Caddyfile if not present
+send "if ! grep -q 'crm.vividwalls.blog' Caddyfile; then echo '' >> Caddyfile && echo '# Twenty CRM' >> Caddyfile && echo 'crm.vividwalls.blog {' >> Caddyfile && echo '    reverse_proxy localhost:3000' >> Caddyfile && echo '}' >> Caddyfile; fi\r"
+expect "root@*"
+
+# Restart Caddy
+send "docker restart caddy\r"
+expect "root@*"
+
+# Navigate to Twenty docker directory
+send "cd /opt/twenty/packages/twenty-docker\r"
+expect "root@*"
+
+# Check if containers are already running
+send "docker compose ps\r"
+expect "root@*"
+
+# Start Twenty CRM
+send "docker compose up -d\r"
+expect -timeout 180 "root@*"
+
+# Wait for services to start
+send "sleep 10\r"
+expect "root@*"
+
+# Check status
+send "docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' | grep -E '(twenty|caddy)'\r"
+expect "root@*"
+
+# Check logs
+send "docker compose logs --tail=20 server\r"
+expect "root@*"
+
+# Show access URL
+send "echo '\\n=== Twenty CRM Deployment Complete ==='\r"
+expect "root@*"
+send "echo 'Access Twenty CRM at: https://crm.vividwalls.blog'\r"
+expect "root@*"
+send "echo 'Note: DNS record for crm.vividwalls.blog must point to 157.230.13.13'\r"
+expect "root@*"
+
+# Exit
+send "exit\r"
+expect eof

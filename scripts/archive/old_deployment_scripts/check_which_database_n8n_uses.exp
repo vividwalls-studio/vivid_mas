@@ -1,0 +1,68 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Check n8n's actual database connection
+send "echo '=== Checking n8n database environment ==='\r"
+expect "# "
+send "docker exec n8n printenv | grep -E 'DB_POSTGRESDB_HOST|DB_POSTGRESDB_DATABASE|DB_POSTGRESDB_USER'\r"
+expect "# "
+
+# Check if there's a 'db' container
+send "echo '\\n=== Checking for db container ==='\r"
+expect "# "
+send "docker ps | grep -E 'db|DB' | grep -v supabase\r"
+expect "# "
+
+# Check docker-compose for database service
+send "echo '\\n=== Checking docker-compose database service ==='\r"
+expect "# "
+send "cd /root/vivid_mas && grep -A20 '^  db:' docker-compose.yml | head -25\r"
+expect "# "
+
+# Check if postgres container has n8n schema
+send "echo '\\n=== Checking postgres container for n8n schema ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -c '\\\\l' | grep -i n8n\r"
+expect "# "
+
+# Check workflow count in different schemas
+send "echo '\\n=== Checking workflow count in postgres database ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c 'SELECT COUNT(*) as workflows, current_database() as db FROM workflow_entity;'\r"
+expect "# "
+
+# Check if there's another postgres instance
+send "echo '\\n=== All postgres containers ==='\r"
+expect "# "
+send "docker ps | grep postgres | awk '{print \\$NF}'\r"
+expect "# "
+
+# Check n8n logs for database connection
+send "echo '\\n=== Recent n8n database logs ==='\r"
+expect "# "
+send "docker logs n8n 2>&1 | grep -i 'database\\|postgres\\|connection' | tail -10\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

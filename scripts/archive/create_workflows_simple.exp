@@ -1,0 +1,190 @@
+#!/usr/bin/expect -f
+
+# Script to create workflows with simple JSON
+set timeout 120
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase for key" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "Are you sure you want to continue connecting" {
+        send "yes\r"
+        exp_continue
+    }
+    "root@*" {
+        send_user "\n✅ Connected to droplet\n"
+    }
+    timeout {
+        send_user "\n❌ SSH connection timeout\n"
+        exit 1
+    }
+}
+
+# Navigate to vivid_mas directory
+send "cd /root/vivid_mas\r"
+expect "root@*"
+
+# Create SQL files first
+send_user "\n📝 Creating SQL files for workflow insertion...\n"
+
+# Create Campaign Manager SQL
+send "cat > /tmp/campaign_manager.sql << 'EOF'\r"
+send {INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, "createdAt", "updatedAt") 
+VALUES ('campaign-manager-001', 'VividWalls Campaign Manager Agent', false, '[]', '{}', '{"executionOrder":"v1"}', NOW(), NOW()) 
+ON CONFLICT (id) DO NOTHING;
+EOF
+}
+send "\r"
+expect "root@*"
+
+# Create Copy Writer SQL
+send "cat > /tmp/copy_writer.sql << 'EOF'\r"
+send {INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, "createdAt", "updatedAt") 
+VALUES ('copy-writer-001', 'VividWalls Copy Writer Agent', false, '[]', '{}', '{"executionOrder":"v1"}', NOW(), NOW()) 
+ON CONFLICT (id) DO NOTHING;
+EOF
+}
+send "\r"
+expect "root@*"
+
+# Create Copy Editor SQL
+send "cat > /tmp/copy_editor.sql << 'EOF'\r"
+send {INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, "createdAt", "updatedAt") 
+VALUES ('copy-editor-001', 'VividWalls Copy Editor Agent', false, '[]', '{}', '{"executionOrder":"v1"}', NOW(), NOW()) 
+ON CONFLICT (id) DO NOTHING;
+EOF
+}
+send "\r"
+expect "root@*"
+
+# Create Email Marketing SQL
+send "cat > /tmp/email_marketing.sql << 'EOF'\r"
+send {INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, "createdAt", "updatedAt") 
+VALUES ('email-marketing-001', 'VividWalls Email Marketing Agent', false, '[]', '{}', '{"executionOrder":"v1"}', NOW(), NOW()) 
+ON CONFLICT (id) DO NOTHING;
+EOF
+}
+send "\r"
+expect "root@*"
+
+# Create Product Director SQL
+send "cat > /tmp/product_director.sql << 'EOF'\r"
+send {INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, "createdAt", "updatedAt") 
+VALUES ('product-director-001', 'VividWalls Product Director Agent', false, '[]', '{}', '{"executionOrder":"v1"}', NOW(), NOW()) 
+ON CONFLICT (id) DO NOTHING;
+EOF
+}
+send "\r"
+expect "root@*"
+
+# Create Sales team SQL files
+send "cat > /tmp/sales_agents.sql << 'EOF'\r"
+send {INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, "createdAt", "updatedAt") VALUES 
+('hospitality-sales-001', 'VividWalls Hospitality Sales Agent', false, '[]', '{}', '{"executionOrder":"v1"}', NOW(), NOW()),
+('corporate-sales-001', 'VividWalls Corporate Sales Agent', false, '[]', '{}', '{"executionOrder":"v1"}', NOW(), NOW()),
+('healthcare-sales-001', 'VividWalls Healthcare Sales Agent', false, '[]', '{}', '{"executionOrder":"v1"}', NOW(), NOW()),
+('residential-sales-001', 'VividWalls Residential Sales Agent', false, '[]', '{}', '{"executionOrder":"v1"}', NOW(), NOW()),
+('educational-sales-001', 'VividWalls Educational Sales Agent', false, '[]', '{}', '{"executionOrder":"v1"}', NOW(), NOW())
+ON CONFLICT (id) DO NOTHING;
+EOF
+}
+send "\r"
+expect "root@*"
+
+# Create Social Media SQL files
+send "cat > /tmp/social_media.sql << 'EOF'\r"
+send {INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, "createdAt", "updatedAt") VALUES 
+('pinterest-001', 'VividWalls Pinterest Agent', false, '[]', '{}', '{"executionOrder":"v1"}', NOW(), NOW()),
+('twitter-001', 'VividWalls Twitter Agent', false, '[]', '{}', '{"executionOrder":"v1"}', NOW(), NOW()),
+('linkedin-001', 'VividWalls LinkedIn Agent', false, '[]', '{}', '{"executionOrder":"v1"}', NOW(), NOW()),
+('tiktok-001', 'VividWalls TikTok Agent', false, '[]', '{}', '{"executionOrder":"v1"}', NOW(), NOW()),
+('youtube-001', 'VividWalls YouTube Agent', false, '[]', '{}', '{"executionOrder":"v1"}', NOW(), NOW())
+ON CONFLICT (id) DO NOTHING;
+EOF
+}
+send "\r"
+expect "root@*"
+
+# Create Other Agents SQL
+send "cat > /tmp/other_agents.sql << 'EOF'\r"
+send {INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, "createdAt", "updatedAt") VALUES 
+('keyword-agent-001', 'VividWalls Keyword Agent', false, '[]', '{}', '{"executionOrder":"v1"}', NOW(), NOW()),
+('newsletter-agent-001', 'VividWalls Newsletter Agent', false, '[]', '{}', '{"executionOrder":"v1"}', NOW(), NOW())
+ON CONFLICT (id) DO NOTHING;
+EOF
+}
+send "\r"
+expect "root@*"
+
+# Execute SQL files
+send_user "\n💾 Executing SQL files to create workflows...\n"
+
+send "docker exec -i postgres psql -U postgres -d postgres < /tmp/campaign_manager.sql\r"
+expect "root@*"
+
+send "docker exec -i postgres psql -U postgres -d postgres < /tmp/copy_writer.sql\r"
+expect "root@*"
+
+send "docker exec -i postgres psql -U postgres -d postgres < /tmp/copy_editor.sql\r"
+expect "root@*"
+
+send "docker exec -i postgres psql -U postgres -d postgres < /tmp/email_marketing.sql\r"
+expect "root@*"
+
+send "docker exec -i postgres psql -U postgres -d postgres < /tmp/product_director.sql\r"
+expect "root@*"
+
+send "docker exec -i postgres psql -U postgres -d postgres < /tmp/sales_agents.sql\r"
+expect "root@*"
+
+send "docker exec -i postgres psql -U postgres -d postgres < /tmp/social_media.sql\r"
+expect "root@*"
+
+send "docker exec -i postgres psql -U postgres -d postgres < /tmp/other_agents.sql\r"
+expect "root@*"
+
+# Verify workflow count
+send_user "\n📊 Verifying workflow count...\n"
+send "docker exec postgres psql -U postgres -d postgres -t -c 'SELECT COUNT(*) FROM workflow_entity;'\r"
+expect "root@*"
+
+# List newly created workflows
+send_user "\n📋 Listing newly created workflows...\n"
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT id, name, active FROM workflow_entity WHERE id LIKE '%-001' ORDER BY name LIMIT 20;\"\r"
+expect "root@*"
+
+# Restart n8n to ensure it picks up new workflows
+send_user "\n🔄 Restarting n8n to pick up new workflows...\n"
+send "docker restart n8n\r"
+expect "root@*"
+
+# Wait for n8n to restart
+send_user "\n⏳ Waiting for n8n to restart...\n"
+send "sleep 10\r"
+expect "root@*"
+
+# Final count
+send_user "\n✅ Final workflow count:\n"
+send "docker exec postgres psql -U postgres -d postgres -t -c 'SELECT COUNT(*) FROM workflow_entity;'\r"
+expect "root@*"
+
+# Summary of created workflows
+send_user "\n📊 Summary of VividWalls workflows:\n"
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT COUNT(*) as count, active FROM workflow_entity WHERE name LIKE 'VividWalls%' GROUP BY active;\"\r"
+expect "root@*"
+
+# Exit
+send_user "\n✅ Workflow creation complete\n"
+send "exit\r"
+expect eof

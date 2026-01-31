@@ -1,0 +1,63 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Fixing Langfuse Configuration ==='\r"
+        expect "root@*"
+        
+        # Generate encryption key
+        send "echo 'Generating ENCRYPTION_KEY for Langfuse...'\r"
+        expect "root@*"
+        send "openssl rand -hex 32 > /tmp/langfuse_key.txt\r"
+        expect "root@*"
+        send "LANGFUSE_ENCRYPTION_KEY=\$(cat /tmp/langfuse_key.txt)\r"
+        expect "root@*"
+        send "echo \"Generated key: \$LANGFUSE_ENCRYPTION_KEY\"\r"
+        expect "root@*"
+        
+        # Add to .env file
+        send "cd /root/vivid_mas\r"
+        expect "root@*"
+        
+        send "echo \"ENCRYPTION_KEY=\$LANGFUSE_ENCRYPTION_KEY\" >> .env\r"
+        expect "root@*"
+        
+        # Stop and remove the failing containers
+        send "echo '\nStopping and removing Langfuse containers...'\r"
+        expect "root@*"
+        send "docker stop vivid_mas-langfuse-web-1 vivid_mas-langfuse-worker-1\r"
+        expect "root@*"
+        send "docker rm vivid_mas-langfuse-web-1 vivid_mas-langfuse-worker-1\r"
+        expect "root@*"
+        
+        # Recreate with proper config
+        send "echo '\nRecreating Langfuse containers...'\r"
+        expect "root@*"
+        send "docker-compose up -d langfuse-web langfuse-worker\r"
+        expect "root@*"
+        
+        # Wait and check
+        send "sleep 10\r"
+        expect "root@*"
+        
+        send "echo '\n=== Langfuse Status ==='\r"
+        expect "root@*"
+        send "docker ps | grep langfuse || echo 'Langfuse containers not running'\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

@@ -1,0 +1,49 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check if Caddy is running
+send "echo '=== Checking Caddy Status ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker ps | grep caddy\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check Caddy config for ListMonk
+send "echo '\n=== Checking Caddy Config for ListMonk ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "grep -A 3 'listmonk.vividwalls.blog' /root/vivid_mas/Caddyfile\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Test local connection from the server
+send "echo '\n=== Testing Local Connection ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "curl -I http://localhost:9003/\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Test if Caddy can reach ListMonk
+send "echo '\n=== Testing Caddy to ListMonk Connection ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "curl -I --resolve listmonk.vividwalls.blog:443:127.0.0.1 https://listmonk.vividwalls.blog/\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

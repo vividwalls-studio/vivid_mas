@@ -1,0 +1,109 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+puts "Fixing n8n startup issue..."
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        puts "\nConnected successfully!"
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}
+
+# Check why n8n failed to start
+puts "\n1. Checking n8n container logs..."
+send "docker logs n8n 2>&1 | tail -50\r"
+expect "root@*"
+
+# Remove failed container
+puts "\n2. Removing failed container..."
+send "docker rm n8n\r"
+expect "root@*"
+
+# Start n8n with corrected configuration
+puts "\n3. Starting n8n with corrected settings..."
+send "cd /root/vivid_mas\r"
+expect "root@*"
+
+# Load environment variables and start n8n
+send "source .env\r"
+expect "root@*"
+
+# Start n8n using docker-compose compatible command
+send "docker run -d --name n8n \\\r"
+send "  --network vivid_mas \\\r"
+send "  -p 5678:5678 \\\r"
+send "  -e DB_TYPE=postgresdb \\\r"
+send "  -e DB_POSTGRESDB_HOST=postgres \\\r"
+send "  -e DB_POSTGRESDB_PORT=5432 \\\r"
+send "  -e DB_POSTGRESDB_DATABASE=postgres \\\r"
+send "  -e DB_POSTGRESDB_USER=postgres \\\r"
+send "  -e DB_POSTGRESDB_PASSWORD=\${POSTGRES_PASSWORD} \\\r"
+send "  -e N8N_ENCRYPTION_KEY=\${N8N_ENCRYPTION_KEY} \\\r"
+send "  -e N8N_HOST=n8n.vividwalls.blog \\\r"
+send "  -e N8N_PORT=5678 \\\r"
+send "  -e N8N_PROTOCOL=https \\\r"
+send "  -e WEBHOOK_URL=https://n8n.vividwalls.blog/ \\\r"
+send "  -e GENERIC_TIMEZONE=America/New_York \\\r"
+send "  -e N8N_METRICS=true \\\r"
+send "  -e EXECUTIONS_PROCESS=main \\\r"
+send "  -v vivid_mas_n8n_storage:/home/node/.n8n \\\r"
+send "  -v /opt/mcp-servers:/opt/mcp-servers:ro \\\r"
+send "  -v ./n8n/backup:/backup \\\r"
+send "  -v ./shared:/data/shared \\\r"
+send "  --restart unless-stopped \\\r"
+send "  n8nio/n8n:latest\r"
+expect "root@*"
+
+# Wait for startup
+puts "\n4. Waiting for n8n to start..."
+send "sleep 15\r"
+expect "root@*"
+
+# Check if running
+puts "\n5. Checking n8n status..."
+send "docker ps | grep n8n\r"
+expect "root@*"
+
+# Check logs
+puts "\n6. Checking n8n logs..."
+send "docker logs n8n --tail 20 2>&1\r"
+expect "root@*"
+
+# Check version
+puts "\n7. Checking n8n version..."
+send "docker exec n8n n8n --version 2>&1\r"
+expect "root@*"
+
+# Test health endpoint
+puts "\n8. Testing health endpoint..."
+send "curl -s http://localhost:5678/healthz\r"
+expect "root@*"
+
+# Test webhook
+puts "\n9. Testing webhook endpoint..."
+send "curl -X POST http://localhost:5678/webhook-test/test -H 'Content-Type: application/json' -d '{\"test\":true}' 2>&1 | head -20\r"
+expect "root@*"
+
+puts "\nn8n restart complete!"
+
+send "exit\r"
+expect eof

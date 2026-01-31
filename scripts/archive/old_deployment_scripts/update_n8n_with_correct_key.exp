@@ -1,0 +1,106 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Stop n8n
+send "echo '=== Stopping n8n ==='\r"
+expect "# "
+send "docker compose stop n8n\r"
+expect "# "
+
+# Update .env with the correct key from n8n UI
+send "echo '=== Updating .env with correct encryption key from n8n UI ==='\r"
+expect "# "
+send "sed -i 's/N8N_ENCRYPTION_KEY=.*/N8N_ENCRYPTION_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZDAxYzZjZC1lNjY5LTQ4YWQtYTY5ZS1mMDU0YTY4NjU1YzQiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzUwNDQ5MzEzfQ.uBJrDT3a0pQdA5hA28Zf5egmhFLryv8DUNLvsoleXcs/' .env\r"
+expect "# "
+
+# Verify the change
+send "echo '=== Verifying .env update ==='\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env\r"
+expect "# "
+
+# Remove all config files from volumes to avoid conflicts
+send "echo '=== Removing config files from all n8n volumes ==='\r"
+expect "# "
+send "docker run --rm -v n8n_storage:/data alpine rm -f /data/config 2>&1 || echo 'No config in n8n_storage'\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine rm -f /data/config 2>&1 || echo 'No config in vivid_mas_n8n_storage'\r"
+expect "# "
+send "docker run --rm -v localai_n8n_storage:/data alpine rm -f /data/config 2>&1 || echo 'No config in localai_n8n_storage'\r"
+expect "# "
+
+# Remove any SQLite databases (we're using PostgreSQL)
+send "echo '=== Removing any SQLite databases ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine rm -f /data/database.sqlite 2>&1 || echo 'No SQLite to remove'\r"
+expect "# "
+
+# Start n8n
+send "echo '=== Starting n8n with correct encryption key ==='\r"
+expect "# "
+send "docker compose up -d n8n\r"
+expect "# "
+
+# Wait for n8n to start
+send "echo 'Waiting for n8n to initialize with PostgreSQL...'\r"
+expect "# "
+send "sleep 30\r"
+expect "# "
+
+# Check n8n status
+send "echo '=== Checking n8n status ==='\r"
+expect "# "
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Check n8n logs
+send "echo '=== Checking n8n logs for database connection ==='\r"
+expect "# "
+send "docker logs n8n --tail 40 2>&1 | grep -E 'Initializing|ready|postgres|workflow|error|Editor' | tail -20\r"
+expect "# "
+
+# Test n8n access
+send "echo '=== Testing n8n access ==='\r"
+expect "# "
+send "curl -s http://localhost:5678 | grep -o '<title>.*</title>' || echo 'Not accessible'\r"
+expect "# "
+
+# Verify PostgreSQL workflow count
+send "echo '=== Verifying workflow count in PostgreSQL ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c 'SELECT COUNT(*) as total_workflows FROM workflow_entity;'\r"
+expect "# "
+
+# Test webhook URLs
+send "echo '=== Testing webhook URLs ==='\r"
+expect "# "
+send "curl -s https://n8n.vividwalls.blog/ | grep -o '<title>.*</title>' || echo 'HTTPS not accessible'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

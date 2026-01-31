@@ -1,0 +1,42 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check n8n MCP server location
+send "echo '=== N8N MCP Server Location ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "ls -la /opt/mcp-servers/n8n-mcp-server/\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check if it has a README
+send "echo '\n=== N8N MCP Server Documentation ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cat /opt/mcp-servers/n8n-mcp-server/README.md 2>/dev/null | head -50 || echo 'No README found'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check package.json for clues
+send "echo '\n=== N8N MCP Server Package Info ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "jq '{name, description, version}' /opt/mcp-servers/n8n-mcp-server/package.json 2>/dev/null\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

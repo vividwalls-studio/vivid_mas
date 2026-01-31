@@ -1,0 +1,58 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Starting critical containers ==='\r"
+        expect "root@*"
+        
+        # Start postgres container
+        send "docker start vivid_mas-postgres-1\r"
+        expect "root@*"
+        
+        # Start langfuse containers
+        send "docker start vivid_mas-langfuse-web-1 vivid_mas-langfuse-worker-1\r"
+        expect "root@*"
+        
+        # Start searxng
+        send "docker start searxng\r"
+        expect "root@*"
+        
+        send "echo '\n=== Checking Twenty server logs ==='\r"
+        expect "root@*"
+        
+        send "docker logs twenty-server-1 --tail 30 2>&1\r"
+        expect "root@*"
+        
+        send "echo '\n=== Restarting Twenty containers ==='\r"
+        expect "root@*"
+        
+        send "cd /opt/twenty/packages/twenty-docker && docker compose restart\r"
+        expect "root@*"
+        
+        send "echo '\n=== Waiting 10 seconds for containers to start ==='\r"
+        expect "root@*"
+        send "sleep 10\r"
+        expect "root@*"
+        
+        send "echo '\n=== Final container status ==='\r"
+        expect "root@*"
+        
+        send "docker ps --format 'table {{.Names}}\t{{.Status}}' | grep -E '(postgres|langfuse|twenty|searxng)'\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

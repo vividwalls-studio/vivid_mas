@@ -1,0 +1,183 @@
+#!/usr/bin/expect -f
+
+# Script to create workflows using n8n CLI import
+set timeout 120
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase for key" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "Are you sure you want to continue connecting" {
+        send "yes\r"
+        exp_continue
+    }
+    "root@*" {
+        send_user "\n✅ Connected to droplet\n"
+    }
+    timeout {
+        send_user "\n❌ SSH connection timeout\n"
+        exit 1
+    }
+}
+
+# Navigate to vivid_mas directory
+send "cd /root/vivid_mas\r"
+expect "root@*"
+
+# Create workflows directory
+send_user "\n📁 Creating workflows directory...\n"
+send "mkdir -p /root/vivid_mas/import_workflows\r"
+expect "root@*"
+
+# Create Campaign Manager workflow JSON
+send_user "\n📝 Creating Campaign Manager workflow...\n"
+send "cat > /root/vivid_mas/import_workflows/campaign-manager.json << 'EOF'\r"
+send {
+{
+  "name": "VividWalls Campaign Manager Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "campaign-manager",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300]
+    }
+  ],
+  "connections": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "campaign-manager-v1",
+  "tags": ["marketing", "campaign", "agent", "vividwalls"]
+}
+EOF
+}
+send "\r"
+expect "root@*"
+
+# Create Copy Writer workflow JSON
+send_user "\n📝 Creating Copy Writer workflow...\n"
+send "cat > /root/vivid_mas/import_workflows/copy-writer.json << 'EOF'\r"
+send {
+{
+  "name": "VividWalls Copy Writer Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "copy-writer",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300]
+    }
+  ],
+  "connections": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "copy-writer-v1",
+  "tags": ["marketing", "content", "agent", "vividwalls"]
+}
+EOF
+}
+send "\r"
+expect "root@*"
+
+# Create Email Marketing workflow JSON
+send_user "\n📝 Creating Email Marketing workflow...\n"
+send "cat > /root/vivid_mas/import_workflows/email-marketing.json << 'EOF'\r"
+send {
+{
+  "name": "VividWalls Email Marketing Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "email-marketing",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300]
+    }
+  ],
+  "connections": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "email-marketing-v1",
+  "tags": ["marketing", "email", "agent", "vividwalls"]
+}
+EOF
+}
+send "\r"
+expect "root@*"
+
+# Import workflows using n8n CLI
+send_user "\n🚀 Importing workflows using n8n CLI...\n"
+
+# Check if import command is available
+send "docker exec n8n n8n import:workflow --help 2>&1 | head -5\r"
+expect "root@*"
+
+# Try importing via docker cp and then import
+send_user "\n📤 Copying workflows to n8n container...\n"
+send "docker cp /root/vivid_mas/import_workflows n8n:/tmp/\r"
+expect "root@*"
+
+# Import each workflow
+send_user "\n⚡ Importing Campaign Manager...\n"
+send "docker exec n8n n8n import:workflow --input=/tmp/import_workflows/campaign-manager.json --separate 2>&1\r"
+expect "root@*"
+
+send_user "\n⚡ Importing Copy Writer...\n"
+send "docker exec n8n n8n import:workflow --input=/tmp/import_workflows/copy-writer.json --separate 2>&1\r"
+expect "root@*"
+
+send_user "\n⚡ Importing Email Marketing...\n"
+send "docker exec n8n n8n import:workflow --input=/tmp/import_workflows/email-marketing.json --separate 2>&1\r"
+expect "root@*"
+
+# Verify workflow count
+send_user "\n📊 Verifying workflow count...\n"
+send "docker exec postgres psql -U postgres -d postgres -t -c 'SELECT COUNT(*) FROM workflow_entity;'\r"
+expect "root@*"
+
+# List newly created workflows
+send_user "\n📋 Checking for new workflows...\n"
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT name, active FROM workflow_entity WHERE name LIKE '%Campaign Manager%' OR name LIKE '%Copy Writer%' OR name LIKE '%Email Marketing%' ORDER BY name;\"\r"
+expect "root@*"
+
+# Exit
+send_user "\n✅ Import attempt complete\n"
+send "exit\r"
+expect eof

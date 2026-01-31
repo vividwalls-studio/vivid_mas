@@ -1,0 +1,88 @@
+#!/usr/bin/expect -f
+
+# Script to audit n8n workflows on DigitalOcean droplet
+set timeout 60
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase for key" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "Are you sure you want to continue connecting" {
+        send "yes\r"
+        exp_continue
+    }
+    "root@*" {
+        send_user "\n✅ Connected to droplet\n"
+    }
+    timeout {
+        send_user "\n❌ SSH connection timeout\n"
+        exit 1
+    }
+}
+
+# Navigate to vivid_mas directory
+send "cd /root/vivid_mas\r"
+expect "root@*"
+
+# Check n8n container status
+send_user "\n📊 Checking n8n container status...\n"
+send "docker ps | grep n8n\r"
+expect "root@*"
+
+# Get workflow count from database
+send_user "\n📈 Getting workflow count from database...\n"
+send "docker exec postgres psql -U postgres -d postgres -t -c 'SELECT COUNT(*) FROM workflow_entity;'\r"
+expect "root@*"
+
+# List all workflows with their names
+send_user "\n📋 Listing all workflows...\n"
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT id, name, active, created_at FROM workflow_entity ORDER BY name;\" | head -50\r"
+expect "root@*"
+
+# Get workflows by category
+send_user "\n🏷️ Analyzing workflow categories...\n"
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT name FROM workflow_entity WHERE name LIKE '%Sales%' OR name LIKE '%sales%';\" | wc -l\r"
+expect "root@*"
+send_user "Sales workflows count: "
+
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT name FROM workflow_entity WHERE name LIKE '%Marketing%' OR name LIKE '%marketing%' OR name LIKE '%Campaign%' OR name LIKE '%campaign%';\" | wc -l\r"
+expect "root@*"
+send_user "Marketing workflows count: "
+
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT name FROM workflow_entity WHERE name LIKE '%Customer%' OR name LIKE '%customer%';\" | wc -l\r"
+expect "root@*"
+send_user "Customer workflows count: "
+
+# Check for duplicate workflows
+send_user "\n🔄 Checking for duplicate workflows...\n"
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT name, COUNT(*) as count FROM workflow_entity GROUP BY name HAVING COUNT(*) > 1;\" \r"
+expect "root@*"
+
+# Check for test/example workflows
+send_user "\n⚠️ Checking for test/example workflows...\n"
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT id, name FROM workflow_entity WHERE LOWER(name) LIKE '%test%' OR LOWER(name) LIKE '%example%' OR LOWER(name) LIKE '%demo%' OR LOWER(name) LIKE '%backup%';\" \r"
+expect "root@*"
+
+# Export workflow list to JSON
+send_user "\n💾 Exporting workflow list...\n"
+send "docker exec postgres psql -U postgres -d postgres -t -A -c \"SELECT json_agg(json_build_object('id', id, 'name', name, 'active', active, 'created', created_at, 'updated', updated_at)) FROM workflow_entity;\" > /tmp/workflows_audit.json\r"
+expect "root@*"
+
+send "cat /tmp/workflows_audit.json | python3 -m json.tool | head -100\r"
+expect "root@*"
+
+# Exit
+send_user "\n✅ Audit complete\n"
+send "exit\r"
+expect eof

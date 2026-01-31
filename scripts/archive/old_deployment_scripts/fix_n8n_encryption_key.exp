@@ -1,0 +1,72 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Stop n8n first
+send "docker compose stop n8n\r"
+expect "# "
+
+# Remove the container completely
+send "docker compose rm -f n8n\r"
+expect "# "
+
+# Check if there's a volume with the old config
+send "docker volume ls | grep n8n\r"
+expect "# "
+
+# Remove the n8n config volume to clear old encryption key
+send "docker volume rm vivid_mas_n8n_data || echo 'No volume to remove'\r"
+expect "# "
+
+# Also remove any bind-mounted config directory if it exists
+send "rm -rf ./n8n_data/.n8n/config || echo 'No config directory to remove'\r"
+expect "# "
+
+# Now start n8n fresh - it will create new config with current encryption key
+send "docker compose up -d n8n\r"
+expect "# "
+
+# Wait for n8n to start
+send "echo 'Waiting for n8n to start...'\r"
+expect "# "
+send "sleep 30\r"
+expect "# "
+
+# Check n8n status
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Check n8n logs
+send "docker logs n8n --tail 20 | grep -i 'started\\|webhook\\|error' || echo 'Checking logs...'\r"
+expect "# "
+
+# Verify environment variables
+send "docker exec n8n printenv | grep -E '(N8N_HOSTNAME|WEBHOOK_URL)' || echo 'Container still starting...'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

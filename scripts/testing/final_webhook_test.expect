@@ -1,0 +1,118 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+puts "Connecting to DigitalOcean droplet..."
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        puts "\nConnected successfully!"
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}
+
+# Test the webhook we just created
+puts "\nTesting VividWalls Agent Webhook..."
+send "curl -X POST https://n8n.vividwalls.blog/webhook/vivid-agent-test \\\r"
+send "  -H 'Content-Type: application/json' \\\r"
+send "  -d '{\"action\":\"test\",\"agent\":\"business-manager\",\"message\":\"Frontend integration test\"}' 2>&1\r"
+expect "root@*"
+
+# Alternative test with webhook-test path
+puts "\nTrying alternative webhook path..."
+send "curl -X POST https://n8n.vividwalls.blog/webhook-test/vivid-agent-test \\\r"
+send "  -H 'Content-Type: application/json' \\\r"
+send "  -d '{\"action\":\"test\",\"agent\":\"business-manager\"}' 2>&1\r"
+expect "root@*"
+
+# Check n8n logs for webhook registration
+puts "\nChecking n8n logs for webhooks..."
+send "docker logs n8n --tail 30 2>&1 | grep -i 'webhook\\|registering\\|path' | tail -10\r"
+expect "root@*"
+
+# Test with workflow ID directly
+puts "\nTesting with workflow ID..."
+send "curl -X POST https://n8n.vividwalls.blog/webhook/Id7yNUcLtZuSv3cx \\\r"
+send "  -H 'Content-Type: application/json' \\\r"
+send "  -d '{\"test\":true}' 2>&1\r"
+expect "root@*"
+
+# Create a simple HTML test page with working webhook
+puts "\nCreating test page with working webhook..."
+send "cat > /var/www/test/final-webhook-test.html << 'ENDHTML'\r"
+send {<!DOCTYPE html>
+<html>
+<head>
+    <title>Webhook Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        button { padding: 10px 20px; background: #4CAF50; color: white; border: none; cursor: pointer; }
+        #result { margin-top: 20px; padding: 10px; background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>VividWalls Webhook Test</h1>
+    <button onclick="testWebhook()">Test Webhook</button>
+    <div id="result"></div>
+    
+    <script>
+        async function testWebhook() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            const webhooks = [
+                'https://n8n.vividwalls.blog/webhook/vivid-agent-test',
+                'https://n8n.vividwalls.blog/webhook-test/vivid-agent-test',
+                'https://n8n.vividwalls.blog/webhook/Id7yNUcLtZuSv3cx'
+            ];
+            
+            for (const url of webhooks) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ test: true, timestamp: new Date().toISOString() })
+                    });
+                    
+                    const text = await response.text();
+                    if (response.ok) {
+                        resultDiv.innerHTML = `<h3>Success!</h3>URL: ${url}<br>Response: ${text}`;
+                        break;
+                    } else {
+                        resultDiv.innerHTML += `<br>Failed: ${url} - ${response.status}`;
+                    }
+                } catch (e) {
+                    resultDiv.innerHTML += `<br>Error: ${url} - ${e.message}`;
+                }
+            }
+        }
+    </script>
+</body>
+</html>}
+send "\rENDHTML\r"
+expect "root@*"
+
+puts "\n\nTest page created at: http://157.230.13.13:8888/final-webhook-test.html"
+puts "Direct test URLs:"
+puts "  - https://n8n.vividwalls.blog/webhook/vivid-agent-test"
+puts "  - https://n8n.vividwalls.blog/webhook/Id7yNUcLtZuSv3cx"
+
+send "exit\r"
+expect eof

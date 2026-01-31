@@ -1,0 +1,166 @@
+# Docker Containers and Caddy Configurations
+
+**Last Updated:** January 5, 2025  
+**Production Environment:** 157.230.13.13 (DigitalOcean Droplet)
+
+## Overview
+
+This document provides a complete mapping of all Docker containers running in the VividWalls MAS system and their corresponding Caddy reverse proxy configurations.
+
+## Container to Caddy URL Mapping
+
+### Core Services
+
+| Container Name | Service | Internal Port | External Port | Caddy URL | Caddy Config |
+|----------------|---------|---------------|---------------|-----------|--------------|
+| **n8n** | Workflow Automation | 5678 | 5678 | https://n8n.vividwalls.blog | `reverse_proxy n8n:5678` |
+| **caddy** | Reverse Proxy/SSL | 80, 443 | 80, 443 | N/A (proxy server) | Main Caddyfile |
+| **postgres** | Main Database | 5432 | 5433 | N/A (direct access) | N/A |
+
+### AI/ML Services
+
+| Container Name | Service | Internal Port | External Port | Caddy URL | Caddy Config |
+|----------------|---------|---------------|---------------|-----------|--------------|
+| **open-webui** | ChatGPT Interface | 8080 | 3000 | https://openwebui.vividwalls.blog | `reverse_proxy open-webui:8080` |
+| **flowise** | No-Code AI Workflows | 3001 | 3001 | https://flowise.vividwalls.blog | `reverse_proxy flowise:3001` |
+| **ollama** | Local LLM | 11434 | 11434 | https://ollama.vividwalls.blog | `reverse_proxy ollama:11434` |
+| **qdrant** | Vector Database | 6333 | 6333 | N/A (direct access) | N/A |
+
+### Business Applications
+
+| Container Name | Service | Internal Port | External Port | Caddy URL | Caddy Config |
+|----------------|---------|---------------|---------------|-----------|--------------|
+| **twenty-server-1** | CRM System | 3000 | 3010 | https://twenty.vividwalls.blog | `reverse_proxy twenty-server-1:3000` |
+| **listmonk** | Email Marketing | 9000 | 9003 (localhost) | https://listmonk.vividwalls.blog | `reverse_proxy listmonk:9000` |
+| **postiz** | Social Media Manager | 5000 | 5000 | https://postiz.vividwalls.blog | ❌ MISCONFIGURED: `reverse_proxy postiz-mcp-server:8080` |
+| **wordpress-multisite** | CMS/Blog | 80 | 8080 | https://wordpress.vividwalls.blog | `reverse_proxy wordpress-multisite:80` |
+
+### Supabase Stack
+
+| Container Name | Service | Internal Port | External Port | Caddy URL | Caddy Config |
+|----------------|---------|---------------|---------------|-----------|--------------|
+| **supabase-kong** | API Gateway | 8000 | 8000 | https://supabase.vividwalls.blog | `reverse_proxy supabase-kong:8000` |
+| **supabase-studio** | Admin UI | 3000 | - | https://studio.vividwalls.blog | `reverse_proxy supabase-studio:3000` |
+| **supabase-db** | PostgreSQL | 5432 | - | N/A (internal) | N/A |
+| **supabase-auth** | Authentication | - | - | Via Kong | N/A |
+| **supabase-storage** | File Storage | 5000 | - | Via Kong | N/A |
+| **supabase-rest** | REST API | 3000 | - | Via Kong | N/A |
+| **supabase-realtime** | WebSockets | - | - | Via Kong | N/A |
+| **supabase-analytics** | Logflare | 4000 | 4000 | N/A | N/A |
+| **supabase-meta** | Metadata | 8080 | - | N/A (internal) | N/A |
+| **supabase-pooler** | Connection Pool | 5432, 6543 | 5432, 6543 | N/A (direct) | N/A |
+
+### Development Tools
+
+| Container Name | Service | Internal Port | External Port | Caddy URL | Caddy Config |
+|----------------|---------|---------------|---------------|-----------|--------------|
+| **neo4j-knowledge** | Graph Database | 7474, 7687 | 7474, 7687 | https://neo4j.vividwalls.blog | `reverse_proxy neo4j-knowledge:7474` |
+| **searxng** | Search Engine | 8080 | 8085 | https://searxng.vividwalls.blog | `reverse_proxy searxng:8080` |
+| **crawl4ai** | Web Scraper | 11235 | 11235 | https://crawl4ai.vividwalls.blog | `reverse_proxy crawl4ai:11235` |
+| **langfuse** | LLM Monitoring | 3000 | 3002 | https://langfuse.vividwalls.blog | `reverse_proxy langfuse-web:3000` |
+
+### Supporting Services (No Caddy Config)
+
+| Container Name | Service | Internal Port | External Port | Notes |
+|----------------|---------|---------------|---------------|-------|
+| **redis** | Cache | 6379 | - | Internal only |
+| **wordpress-redis** | WP Cache | 6379 | 6380 | For WordPress |
+| **wordpress-mysql** | WP Database | 3306 | 3307 | For WordPress |
+| **postiz-redis** | Postiz Cache | 6379 | - | Internal only |
+| **postiz-postgres** | Postiz DB | 5432 | - | Internal only |
+| **twenty-db-1** | Twenty DB | 5432 | - | Internal only |
+| **twenty-redis-1** | Twenty Cache | 6379 | - | Internal only |
+| **twenty-worker-1** | Twenty Worker | - | - | Background jobs |
+| **listmonk-postgres** | ListMonk DB | 5432 | - | Internal only |
+| **vivid_mas-clickhouse-1** | Analytics DB | 8123, 9000 | 8123, 9000 | Localhost only |
+| **vivid_mas-minio-1** | Object Storage | 9000, 9001 | 9090, 9091 | For Langfuse |
+
+## Caddy Configuration Structure
+
+### Main Caddyfile Location
+- **Container Path:** `/etc/caddy/Caddyfile`
+- **Content:**
+```
+{
+    email kingler@vividwalls.co
+}
+
+# DO NOT EDIT THIS FILE
+# Add new services in caddy/sites-enabled/
+# Each service should have its own .caddy file
+
+# Import all site configurations
+import ./caddy/sites-enabled/*.caddy
+```
+
+### Individual Service Configs
+- **Location:** `/etc/caddy/caddy/sites-enabled/`
+- **Format:** `{service-name}.caddy`
+
+### Sample Caddy Config Format
+```
+# Service Name
+{$SERVICE_HOSTNAME} {
+    reverse_proxy container-name:port
+}
+```
+
+## Environment Variables
+
+All Caddy configurations use environment variables for hostnames:
+- `N8N_HOSTNAME=n8n.vividwalls.blog`
+- `SUPABASE_HOSTNAME=supabase.vividwalls.blog`
+- `LISTMONK_HOSTNAME=listmonk.vividwalls.blog`
+- `TWENTY_HOSTNAME=twenty.vividwalls.blog`
+- `POSTIZ_HOSTNAME=postiz.vividwalls.blog`
+- `NEO4J_HOSTNAME=neo4j.vividwalls.blog`
+- `WORDPRESS_HOSTNAME=wordpress.vividwalls.blog`
+- `OPENWEBUI_HOSTNAME=openwebui.vividwalls.blog`
+- `FLOWISE_HOSTNAME=flowise.vividwalls.blog`
+- `LANGFUSE_HOSTNAME=langfuse.vividwalls.blog`
+- `OLLAMA_HOSTNAME=ollama.vividwalls.blog`
+- `SEARXNG_HOSTNAME=searxng.vividwalls.blog`
+- `CRAWL4AI_HOSTNAME=crawl4ai.vividwalls.blog`
+
+## Issues to Fix
+
+### 1. Postiz Configuration
+- **File:** `/etc/caddy/caddy/sites-enabled/postiz.caddy`
+- **Current:** `reverse_proxy postiz-mcp-server:8080`
+- **Should be:** `reverse_proxy postiz:5000`
+- **Status:** Returns 502 Bad Gateway
+
+### 2. ListMonk Accessibility
+- **Issue:** Only bound to localhost (127.0.0.1:9003)
+- **Impact:** May not be accessible via Caddy
+- **Solution:** Either expose on all interfaces or ensure Caddy network access
+
+## Network Configuration
+
+All containers are connected to the `vivid_mas` Docker network, enabling inter-container communication by container name.
+
+## SSL Certificates
+
+All HTTPS domains are automatically managed by Caddy using Let's Encrypt with the email `kingler@vividwalls.co`.
+
+## Quick Reference Commands
+
+```bash
+# Check all running containers
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+# Check Caddy configuration
+docker exec caddy cat /etc/caddy/Caddyfile
+
+# List all Caddy site configs
+docker exec caddy ls /etc/caddy/caddy/sites-enabled/
+
+# Test a specific URL
+curl -I https://service.vividwalls.blog
+
+# Check Caddy logs
+docker logs caddy --tail 50
+
+# Reload Caddy after config changes
+docker exec caddy caddy reload --config /etc/caddy/Caddyfile
+```

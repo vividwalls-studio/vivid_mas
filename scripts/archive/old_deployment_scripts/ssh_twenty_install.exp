@@ -1,0 +1,63 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect "Enter passphrase for key*"
+send "freedom\r"
+
+# Wait for prompt
+expect "root@*"
+
+# Check if Twenty already exists
+send "ls /opt/twenty 2>/dev/null || echo 'NOT_FOUND'\r"
+expect "root@*"
+
+# Clone if not exists
+send "if \[ ! -d /opt/twenty \]; then cd /opt && git clone https://github.com/twentyhq/twenty.git; fi\r"
+expect "root@*"
+
+# Navigate to twenty-docker
+send "cd /opt/twenty/packages/twenty-docker\r"
+expect "root@*"
+
+# Check if .env exists
+send "if \[ ! -f .env \]; then cp .env.example .env; fi\r"
+expect "root@*"
+
+# Generate and set secrets
+send "POSTGRES_ADMIN_PASSWORD=\$(openssl rand -base64 32 | tr -d '/' | tr -d '+' | head -c 32)\r"
+expect "root@*"
+
+send "sed -i \"s/POSTGRES_ADMIN_PASSWORD=.*/POSTGRES_ADMIN_PASSWORD=\$POSTGRES_ADMIN_PASSWORD/\" .env\r"
+expect "root@*"
+
+send "sed -i \"s|SERVER_URL=.*|SERVER_URL=https://crm.vividwalls.blog|\" .env\r"
+expect "root@*"
+
+# Generate other secrets
+send "ACCESS_TOKEN_SECRET=\$(openssl rand -base64 32 | tr -d '/' | tr -d '+' | head -c 32)\r"
+expect "root@*"
+send "sed -i \"s/ACCESS_TOKEN_SECRET=.*/ACCESS_TOKEN_SECRET=\$ACCESS_TOKEN_SECRET/\" .env\r"
+expect "root@*"
+
+send "LOGIN_TOKEN_SECRET=\$(openssl rand -base64 32 | tr -d '/' | tr -d '+' | head -c 32)\r"
+expect "root@*"
+send "sed -i \"s/LOGIN_TOKEN_SECRET=.*/LOGIN_TOKEN_SECRET=\$LOGIN_TOKEN_SECRET/\" .env\r"
+expect "root@*"
+
+send "REFRESH_TOKEN_SECRET=\$(openssl rand -base64 32 | tr -d '/' | tr -d '+' | head -c 32)\r"
+expect "root@*"
+send "sed -i \"s/REFRESH_TOKEN_SECRET=.*/REFRESH_TOKEN_SECRET=\$REFRESH_TOKEN_SECRET/\" .env\r"
+expect "root@*"
+
+send "FILE_TOKEN_SECRET=\$(openssl rand -base64 32 | tr -d '/' | tr -d '+' | head -c 32)\r"
+expect "root@*"
+send "sed -i \"s/FILE_TOKEN_SECRET=.*/FILE_TOKEN_SECRET=\$FILE_TOKEN_SECRET/\" .env\r"
+expect "root@*"
+
+# Interactive mode for remaining tasks
+interact

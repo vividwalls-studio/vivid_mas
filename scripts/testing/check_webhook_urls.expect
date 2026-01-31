@@ -1,0 +1,58 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+puts "========================================="
+puts "Checking Webhook URLs in Active Workflows"
+puts "========================================="
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        puts "\nConnected successfully!"
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}
+
+puts "\n1. Getting webhook URLs from active workflows..."
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT id, name FROM workflow_entity WHERE active = true;\" 2>&1\r"
+expect "root@*"
+
+puts "\n2. Testing VividWalls Frontend Agent Hub webhook..."
+send "curl -X POST http://localhost:5678/webhook/F6Atigcod1nIYAw1 \\\r"
+send "  -H 'Content-Type: application/json' \\\r"
+send "  -d '{\"action\":\"list\",\"timestamp\":\"'\$(date -u +\"%Y-%m-%dT%H:%M:%SZ\")'\"}' 2>&1 | head -50\r"
+expect "root@*"
+
+puts "\n3. Testing VividWalls Agent Webhook Test..."
+send "curl -X POST http://localhost:5678/webhook/Id7yNUcLtZuSv3cx \\\r"
+send "  -H 'Content-Type: application/json' \\\r"
+send "  -d '{\"test\":true}' 2>&1 | head -50\r"
+expect "root@*"
+
+puts "\n4. Getting workflow count..."
+send "docker exec postgres psql -U postgres -d postgres -t -c 'SELECT COUNT(*) FROM workflow_entity;'\r"
+expect "root@*"
+
+puts "\n========================================="
+puts "Webhook URL Check Complete!"
+puts "========================================="
+
+send "exit\r"
+expect eof

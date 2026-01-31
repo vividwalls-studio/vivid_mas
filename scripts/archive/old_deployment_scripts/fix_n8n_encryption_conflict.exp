@@ -1,0 +1,62 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Remove the conflicting config file from n8n volume
+send "echo '=== Removing conflicting n8n config file ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine rm -f /data/.n8n/config\r"
+expect "# "
+
+# Also check for any other config files
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine find /data -name 'config*' -type f\r"
+expect "# "
+
+# Restart n8n
+send "echo '\n=== Restarting n8n ==='\r"
+expect "# "
+send "docker restart n8n\r"
+expect "# "
+
+# Wait for it to start
+send "sleep 20\r"
+expect "# "
+
+# Check status
+send "echo '\n=== Checking n8n status ==='\r"
+expect "# "
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Test access
+send "echo '\n=== Testing n8n access ==='\r"
+expect "# "
+send "curl -s http://localhost:5678 | grep -o '<title>.*</title>' || echo 'n8n not responding'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

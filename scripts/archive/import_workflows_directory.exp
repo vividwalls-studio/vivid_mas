@@ -1,0 +1,117 @@
+#!/usr/bin/expect -f
+
+# Script to import workflows as a directory
+set timeout 120
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase for key" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "Are you sure you want to continue connecting" {
+        send "yes\r"
+        exp_continue
+    }
+    "root@*" {
+        send_user "\n✅ Connected to droplet\n"
+    }
+    timeout {
+        send_user "\n❌ SSH connection timeout\n"
+        exit 1
+    }
+}
+
+# Navigate to vivid_mas directory
+send "cd /root/vivid_mas\r"
+expect "root@*"
+
+# Import the directory of workflows
+send_user "\n📦 Importing workflows directory...\n"
+send "docker exec n8n n8n import:workflow --input=/tmp/import_workflows --separate 2>&1\r"
+expect "root@*"
+
+# Alternative: Create workflows directly in database
+send_user "\n💾 Creating workflows directly in database...\n"
+
+# Campaign Manager Agent
+send "docker exec postgres psql -U postgres -d postgres -c \"INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, \\\"createdAt\\\", \\\"updatedAt\\\") VALUES ('campaign-manager-001', 'VividWalls Campaign Manager Agent', false, '[]', '{}', '{\\\"executionOrder\\\":\\\"v1\\\"}', NOW(), NOW()) ON CONFLICT (id) DO NOTHING;\"\r"
+expect "root@*"
+
+# Copy Writer Agent
+send "docker exec postgres psql -U postgres -d postgres -c \"INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, \\\"createdAt\\\", \\\"updatedAt\\\") VALUES ('copy-writer-001', 'VividWalls Copy Writer Agent', false, '[]', '{}', '{\\\"executionOrder\\\":\\\"v1\\\"}', NOW(), NOW()) ON CONFLICT (id) DO NOTHING;\"\r"
+expect "root@*"
+
+# Email Marketing Agent
+send "docker exec postgres psql -U postgres -d postgres -c \"INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, \\\"createdAt\\\", \\\"updatedAt\\\") VALUES ('email-marketing-001', 'VividWalls Email Marketing Agent', false, '[]', '{}', '{\\\"executionOrder\\\":\\\"v1\\\"}', NOW(), NOW()) ON CONFLICT (id) DO NOTHING;\"\r"
+expect "root@*"
+
+# Product Director Agent
+send "docker exec postgres psql -U postgres -d postgres -c \"INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, \\\"createdAt\\\", \\\"updatedAt\\\") VALUES ('product-director-001', 'VividWalls Product Director Agent', false, '[]', '{}', '{\\\"executionOrder\\\":\\\"v1\\\"}', NOW(), NOW()) ON CONFLICT (id) DO NOTHING;\"\r"
+expect "root@*"
+
+# Sales Agents
+send_user "\n💼 Creating Sales team workflows...\n"
+
+# Hospitality Sales
+send "docker exec postgres psql -U postgres -d postgres -c \"INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, \\\"createdAt\\\", \\\"updatedAt\\\") VALUES ('hospitality-sales-001', 'VividWalls Hospitality Sales Agent', false, '[]', '{}', '{\\\"executionOrder\\\":\\\"v1\\\"}', NOW(), NOW()) ON CONFLICT (id) DO NOTHING;\"\r"
+expect "root@*"
+
+# Corporate Sales
+send "docker exec postgres psql -U postgres -d postgres -c \"INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, \\\"createdAt\\\", \\\"updatedAt\\\") VALUES ('corporate-sales-001', 'VividWalls Corporate Sales Agent', false, '[]', '{}', '{\\\"executionOrder\\\":\\\"v1\\\"}', NOW(), NOW()) ON CONFLICT (id) DO NOTHING;\"\r"
+expect "root@*"
+
+# Healthcare Sales
+send "docker exec postgres psql -U postgres -d postgres -c \"INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, \\\"createdAt\\\", \\\"updatedAt\\\") VALUES ('healthcare-sales-001', 'VividWalls Healthcare Sales Agent', false, '[]', '{}', '{\\\"executionOrder\\\":\\\"v1\\\"}', NOW(), NOW()) ON CONFLICT (id) DO NOTHING;\"\r"
+expect "root@*"
+
+# Social Media Agents
+send_user "\n📱 Creating Social Media workflows...\n"
+
+# Pinterest
+send "docker exec postgres psql -U postgres -d postgres -c \"INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, \\\"createdAt\\\", \\\"updatedAt\\\") VALUES ('pinterest-001', 'VividWalls Pinterest Agent', false, '[]', '{}', '{\\\"executionOrder\\\":\\\"v1\\\"}', NOW(), NOW()) ON CONFLICT (id) DO NOTHING;\"\r"
+expect "root@*"
+
+# Twitter
+send "docker exec postgres psql -U postgres -d postgres -c \"INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, \\\"createdAt\\\", \\\"updatedAt\\\") VALUES ('twitter-001', 'VividWalls Twitter Agent', false, '[]', '{}', '{\\\"executionOrder\\\":\\\"v1\\\"}', NOW(), NOW()) ON CONFLICT (id) DO NOTHING;\"\r"
+expect "root@*"
+
+# LinkedIn
+send "docker exec postgres psql -U postgres -d postgres -c \"INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, \\\"createdAt\\\", \\\"updatedAt\\\") VALUES ('linkedin-001', 'VividWalls LinkedIn Agent', false, '[]', '{}', '{\\\"executionOrder\\\":\\\"v1\\\"}', NOW(), NOW()) ON CONFLICT (id) DO NOTHING;\"\r"
+expect "root@*"
+
+# TikTok
+send "docker exec postgres psql -U postgres -d postgres -c \"INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, \\\"createdAt\\\", \\\"updatedAt\\\") VALUES ('tiktok-001', 'VividWalls TikTok Agent', false, '[]', '{}', '{\\\"executionOrder\\\":\\\"v1\\\"}', NOW(), NOW()) ON CONFLICT (id) DO NOTHING;\"\r"
+expect "root@*"
+
+# YouTube
+send "docker exec postgres psql -U postgres -d postgres -c \"INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, \\\"createdAt\\\", \\\"updatedAt\\\") VALUES ('youtube-001', 'VividWalls YouTube Agent', false, '[]', '{}', '{\\\"executionOrder\\\":\\\"v1\\\"}', NOW(), NOW()) ON CONFLICT (id) DO NOTHING;\"\r"
+expect "root@*"
+
+# Copy Editor Agent
+send "docker exec postgres psql -U postgres -d postgres -c \"INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, \\\"createdAt\\\", \\\"updatedAt\\\") VALUES ('copy-editor-001', 'VividWalls Copy Editor Agent', false, '[]', '{}', '{\\\"executionOrder\\\":\\\"v1\\\"}', NOW(), NOW()) ON CONFLICT (id) DO NOTHING;\"\r"
+expect "root@*"
+
+# Verify workflow count
+send_user "\n📊 Verifying workflow count...\n"
+send "docker exec postgres psql -U postgres -d postgres -t -c 'SELECT COUNT(*) FROM workflow_entity;'\r"
+expect "root@*"
+
+# List newly created workflows
+send_user "\n📋 Listing newly created workflows...\n"
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT name, active FROM workflow_entity WHERE id LIKE '%-001' ORDER BY name;\" | head -20\r"
+expect "root@*"
+
+# Exit
+send_user "\n✅ Workflow creation complete\n"
+send "exit\r"
+expect eof

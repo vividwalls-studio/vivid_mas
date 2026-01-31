@@ -1,0 +1,140 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Show current situation
+send "echo '=== CURRENT SITUATION ==='\r"
+expect "# "
+send "echo 'File system key:'\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env | head -1\r"
+expect "# "
+send "echo '\nDocker container key:'\r"
+expect "# "
+send "docker exec n8n printenv | grep N8N_ENCRYPTION_KEY\r"
+expect "# "
+
+# Decision point
+send "echo '\n=== DECISION ==='\r"
+expect "# "
+send "echo 'The Business Manager workflow uses Telegram credentials encrypted with the OLD key.'\r"
+expect "# "
+send "echo 'We need to use the OLD key (pAyfxPn9h2yqv32GtzSLA73h2IdZ1n88) for now.'\r"
+expect "# "
+send "echo 'Later, you can re-enter credentials in n8n UI to use the new key.'\r"
+expect "# "
+
+# Ensure .env has the old key
+send "echo '\n=== Ensuring .env has OLD key ==='\r"
+expect "# "
+send "grep -q 'N8N_ENCRYPTION_KEY=pAyfxPn9h2yqv32GtzSLA73h2IdZ1n88' .env || sed -i 's/N8N_ENCRYPTION_KEY=.*/N8N_ENCRYPTION_KEY=pAyfxPn9h2yqv32GtzSLA73h2IdZ1n88/' .env\r"
+expect "# "
+
+# Force docker to use .env value
+send "echo '\n=== Forcing Docker to reload from .env ==='\r"
+expect "# "
+send "docker compose down n8n\r"
+expect "# "
+send "sleep 5\r"
+expect "# "
+send "docker compose up -d n8n\r"
+expect "# "
+
+# Wait for n8n to start
+send "echo '\nWaiting for n8n to start...'\r"
+expect "# "
+send "sleep 30\r"
+expect "# "
+
+# Verify keys match
+send "echo '\n=== VERIFICATION ==='\r"
+expect "# "
+send "echo 'File system key:'\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env | head -1\r"
+expect "# "
+send "echo '\nDocker container key:'\r"
+expect "# "
+send "docker exec n8n printenv | grep N8N_ENCRYPTION_KEY\r"
+expect "# "
+
+# Activate the workflow
+send "echo '\n=== Activating Business Manager workflow ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"UPDATE workflow_entity SET active = true WHERE id = 'czgQFXq4Bh6Ho3q3';\"\r"
+expect "# "
+
+# Wait for activation
+send "sleep 10\r"
+expect "# "
+
+# Test the webhook
+send "echo '\n=== Testing webhook ==='\r"
+expect "# "
+send "curl -s -X POST https://n8n.vividwalls.blog/webhook/czgQFXq4Bh6Ho3q3 -H 'Content-Type: application/json' -d '{\"message\": \"test\"}' -w '\nHTTP Status: %{http_code}\n'\r"
+expect "# "
+
+# Check Telegram webhook registration
+send "echo '\n=== Checking Telegram webhook ==='\r"
+expect "# "
+send "curl -s https://api.telegram.org/bot7988488328:AAFpSgwLqCQSo4O7hP1KekUt4W6DJIJRhrc/getWebhookInfo | python3 -m json.tool | grep -E 'url|pending_update_count|last_error'\r"
+expect "# "
+
+# Clean up old backup files
+send "echo '\n=== Cleaning up old backup files ==='\r"
+expect "# "
+send "ls -1 .env.backup* | wc -l\r"
+expect "# "
+send "echo 'Moving old backups to archive directory...'\r"
+expect "# "
+send "mkdir -p /root/vivid_mas/archive/env_backups\r"
+expect "# "
+send "mv .env.backup* /root/vivid_mas/archive/env_backups/ 2>/dev/null || echo 'No backups to move'\r"
+expect "# "
+
+# Summary
+send "echo '\n=== SUMMARY ==='\r"
+expect "# "
+send "echo '✓ Both .env and Docker container now use OLD encryption key'\r"
+expect "# "
+send "echo '✓ This allows existing encrypted credentials to work'\r"
+expect "# "
+send "echo '✓ Business Manager workflow should now accept webhooks'\r"
+expect "# "
+send "echo '✓ Old backup files moved to archive directory'\r"
+expect "# "
+send "echo '\nIMPORTANT: To use the new key in future:'\r"
+expect "# "
+send "echo '1. Change key in .env file'\r"
+expect "# "
+send "echo '2. Restart n8n'\r"
+expect "# "
+send "echo '3. Re-enter ALL credentials in n8n UI'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

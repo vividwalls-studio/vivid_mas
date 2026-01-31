@@ -1,0 +1,70 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check if n8n is running
+send "echo '=== N8N Container Status ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' | grep n8n\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check n8n version
+send "echo '\n=== N8N Version ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker exec n8n n8n --version 2>/dev/null || echo 'Could not get version'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Test n8n health endpoint
+send "echo '\n=== Testing N8N Health ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "curl -s -o /dev/null -w '%{http_code}' http://localhost:5678/healthz && echo ' - Health check OK' || echo ' - Health check failed'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check n8n workflows
+send "echo '\n=== N8N API Test ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "curl -s http://localhost:5678/ | grep -o '<title>.*</title>' | head -1\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check MCP servers configured
+send "echo '\n=== MCP Servers Configured ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "jq '.mcpServers | length' /opt/mcp-servers/n8n-mcp-config.json 2>/dev/null && echo ' MCP servers configured'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check docker-compose
+send "echo '\n=== Docker Compose Location ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "find /root -name 'docker-compose*.yml' -type f 2>/dev/null | xargs grep -l 'n8n' | head -1\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check n8n data directory
+send "echo '\n=== N8N Data Directory ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker inspect n8n --format '{{range .Mounts}}{{.Destination}}: {{.Source}}\n{{end}}' | grep n8n_data\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

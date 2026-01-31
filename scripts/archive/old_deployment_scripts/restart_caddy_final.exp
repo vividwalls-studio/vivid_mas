@@ -1,0 +1,40 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect "Enter passphrase for key*"
+send "freedom\r"
+
+# Wait for prompt
+expect "root@*"
+
+# Restart Caddy to pick up the new configuration
+send "cd /home/vivid/vivid_mas\r"
+expect "root@*"
+
+send "docker-compose restart caddy\r"
+expect "root@*"
+
+# Wait for Caddy to fully start
+send "sleep 5\r"
+expect "root@*"
+
+# Check that the new configuration is loaded
+send "docker logs caddy --tail=5\r"
+expect "root@*"
+
+# Test the URL now
+send "curl -I https://crm.vividwalls.blog\r"
+expect "root@*"
+
+# Also test with full browser headers
+send "curl -H 'User-Agent: Mozilla/5.0' https://crm.vividwalls.blog --head\r"
+expect "root@*"
+
+# Exit
+send "exit\r"
+expect eof

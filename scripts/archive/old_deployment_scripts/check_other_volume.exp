@@ -1,0 +1,69 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Check n8n status now
+send "echo '=== Current n8n status ==='\r"
+expect "# "
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Test if n8n is accessible
+send "echo '=== Testing n8n access ==='\r"
+expect "# "
+send "curl -s http://localhost:5678 | grep -o '<title>.*</title>' || echo 'Not accessible'\r"
+expect "# "
+
+# Check for database in n8n_storage volume
+send "echo '=== Checking n8n_storage volume for database ==='\r"
+expect "# "
+send "docker run --rm -v n8n_storage:/data alpine ls -la /data/ | grep -E 'database|backup' | head -10\r"
+expect "# "
+
+# Check database size if it exists
+send "docker run --rm -v n8n_storage:/data alpine du -h /data/database.sqlite 2>&1 || echo 'No database in n8n_storage'\r"
+expect "# "
+
+# Let's see what's in both volumes
+send "echo '=== Contents of vivid_mas_n8n_storage ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine ls -la /data/ | head -20\r"
+expect "# "
+
+send "echo '=== Contents of n8n_storage ==='\r"
+expect "# "
+send "docker run --rm -v n8n_storage:/data alpine ls -la /data/ | head -20\r"
+expect "# "
+
+# Check current logs to see if n8n is running properly
+send "echo '=== Current n8n logs ==='\r"
+expect "# "
+send "docker logs n8n --tail 20 2>&1 | grep -v 'Mismatching encryption' | grep -E 'Initializing|ready|accessible|started|Starting' | tail -10\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

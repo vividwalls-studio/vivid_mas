@@ -1,0 +1,37 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check for Listmonk configuration
+send "echo '=== Checking Listmonk Installation ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check if Listmonk is running
+send "docker ps | grep listmonk\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check for config files
+send "find / -name 'listmonk*' -type f 2>/dev/null | grep -E '(config|env)' | head -10\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check docker-compose files for Listmonk
+send "find / -name 'docker-compose*.yml' -type f 2>/dev/null | xargs grep -l listmonk 2>/dev/null | head -5\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

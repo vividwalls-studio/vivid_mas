@@ -1,0 +1,60 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Check current encryption key in .env
+send "echo '=== Current encryption key in .env ==='\r"
+expect "# "
+send "grep N8N_ENCRYPTION_KEY .env\r"
+expect "# "
+
+# Check what credentials are associated with this workflow
+send "echo '\n=== Checking credentials for this workflow ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT id, name, type FROM credentials_entity WHERE id IN (SELECT DISTINCT jsonb_array_elements_text((nodes::jsonb->0->'credentials')::jsonb->'* '->>'id')::varchar FROM workflow_entity WHERE id = 'czgQFXq4Bh6Ho3q3');\"\r"
+expect "# "
+
+# Find all credentials in the system
+send "echo '\n=== All credentials in the system ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT id, name, type, (length(data) > 0) as has_encrypted_data FROM credentials_entity LIMIT 10;\"\r"
+expect "# "
+
+# Check if we have the original encryption key anywhere
+send "echo '\n=== Searching for possible original encryption key ==='\r"
+expect "# "
+send "find /root/vivid_mas -name '*.env*' -o -name '*config*' | xargs grep -l 'pAyfxPn9h2yqv32GtzSLA73h2IdZ1n88' 2>/dev/null | head -5\r"
+expect "# "
+
+# Try to set the workflow to inactive to stop the error messages
+send "echo '\n=== Setting workflow to inactive to stop errors ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"UPDATE workflow_entity SET active = false WHERE id = 'czgQFXq4Bh6Ho3q3';\"\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

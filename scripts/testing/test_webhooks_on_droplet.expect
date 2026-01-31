@@ -1,0 +1,78 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+puts "Connecting to DigitalOcean droplet..."
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        puts "\nConnected successfully!"
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}
+
+# Navigate to project directory
+send "cd /root/vivid_mas\r"
+expect "root@*"
+
+# Check n8n status
+puts "\nChecking n8n container status..."
+send "docker ps | grep n8n\r"
+expect "root@*"
+
+# Get n8n logs to find webhook URLs
+puts "\nGetting recent n8n webhook activity..."
+send "docker logs n8n --tail 20 | grep -i webhook\r"
+expect "root@*"
+
+# Test Business Manager webhook
+puts "\nTesting Business Manager Agent webhook..."
+send "curl -X POST https://n8n.vividwalls.blog/webhook/business-manager \\\r"
+send "  -H 'Content-Type: application/json' \\\r"
+send "  -d '{\"action\":\"status\",\"request\":\"Get system status\"}'\r"
+expect "root@*"
+
+# Test Marketing Director webhook
+puts "\nTesting Marketing Director Agent webhook..."
+send "curl -X POST https://n8n.vividwalls.blog/webhook/marketing-director \\\r"
+send "  -H 'Content-Type: application/json' \\\r"
+send "  -d '{\"action\":\"analyze\",\"type\":\"performance\"}'\r"
+expect "root@*"
+
+# Check active workflows with webhooks
+puts "\nChecking for active webhook triggers in n8n..."
+send "docker exec n8n sh -c \"ls /home/node/.n8n/workflows 2>/dev/null | head -10\"\r"
+expect "root@*"
+
+# List available webhook endpoints from n8n database
+puts "\nQuerying n8n database for webhook endpoints..."
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT name, active FROM workflow_entity WHERE active = true LIMIT 10;\"\r"
+expect "root@*"
+
+# Test webhook with detailed response
+puts "\nTesting webhook with verbose output..."
+send "curl -v -X POST https://n8n.vividwalls.blog/webhook-test/vivid-mas \\\r"
+send "  -H 'Content-Type: application/json' \\\r"
+send "  -d '{\"test\":\"true\",\"agent\":\"business-manager\",\"timestamp\":\"'$(date -u +\"%Y-%m-%dT%H:%M:%SZ\")'\"} 2>&1\r"
+expect "root@*"
+
+puts "\nWebhook testing complete!"
+send "exit\r"
+expect eof

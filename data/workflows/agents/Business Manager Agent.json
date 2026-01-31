@@ -1,0 +1,1796 @@
+{
+  "name": "Business Manager Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Linear MCP Tools - Business Manager\n**Project Management & Task Orchestration**\n\n### AI Parameter Extraction:\n- `issue_title`: \"={{ $fromAI('issue_title', 'task or issue title') }}\"\n- `issue_description`: \"={{ $fromAI('issue_description', 'detailed task description') }}\"\n- `priority`: \"={{ $fromAI('priority', 'task priority 0-4') }}\"\n- `assignee`: \"={{ $fromAI('assignee', 'team member to assign') }}\"\n- `team_id`: \"={{ $fromAI('team_id', 'target team for task') }}\"\n- `project_id`: \"={{ $fromAI('project_id', 'associated project') }}\"\n- `labels`: \"={{ $fromAI('labels', 'task labels array') }}\"\n\n### Key Tools:\n\n#### create_issue\n- **Use Case**: Create strategic tasks for department heads\n- **Invocation**: `Create task for Marketing Director to launch Q4 campaign`\n- **Expected Output**: New issue with ID, URL, and assigned team\n- **Tool Type**: `executeTool` with `toolName: create_issue`\n\n#### update_issue\n- **Use Case**: Update task status, priority, or assignments\n- **Invocation**: `Update issue ABC-123 status to in progress`\n- **Input**: Issue ID/key, status, priority, assignee changes\n- **Output**: Updated issue confirmation\n\n#### search_issues\n- **Use Case**: Find tasks by priority, assignee, or status\n- **Invocation**: `Find all high priority marketing tasks`\n- **Input**: Query string, filters (priority, status, team)\n- **Output**: Array of matching issues\n\n#### get_projects\n- **Use Case**: List all active business initiatives\n- **Invocation**: `Show all Q4 projects`\n- **Output**: Project list with status and progress\n\n#### create_project_update\n- **Use Case**: Document project milestones and blockers\n- **Invocation**: `Create weekly update for e-commerce expansion`\n- **Input**: Project ID, update content, health status\n- **Output**: Update confirmation with timestamp",
+        "height": 1040,
+        "width": 1340,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -7020,
+        -1520
+      ],
+      "typeVersion": 1,
+      "id": "a62cc59d-9f50-40dc-b475-733a6bc19351",
+      "name": "Linear MCP Details"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "c645b4cc-4ae2-4aee-a698-0a61f9cc7bca",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -10980,
+        -3720
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -10980,
+        -2620
+      ],
+      "id": "8979588c-bcea-4d6d-9bf1-653f8a5e7bab",
+      "name": "When chat message received",
+      "webhookId": "business-manager-chat-trigger"
+    },
+    {
+      "parameters": {
+        "path": "business-manager-webhook",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -10980,
+        -3140
+      ],
+      "id": "285ed3ec-443b-4c35-95cf-e6017d22a972",
+      "name": "Business Manager Webhook",
+      "webhookId": "business-manager-webhook"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ccef36be-af1d-4fd0-bc50-992aa3c33455"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -10500,
+        -2620
+      ],
+      "id": "3e12a068-67aa-425e-8302-20f1140b625e",
+      "name": "Route by Trigger Type"
+    },
+    {
+      "parameters": {
+        "description": "Access Social Media Director for platform coordination",
+        "workflowId": {
+          "__rl": true,
+          "value": "SocialMediaDirectorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Social Media Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task_type": "={{ $fromAI('task_type', 'campaign_coordination, performance_review, budget_allocation') }}",
+            "platforms": "={{ $fromAI('platforms', 'facebook, instagram, pinterest') }}",
+            "budget": "={{ $fromAI('budget', 'allocation details') }}",
+            "timeline": "={{ $fromAI('timeline', 'execution schedule') }}",
+            "performance_targets": "={{ $fromAI('performance_targets', 'ROAS, engagement goals') }}"
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -10480,
+        -1360
+      ],
+      "id": "64b90aca-de3a-463d-bf6f-3e03233d1cf4",
+      "name": "Social Media Director Tool"
+    },
+    {
+      "parameters": {
+        "description": "Coordinate with Marketing Director for strategic alignment",
+        "workflowId": {
+          "__rl": true,
+          "value": "MarketingDirectorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Marketing Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "request_type": "={{ $fromAI('request_type', 'strategy_review, campaign_approval, performance_report') }}",
+            "data": "={{ $fromAI('data', 'relevant metrics and insights') }}",
+            "recommendations": "={{ $fromAI('recommendations', 'strategic suggestions') }}",
+            "urgency": "={{ $fromAI('urgency', 'high, medium, low') }}"
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -10880,
+        -1360
+      ],
+      "id": "149efc05-f64c-459a-83d6-87064fbad8f7",
+      "name": "Marketing Director Tool"
+    },
+    {
+      "parameters": {
+        "description": "Access Analytics Director for performance insights",
+        "workflowId": {
+          "__rl": true,
+          "value": "AnalyticsDirectorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Analytics Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "analysis_type": "={{ $fromAI('analysis_type', 'cross_channel, roi_analysis, customer_journey') }}",
+            "date_range": "={{ $fromAI('date_range', 'today, yesterday, last_week, custom') }}",
+            "metrics": "={{ $fromAI('metrics', 'revenue, roas, cac, ltv') }}",
+            "segments": "={{ $fromAI('segments', 'customer segments to analyze') }}"
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -8060,
+        -1360
+      ],
+      "id": "1f043588-e78b-4593-bb56-aa19d6d400f0",
+      "name": "Analytics Director Tool"
+    },
+    {
+      "parameters": {
+        "description": "Manage financial operations and budgets",
+        "workflowId": {
+          "__rl": true,
+          "value": "FinanceDirectorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Finance Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operation": "={{ $fromAI('operation', 'budget_review, allocation, forecast, expense_report') }}",
+            "department": "={{ $fromAI('department', 'marketing, operations, technology') }}",
+            "amount": "={{ $fromAI('amount', 'budget amount') }}",
+            "period": "={{ $fromAI('period', 'daily, weekly, monthly, quarterly') }}"
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -8420,
+        -1360
+      ],
+      "id": "3e5e90e7-7776-4f96-9b39-a322a4294076",
+      "name": "Finance Director Tool"
+    },
+    {
+      "parameters": {
+        "description": "Coordinate operations and fulfillment",
+        "workflowId": {
+          "__rl": true,
+          "value": "OperationsDirectorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Operations Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task": "={{ $fromAI('task', 'inventory_check, fulfillment_status, logistics_update') }}",
+            "priority": "={{ $fromAI('priority', 'urgent, high, normal, low') }}",
+            "products": "={{ $fromAI('products', 'product IDs or categories') }}",
+            "requirements": "={{ $fromAI('requirements', 'specific operational needs') }}"
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -7340,
+        -1360
+      ],
+      "id": "1bf5c194-d2a8-4e3f-8230-dc223d846e50",
+      "name": "Operations Director Tool"
+    },
+    {
+      "parameters": {
+        "description": "Manage customer experience initiatives",
+        "workflowId": {
+          "__rl": true,
+          "value": "CustomerExperienceDirectorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Customer Experience Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "action": "={{ $fromAI('action', 'sentiment_analysis, support_review, experience_optimization') }}",
+            "channel": "={{ $fromAI('channel', 'email, chat, phone, social') }}",
+            "metrics": "={{ $fromAI('metrics', 'satisfaction, nps, resolution_time') }}",
+            "issues": "={{ $fromAI('issues', 'customer pain points') }}"
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -9260,
+        -1360
+      ],
+      "id": "a84012db-e3fe-483a-ae5f-3ec5825ba9d5",
+      "name": "Customer Experience Director Tool"
+    },
+    {
+      "parameters": {
+        "description": "Coordinate with Product Director for product strategy",
+        "workflowId": {
+          "__rl": true,
+          "value": "ProductDirectorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Product Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "request": "={{ $fromAI('request', 'product_performance, new_launch, inventory_strategy') }}",
+            "products": "={{ $fromAI('products', 'product IDs or categories') }}",
+            "market_data": "={{ $fromAI('market_data', 'trends and insights') }}",
+            "timeline": "={{ $fromAI('timeline', 'launch or update schedule') }}"
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -9620,
+        -1360
+      ],
+      "id": "81db95e3-0b78-41d5-b80a-c272856bd6ef",
+      "name": "Product Director Tool"
+    },
+    {
+      "parameters": {
+        "description": "Access Technology Director for system management",
+        "workflowId": {
+          "__rl": true,
+          "value": "TechnologyDirectorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Technology Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "request_type": "={{ $fromAI('request_type', 'system_status, integration_check, automation_setup') }}",
+            "systems": "={{ $fromAI('systems', 'shopify, n8n, mcp_servers') }}",
+            "priority": "={{ $fromAI('priority', 'critical, high, normal') }}",
+            "technical_details": "={{ $fromAI('technical_details', 'specific requirements') }}"
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -7700,
+        -1360
+      ],
+      "id": "9d59a7d8-d586-46f2-98b5-e61e18921cf9",
+      "name": "Technology Director Tool"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "send_email",
+        "toolParameters": "={{ {\n  'to': 'kingler@vividwalls.co',\n  'subject': $fromAI('subject', 'Email subject'),\n  'body': $fromAI('body', 'Email content'),\n  'html': true\n} }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        -11720,
+        -1360
+      ],
+      "id": "6276b509-a867-4dcd-bff3-b5f58f2beb40",
+      "name": "Email MCP - Send Email"
+    },
+    {
+      "parameters": {
+        "content": "## Memory Systems\n\n### Supabase Chat Memory\n- Session-based conversation tracking\n- Contextual awareness across interactions\n- Agent learning and adaptation\n\n### Supabase Integration\n- Vector embeddings for semantic search\n- Historical decision tracking\n- Performance pattern recognition\n\nBoth memory systems work together to provide the Business Manager Agent with comprehensive context for decision-making.",
+        "height": 680,
+        "width": 420
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2546180,
+        87260
+      ],
+      "id": "4a158544-6810-4181-a9f7-bcad0852fd19",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "content": "## Daily Operations Schedule\n\n### Morning Review (9:00 AM EST)\n1. Check overnight sales (Shopify MCP)\n2. Review ad performance (Facebook MCP)\n3. Monitor email campaigns\n4. Check workflow errors (n8n MCP)\n5. Auto-optimize underperformers\n\n\n\n### Midday Check (1:00 PM)\n1. Real-time campaign monitoring\n2. Inventory status check\n3. Budget reallocation\n4. Trigger promotions for low stock\n\n\n\n### Evening Summary (5:00 PM)\n1. Compile daily performance\n2. Execute reporting workflow\n3. Plan tomorrow's priorities\n4. Send stakeholder report",
+        "height": 740,
+        "width": 870,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -11600,
+        -2300
+      ],
+      "id": "e3e2348d-8dd7-4709-abcc-fa0b30c59d91",
+      "name": "Sticky Note13"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "generate_html_report",
+        "toolParameters": "={{ {\n  'report_type': $fromAI('report_type', 'daily, weekly, monthly, custom'),\n  'data': $json.performance_data,\n  'include_charts': true,\n  'interactive': true,\n  'brand_colors': {\n    'primary': '#2C3E50',\n    'accent': '#E74C3C',\n    'success': '#27AE60'\n  }\n} }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        -12100,
+        -1360
+      ],
+      "id": "72e35bdd-8667-47e2-94d0-17f9e058d7ca",
+      "name": "HTML Report Generator MCP",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "1sL2egXbdslY8cew",
+          "name": "WordPress MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## HTML Report Generation\n\n### Beautiful Stakeholder Reports\nAll reports to Kingler are generated as:\n- Interactive HTML dashboards\n- Modern UX/UI with animations\n- Responsive design\n- Dark mode support\n- Interactive charts (Chart.js/D3.js)\n\n### Report Components\n1. Executive Summary Header\n2. Interactive Dashboard\n3. Visual Analytics\n4. Action Items\n5. Recommendations Panel\n\n### Features\n- Export to PDF/Excel\n- Search & filter\n- Mobile-optimized\n- WCAG 2.1 AA compliant",
+        "height": 580,
+        "width": 310
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -12220,
+        -740
+      ],
+      "id": "9a92e960-6f12-4234-8d1b-6a0232e4073d",
+      "name": "Sticky Note15"
+    },
+    {
+      "parameters": {
+        "description": "Coordinate with Creative Director for visual assets",
+        "workflowId": {
+          "__rl": true,
+          "value": "CreativeDirectorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Creative Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "request_type": "={{ $fromAI('request_type', 'select_images, create_campaign_visuals, brand_review') }}",
+            "topic": "={{ $fromAI('topic', 'campaign theme or product focus') }}",
+            "style": "={{ $fromAI('style', 'visual style preferences') }}",
+            "color": "={{ $fromAI('color', 'brand colors or palette') }}",
+            "theme": "={{ $fromAI('theme', 'creative theme or mood') }}",
+            "quantity": "={{ $fromAI('quantity', 'number of assets needed') }}"
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -10100,
+        -1360
+      ],
+      "id": "d6c74313-2fdc-4200-93a6-2bc95e2f9082",
+      "name": "Creative Director Tool"
+    },
+    {
+      "parameters": {
+        "content": "## Agent Coordination Flow\n\n### Hierarchical Structure\n```\nBusiness Manager (Central Hub)\n    |\n    ├── Marketing Director\n    │   ├── Social Media Director\n    │   └── Creative Director\n    |\n    ├── Analytics Director\n    │   └── Performance Insights\n    |\n    ├── Finance Director\n    │   └── Budget Management\n    |\n    ├── Operations Director\n    │   └── Fulfillment\n    |\n    ├── Customer Experience Director\n    │   └── Support & Satisfaction\n    |\n    ├── Product Director\n    │   └── Inventory & Strategy\n    |\n    └── Technology Director\n        └── Systems & Integration\n```\n\n### Communication Protocol\n- Bi-directional feedback loops\n- Real-time performance data\n- Strategic alignment checks\n- Automated task delegation",
+        "height": 700,
+        "width": 500
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -9160,
+        -3160
+      ],
+      "id": "9e0b6977-a7a0-4f4b-922e-41dff6af48e9",
+      "name": "Sticky Note18"
+    },
+    {
+      "parameters": {
+        "content": "## Model Configuration\n\n### Primary Model\n- **OpenAI GPT-4o**: Main reasoning engine\n- **Temperature**: 0.7 for balanced creativity\n- **Context**: Full system prompt loaded\n\n### Backup Model\n- **Local Ollama**: Failover option\n- **Use Case**: When OpenAI unavailable\n- **Performance**: Slightly reduced capability\n\nThe Business Manager Agent uses advanced LLM capabilities for complex decision-making and multi-agent coordination.",
+        "height": 680,
+        "width": 410
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2547160,
+        87260
+      ],
+      "id": "7d137b2f-b3bb-4953-b5ec-51caca8c7e10",
+      "name": "Sticky Note19"
+    },
+    {
+      "parameters": {
+        "content": "## Marketing Director\n\n**Delegation Areas**:\n- Campaign strategy approval\n- Budget allocation\n- Creative direction\n- ROI targets\n\n**Key Metrics**:\n- Campaign performance\n- Brand engagement\n- Lead generation\n- Content effectiveness",
+        "height": 480,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -10980,
+        -1140
+      ],
+      "id": "484c79dd-1e87-458a-8160-83585f033538",
+      "name": "Sticky Note 7",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Analytics Director\n\n**Delegation Areas**:\n- Data strategy\n- Reporting frameworks\n- Insight generation\n- Predictive modeling\n\n**Key Metrics**:\n- Data accuracy\n- Report timeliness\n- Insight actionability\n- Model performance",
+        "height": 480,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -8180,
+        -1140
+      ],
+      "id": "2f168773-7785-4be5-8b68-1c3267285057",
+      "name": "Sticky Note 8",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Finance Director\n\n**Delegation Areas**:\n- Budget management\n- Financial planning\n- Cost optimization\n- Investment decisions\n\n**Key Metrics**:\n- Cash flow health\n- Profit margins\n- Cost efficiency\n- ROI achievement",
+        "height": 400,
+        "width": 300
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -8520,
+        -620
+      ],
+      "id": "427a3e81-aa38-45a3-9b0b-85ef72b37c7e",
+      "name": "Sticky Note 9",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Operations Director\n\n**Delegation Areas**:\n- Supply chain mgmt\n- Fulfillment optimization\n- Inventory control\n- Process improvement\n\n**Key Metrics**:\n- Order accuracy\n- Fulfillment speed\n- Inventory turnover\n- Operational costs",
+        "height": 480,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -7460,
+        -1140
+      ],
+      "id": "c41a7114-8d77-4ba6-99e3-5c725fb42a0c",
+      "name": "Sticky Note 10",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Customer Experience\n\n**Delegation Areas**:\n- Service standards\n- Support optimization\n- Satisfaction tracking\n- Experience design\n\n**Key Metrics**:\n- NPS scores\n- Resolution time\n- Customer retention\n- Support efficiency",
+        "height": 480,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -9380,
+        -1140
+      ],
+      "id": "a3926c99-1464-44f5-ab0c-a3c0b044ad28",
+      "name": "Sticky Note 11",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Product Director\n\n**Delegation Areas**:\n- Product strategy\n- Feature prioritization\n- Market research\n- Launch planning\n\n**Key Metrics**:\n- Product adoption\n- Feature usage\n- Market fit\n- Launch success",
+        "height": 480,
+        "width": 300
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -9740,
+        -1140
+      ],
+      "id": "e7edfae5-2ef2-4848-8dac-59de9e6f3a55",
+      "name": "Sticky Note 12",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Technology Director\n\n**Delegation Areas**:\n- System architecture\n- Integration strategy\n- Security protocols\n- Innovation roadmap\n\n**Key Metrics**:\n- System uptime\n- Integration success\n- Security incidents\n- Tech debt ratio",
+        "height": 400,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -7820,
+        -620
+      ],
+      "id": "ad6f6e5a-e6d9-4a76-943a-c61a7e8a731b",
+      "name": "Sticky Note 13",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Creative Director\n\n**Delegation Areas**:\n- Brand guidelines\n- Creative campaigns\n- Design systems\n- Content quality\n\n**Key Metrics**:\n- Brand consistency\n- Creative output\n- Design efficiency\n- Content engagement",
+        "height": 480,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -10220,
+        -1140
+      ],
+      "id": "9d970c09-e06e-433f-a0bb-55620726b904",
+      "name": "Sticky Note 14",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Marketing Director Tool\n\n**Purpose**: Campaign & brand strategy\n\n**Inputs**:\n- campaign_objective\n- target_metrics\n- budget_allocation\n\n**Outputs**:\n- strategy_approval\n- resource_assignment",
+        "height": 320,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -10980,
+        -620
+      ],
+      "id": "bb93ff97-46a1-4c50-8895-4e532f3a7209",
+      "name": "Sticky Note 21",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Analytics Director Tool\n\n**Purpose**: Data insights & reporting\n\n**Inputs**:\n- analysis_type\n- data_sources\n- report_format\n\n**Outputs**:\n- insights_report\n- recommendations",
+        "height": 400,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -8180,
+        -620
+      ],
+      "id": "aa296cc4-073e-4b7b-be44-2fadef74f284",
+      "name": "Sticky Note 22",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Finance Director Tool\n\n**Purpose**: Financial planning & control\n\n**Inputs**:\n- budget_request\n- financial_metric\n- forecast_period\n\n**Outputs**:\n- budget_approval\n- financial_analysis",
+        "height": 480,
+        "width": 300
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -8520,
+        -1140
+      ],
+      "id": "2bd6cf4e-c206-4eee-a99c-9b82de595979",
+      "name": "Sticky Note 23",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Operations Director Tool\n\n**Purpose**: Operational excellence\n\n**Inputs**:\n- process_area\n- optimization_goal\n- constraints\n\n**Outputs**:\n- process_improvement\n- efficiency_metrics",
+        "height": 400,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -7460,
+        -620
+      ],
+      "id": "d14192a4-9b68-47f3-9390-f596cb178fb5",
+      "name": "Sticky Note 24",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## CX Director Tool\n\n**Purpose**: Customer satisfaction\n\n**Inputs**:\n- service_area\n- customer_segment\n- experience_goal\n\n**Outputs**:\n- service_strategy\n- satisfaction_metrics",
+        "height": 320,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -9380,
+        -620
+      ],
+      "id": "4ad73391-16c3-4ec6-a65f-3f929db18d08",
+      "name": "Sticky Note 25",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Product Director Tool\n\n**Purpose**: Product strategy & roadmap\n\n**Inputs**:\n- product_area\n- market_segment\n- feature_priority\n\n**Outputs**:\n- product_decision\n- roadmap_update",
+        "height": 320,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -9740,
+        -620
+      ],
+      "id": "ed345e7d-4561-4ad4-a723-58e1ecc6bcdf",
+      "name": "Sticky Note 26",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Technology Director Tool\n\n**Purpose**: Tech strategy & systems\n\n**Inputs**:\n- tech_initiative\n- system_component\n- security_level\n\n**Outputs**:\n- tech_decision\n- implementation_plan",
+        "height": 480,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -7820,
+        -1140
+      ],
+      "id": "cb4ada4d-dca5-4640-9493-d4933c860828",
+      "name": "Sticky Note 27",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Creative Director Tool\n\n**Purpose**: Brand & creative direction\n\n**Inputs**:\n- creative_brief\n- brand_element\n- campaign_type\n\n**Outputs**:\n- creative_approval\n- brand_guidelines",
+        "height": 360,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -10220,
+        -620
+      ],
+      "id": "c2b692e3-402e-4416-92fd-89f9192dc327",
+      "name": "Sticky Note 28",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Telegram MCP\n\n**Purpose**: Real-time stakeholder updates\n\n**Use Cases**:\n- Critical alerts\n- Performance milestones\n- Strategic decisions\n- Emergency notifications\n\n**Format**: Markdown with metrics",
+        "height": 360,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -11460,
+        -1140
+      ],
+      "id": "e00f410a-f56e-4f5d-9a68-d4eaa46be5b4",
+      "name": "Sticky Note 29",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Email MCP\n\n**Purpose**: Formal executive reports\n\n**Use Cases**:\n- Weekly summaries\n- Monthly reports\n- Quarterly reviews\n- Strategic proposals\n\n**Includes**: Charts & tables",
+        "height": 360,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -11840,
+        -1140
+      ],
+      "id": "26520853-d414-4954-bcfc-b3f7746b7e57",
+      "name": "Sticky Note 30",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## HTML Report MCP\n\n**Purpose**: Interactive dashboards\n\n**Features**:\n- Real-time metrics\n- Drill-down capability\n- Trend visualization\n- Export functions\n\n**Tech**: React + D3.js",
+        "height": 360,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -12220,
+        -1140
+      ],
+      "id": "204e723d-58e9-477f-a914-0031cb7b9c6a",
+      "name": "Sticky Note 31",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2546560,
+        87380
+      ],
+      "id": "4528eda1-1dea-4555-9ea8-2d72cb3f2587",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "nMbluFwHsrVvkQBJ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 900,
+        "width": 840,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2546220,
+        87220
+      ],
+      "id": "253c43f5-7aed-40c0-98df-d6766baf8e8b",
+      "name": "Sticky Note27"
+    },
+    {
+      "parameters": {
+        "tableName": "agent_chat_memory"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -2545620,
+        87360
+      ],
+      "id": "dbc917ec-4b09-4dbe-aab8-071b0d520040",
+      "name": "Agent Memory",
+      "credentials": {
+        "postgres": {
+          "id": "c76ccdf5-568d-4ef2-a0c2-00c7423d775f",
+          "name": "Supabase DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 280,
+        "width": 300
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2545720,
+        87260
+      ],
+      "id": "9609b7b0-27b1-4b95-9c49-362d0097c32b",
+      "name": "Sticky Note28"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 900,
+        "width": 920,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2547200,
+        87220
+      ],
+      "id": "da7caa54-4557-43f1-b931-fd413d28f96f",
+      "name": "Sticky Note29"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            },
+            {
+              "triggerAtHour": 13
+            },
+            {
+              "triggerAtHour": 17
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -10980,
+        -2180
+      ],
+      "id": "e5c16510-80a0-422e-a90d-46fdccad43ec",
+      "name": "Schedule Trigger - Morning Review"
+    },
+    {
+      "parameters": {
+        "content": "### OpenAI - GPT o3 Model",
+        "height": 320,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2546720,
+        87260
+      ],
+      "id": "0e778526-1d01-4204-b30f-c1e1d227e5bc",
+      "name": "Sticky Note30"
+    },
+    {
+      "parameters": {
+        "content": "### OpenAI - Local Ollama Model",
+        "height": 320,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2546720,
+        87620
+      ],
+      "id": "5bb2a5d2-55d2-41a5-a72d-5d76395d8dfd",
+      "name": "Sticky Note31"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -2546560,
+        87740
+      ],
+      "id": "6b3127e3-1001-416d-bf53-b6481800646f",
+      "name": "Local Ollama Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "gMmdSJ7Ie4jj3U8D",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 1340,
+        "width": 1200,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -11040,
+        -1520
+      ],
+      "id": "707c35ed-f738-4cff-a550-3c2db6166a28",
+      "name": "Sticky Note32"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 280,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -10980,
+        -1460
+      ],
+      "id": "a6a41e85-6431-4960-a7ce-2f47845721b4",
+      "name": "Sticky Note33"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 1340,
+        "width": 1180,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -9800,
+        -1520
+      ],
+      "id": "5ba6e060-a56d-4b90-b2f3-f1e1bbd7707d",
+      "name": "Sticky Note34"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 280,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -10600,
+        -1460
+      ],
+      "id": "fcf0d9d3-9e0b-4765-8552-db8121efb0bc",
+      "name": "Sticky Note35"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 280,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -10220,
+        -1460
+      ],
+      "id": "ae67e546-0c7f-4738-b8a5-1810c60ba178",
+      "name": "Sticky Note37"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 1340,
+        "width": 1500,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -8580,
+        -1520
+      ],
+      "id": "57e7e846-e69b-46a4-adf5-e73b46e91136",
+      "name": "Sticky Note38"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 280,
+        "width": 300
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -9740,
+        -1460
+      ],
+      "id": "f6734c99-a044-49be-8456-205584cf9bec",
+      "name": "Sticky Note39"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 1420,
+        "width": 1200,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -12280,
+        -1520
+      ],
+      "id": "b727569e-a9d7-43c3-9127-700231aaa5b7",
+      "name": "Sticky Note40"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 280,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -11460,
+        -1460
+      ],
+      "id": "45bfbd14-20a3-4ad7-98ad-21133bf5d0d9",
+      "name": "Sticky Note41"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 280,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -9380,
+        -1460
+      ],
+      "id": "8412b07c-2a27-40e9-9493-96c2f2c9e103",
+      "name": "Sticky Note42"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 280,
+        "width": 300
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -8520,
+        -1460
+      ],
+      "id": "789565bf-7f7e-41f1-94ab-63beb5c72825",
+      "name": "Sticky Note43"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 280,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -8180,
+        -1460
+      ],
+      "id": "3579345b-0c63-435c-9253-b498c7119ce7",
+      "name": "Sticky Note44"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 280,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -7820,
+        -1460
+      ],
+      "id": "b9af1d7a-d284-41c4-b092-536fcf53545d",
+      "name": "Sticky Note45"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 280,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -7460,
+        -1460
+      ],
+      "id": "672e3296-5962-4a27-9012-2f6dac9e1397",
+      "name": "Sticky Note46"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 280,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -9000,
+        -1460
+      ],
+      "id": "94ade2b9-c2a7-4ed9-bb89-24c04b6215b9",
+      "name": "Sticky Note47"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "qf5CJ9bN1hbswKtt",
+          "mode": "list",
+          "cachedResultName": "Sales Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -8880,
+        -1360
+      ],
+      "id": "0021c683-ad77-429b-b455-401b66dfe8f6",
+      "name": "Sales Director Agent"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Chat_ID', ``, 'string') }}",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Text', ``, 'string') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTool",
+      "typeVersion": 1.2,
+      "position": [
+        -11340,
+        -1360
+      ],
+      "id": "be247bd2-2993-4a87-9580-ed6a262707ab",
+      "name": "Telegram",
+      "webhookId": "57399d59-7cd4-4bb9-83b0-7d612ae34627",
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_bot",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 280,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -11840,
+        -1460
+      ],
+      "id": "cf307565-825c-4908-b7d7-87fa699c2064",
+      "name": "Sticky Note48"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 280,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -12220,
+        -1460
+      ],
+      "id": "a142e86f-2610-45db-b2f0-9e146714501a",
+      "name": "Sticky Note49"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 260,
+        "width": 280
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -11060,
+        -2240
+      ],
+      "typeVersion": 1,
+      "id": "2db10e19-e9db-4f0b-a068-8c95342b6790",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 1640,
+        "width": 1570,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -10180,
+        -3200
+      ],
+      "id": "c8f5881b-6f6d-4ff1-a182-82d8ef2e07d6",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 1640,
+        "width": 450,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -10680,
+        -3200
+      ],
+      "id": "be7e1921-30a9-4f28-8197-354225fa328c",
+      "name": "Sticky Note14"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 440,
+        "width": 890,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -11620,
+        -2780
+      ],
+      "id": "3ef0bd60-117a-46ba-a2f6-940322e30650",
+      "name": "Sticky Note20"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 520,
+        "width": 1450,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -12180,
+        -3900
+      ],
+      "id": "3d10b978-2f03-481f-9f67-89bb4bf04ba8",
+      "name": "Sticky Note22"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 1640,
+        "width": 630,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -8560,
+        -3200
+      ],
+      "id": "566ea72c-6c53-458a-8309-853f2e8707f7",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "36e8486d-c497-421f-8a55-a1bfe9efff9f",
+              "leftValue": true,
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "f28ed8b7-0d3a-453c-b13d-e6f80581e8ee",
+              "leftValue": false,
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -8280,
+        -2340
+      ],
+      "id": "484189bd-e196-464d-a284-8993ac560c85",
+      "name": "Is Approval Required"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $fromAI('approval') }}",
+        "text": "={{ $fromAI('approval') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -7480,
+        -2860
+      ],
+      "id": "833071d6-cc40-4224-85bc-c8fd6630c112",
+      "name": "Telegram1",
+      "webhookId": "6ac9f34e-5e26-4e9f-a76e-dc55948ffdc2",
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_bot",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -7480,
+        -1980
+      ],
+      "id": "328d6e1a-d6c6-4900-ad41-4c4e2b994030",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 840,
+        "width": 890,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -7880,
+        -3200
+      ],
+      "id": "98924ce4-4708-4e10-882e-7c3d8ba61369",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 740,
+        "width": 890,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -7880,
+        -2300
+      ],
+      "id": "3b81481c-14b9-40e0-bbe6-52556691a003",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{$input }}",
+        "options": {
+          "systemMessage": "=You are the Business Manager Agent for VividWalls, the central orchestrator and strategic decision maker for all business operations. You coordinate with 8 specialized Director Agents to achieve business objectives, maintain strategic alignment, and ensure optimal performance across all departments. You report directly to the stakeholder Kingler Bercy, owner of vividwalls.co ecommerce website.\n\nI communicate with Kingler via the following executive methods:\n- **Telegram**: Real-time alerts and critical updates via telegram-mcp tool\n- **Email**: Formal reports and strategic proposals to kingler@vividwalls.co via email-mcp tool\n- **HTML Reports**: Beautiful interactive dashboards via html-report-generator-mcp tool\n\n## Core Responsibilities\n\n### 1. Strategic Oversight\n- Monitor overall business performance across all departments\n- Set quarterly goals and strategic priorities\n- Ensure alignment with VividWalls' vision and objectives\n- Identify growth opportunities and market trends\n- Manage risk and compliance across operations\n\n### 2. Director Coordination\n- Delegate tasks to appropriate Director Agents\n- Monitor director performance and task completion\n- Resolve cross-department conflicts and resource allocation\n- Facilitate collaboration between directors\n- Ensure seamless workflow across all departments\n\n### 3. Resource Management\n- Optimize budget allocation across departments\n- Monitor resource utilization and efficiency\n- Approve major expenditures and investments\n- Balance competing priorities and constraints\n- Ensure ROI optimization across all channels\n\n### 4. Performance Analysis\n- Consolidate metrics from all directors\n- Identify performance trends and patterns\n- Generate actionable insights for improvement\n- Track KPIs against business targets\n- Implement data-driven optimizations\n\n### 5. Executive Reporting\n- Create comprehensive stakeholder reports\n- Provide strategic recommendations\n- Alert on critical issues requiring attention\n- Present business performance dashboards\n- Maintain transparent communication with ownership\n\n## Available Director Tools\n\n### Marketing Director Tool\n**Purpose**: Brand strategy and campaign orchestration\n`marketing_director_tool`\n\n### Analytics Director Tool\n**Purpose**: Data insights and performance optimization\n`analytics_director_tool`\n\n### Finance Director Tool\n**Purpose**: Financial planning and budget control\n`finance_director_tool`\n\n### Operations Director Tool\n**Purpose**: Supply chain and fulfillment excellence\n`operations_director_tool`\n\n### Customer Experience Director Tool\n**Purpose**: Customer satisfaction and support optimization\n`customer_experience_director_tool`\n\n### Product Director Tool\n**Purpose**: Product strategy and market positioning\n`product_director_tool`\n\n### Technology Director Tool\n**Purpose**: Technical infrastructure and innovation\n`technology_director_tool`\n\n\n### 🎭 Creative Director Tool\n**Purpose**: Visual identity and creative excellence\n`creative_director_tool`\n\n## Executive Communication Tools (Direct Access)\n\n### 📱 Telegram MCP\n**Purpose**: Real-time stakeholder notifications\n`telegram_mcp`\n\n### 📧 Email MCP\n**Purpose**: Formal executive reports\n`email_mcp`\n\n### 📊 HTML Report Generator MCP\n**Purpose**: Interactive executive dashboards\n`html_report_generator_mcp`\n\n## Delegation Framework\n\n### Hierarchical Structure\n\nBusiness Manager (You)\n    │\n    ├── Marketing Director\n    │   ├── Social Media Director → Platform Agents\n    │   ├── Creative Director → Design Agents\n    │   └── Content Strategy Agent\n    │\n    ├── Analytics Director\n    │   ├── Performance Analytics Agent\n    │   └── Data Insights Agent\n    │\n    ├── Finance Director\n    │   ├── Budget Management Agent\n    │   └── ROI Analysis Agent\n    │\n    ├── Operations Director\n    │   ├── Inventory Management Agent\n    │   ├── Fulfillment Agent\n    │   └── Shopify Integration (MCP)\n    │\n    ├── Customer Experience Director\n    │   ├── Support Agent\n    │   └── Satisfaction Monitoring Agent\n    │\n    ├── Product Director\n    │   ├── Product Strategy Agent\n    │   └── Market Research Agent\n    │\n    ├── Technology Director\n    │   ├── System Monitoring Agent\n    │   ├── Integration Management Agent\n    │   └── n8n Automation (MCP)\n    │\n    └── Creative Director\n        ├── Design Agent\n        └── Content Creation Agent\n\n### Delegation Principles\n1. **Never access platform MCPs directly** - Always delegate to appropriate directors\n2. **Maintain strategic focus** - Concentrate on high-level decisions and coordination\n3. **Enable director autonomy** - Trust directors to manage their domains\n4. **Monitor and guide** - Track performance without micromanaging\n5. **Escalate appropriately** - Handle only director-level issues\n\n## Daily Operations Framework\n\n### Morning Strategic Review (9:00 AM EST)\n\n### Midday Coordination (1:00 PM)\n`middayCoordination`\n\n### Evening Executive Summary (5:00 PM)\neveningExecutiveSummary`\n\n## Decision Making Framework\n\n### Strategic Decision Matrix\n`decisionMatrix`\n\n### Performance Thresholds\n| Metric | Green (Scale) | Yellow (Optimize) | Red (Intervene) |\n|--------|--------------|-------------------|-----------------|\n| Overall ROAS | >3.5 | 2.5-3.5 | <2.5 |\n| CAC | <$40 | $40-50 | >$50 |\n| Director Task Completion | >95% | 85-95% | <85% |\n| Customer Satisfaction | >4.5/5 | 4.0-4.5 | <4.0 |\n| System Uptime | >99.9% | 99-99.9% | <99% |\n\n## Crisis Management Protocol\n\n### Crisis Detection\n`crisisIndicators`\n\n### Crisis Response Framework\n1. **Immediate (0-15 minutes)**\n   - Alert stakeholder via Telegram\n   - Assemble crisis team (relevant directors)\n   - Implement emergency protocols\n   \n2. **Short-term (15 min - 2 hours)**\n   - Execute mitigation strategies\n   - Communicate with affected parties\n   - Monitor resolution progress\n   \n3. **Recovery (2-24 hours)**\n   - Restore normal operations\n   - Document lessons learned\n   - Update crisis protocols\n\n## Reporting Standards\n\n### Executive Dashboard Components\nAll reports to Kingler must be formatted as beautiful, modern HTML dashboards with:\n\n1. **Visual Design**\n   - VividWalls brand colors (#2C3E50, #E74C3C, #27AE60)\n   - Responsive grid layout with card components\n   - Smooth animations and micro-interactions\n   - Dark mode toggle option\n\n2. **Key Sections**\n   - Executive summary with animated KPI cards\n   - Interactive performance charts (Chart.js/D3.js)\n   - Department performance grid\n   - Action items with priority indicators\n   - Strategic recommendations panel\n\n3. **Interactivity**\n   - Drill-down capabilities on all metrics\n   - Date range selectors\n   - Export options (PDF, Excel)\n   - Real-time data updates\n   - Mobile-optimized viewing\n\n### Report Templates\n`reportTemplates`\n\n## Success Metrics\n\n### Business KPIs\n- **Revenue Growth**: 20%+ MoM\n- **Overall ROAS**: >3.5:1\n- **Customer Acquisition Cost**: <$40\n- **Customer Lifetime Value**: >$500\n- **Net Promoter Score**: >70\n\n### Operational Excellence\n- **Director Task Completion**: >95%\n- **Response Time to Critical Issues**: <15 minutes\n- **Budget Utilization**: 90-95%\n- **Cross-department Collaboration Score**: >90%\n- **Strategic Initiative Success Rate**: >80%\n\n## Integration Requirements\n\n### System Connectivity\n- Real-time data synchronization with all directors\n- Automated alert system for threshold breaches\n- Bi-directional communication with all departments\n- Secure credential management for executive tools\n- Audit trail for all strategic decisions\n\n### Meeting Cadence\n- **Daily**: Morning briefing (9 AM), Evening summary (5 PM)\n- **Weekly**: Director performance reviews (Monday)\n- **Monthly**: Strategic planning session (First Tuesday)\n- **Quarterly**: Business review with stakeholder\n\n## Remember\n\nYou are the strategic brain of VividWalls. Your decisions impact the entire organization. Always:\n- Think strategically, not tactically\n- Delegate operational tasks to directors\n- Focus on cross-functional optimization\n- Maintain clear communication with Kingler\n- Drive growth while managing risk\n- Ensure all departments work in harmony"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -9560,
+        -2640
+      ],
+      "id": "4bace6da-4aea-4ab2-a467-941a83b18705",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -9860,
+        -2240
+      ],
+      "id": "7e6c7e6b-d1e2-40bf-ba6f-93a98c4489d1",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "nMbluFwHsrVvkQBJ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -9760,
+        -2060
+      ],
+      "id": "40b0204f-bf8a-422a-ad2c-4b1aae8c4a19",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "c76ccdf5-568d-4ef2-a0c2-00c7423d775f",
+          "name": "Supabase DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 520,
+        "width": 1450,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -12180,
+        -3340
+      ],
+      "id": "ebcdf77a-9269-46f0-ad63-e39c9255f34b",
+      "name": "Sticky Note23"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Route by Trigger Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Route by Trigger Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Business Manager Webhook": {
+      "main": [
+        [
+          {
+            "node": "Route by Trigger Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Trigger Type": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Media Director Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Director Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analytics Director Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finance Director Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Operations Director Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer Experience Director Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Product Director Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Technology Director Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creative Director Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML Report Generator MCP": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Agent Memory": {
+      "ai_memory": [
+        []
+      ]
+    },
+    "Schedule Trigger - Morning Review": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Director Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email MCP - Send Email": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Is Approval Required": {
+      "main": [
+        [
+          {
+            "node": "Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Is Approval Required",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "afcbaf08-f66d-42f6-9247-5b69fa14f43e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "80621a4270e0ac393edfe0b84576ab8588a37d1db0f23bca7018517bcf39d930"
+  },
+  "id": "Qbqnu6n8PBTnCltp",
+  "tags": [
+    {
+      "createdAt": "2025-06-22T23:31:18.933Z",
+      "updatedAt": "2025-06-22T23:31:18.933Z",
+      "id": "XCG1SczddSOFPU72",
+      "name": "Orchestrator"
+    },
+    {
+      "createdAt": "2025-06-20T02:24:26.556Z",
+      "updatedAt": "2025-06-20T02:24:26.556Z",
+      "id": "6VVZ3efzkyffQNb0",
+      "name": "Agent"
+    },
+    {
+      "createdAt": "2025-06-20T15:45:34.722Z",
+      "updatedAt": "2025-06-20T15:45:34.722Z",
+      "id": "DOGrje2mCZmui0Ic",
+      "name": "Multi-Agent System"
+    },
+    {
+      "createdAt": "2025-06-20T15:45:58.525Z",
+      "updatedAt": "2025-06-20T15:45:58.525Z",
+      "id": "ZsfmuWvgUuEZoRlj",
+      "name": "VividWalls"
+    }
+  ]
+}

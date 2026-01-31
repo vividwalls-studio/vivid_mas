@@ -1,0 +1,38 @@
+#!/usr/bin/expect -f
+
+set timeout 1800
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Navigate to MCP servers directory
+send "cd /opt/mcp-servers\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers#"
+
+# Run the installation script
+send "./install_new_mcp_servers.sh\r"
+
+# Wait for installation to complete
+expect {
+    "All new MCP server dependencies installed!" {
+        puts "\n✅ Installation completed successfully!"
+    }
+    timeout {
+        puts "\n⚠️  Installation timeout - check server manually"
+    }
+}
+
+# Exit
+send "exit\r"
+expect eof

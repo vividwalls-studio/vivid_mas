@@ -1,0 +1,45 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Twenty CRM Container Status ==='\r"
+        expect "root@*"
+        
+        # Check Twenty containers
+        send "docker ps -a | grep twenty\r"
+        expect "root@*"
+        
+        # Check Twenty logs
+        send "echo '\n=== Twenty Server Logs (last error) ==='\r"
+        expect "root@*"
+        send "docker logs twenty-server-1 2>&1 | grep -A5 -B5 'password authentication failed' | tail -15\r"
+        expect "root@*"
+        
+        # Check Twenty environment
+        send "echo '\n=== Twenty Docker Compose Location ==='\r"
+        expect "root@*"
+        send "find /opt /root -name 'docker-compose*.yml' -type f 2>/dev/null | xargs grep -l 'twenty' | head -5\r"
+        expect "root@*"
+        
+        # Check Twenty configuration
+        send "echo '\n=== Twenty Environment Config ==='\r"
+        expect "root@*"
+        send "cd /opt/twenty/packages/twenty-docker 2>/dev/null && cat .env | grep -E 'POSTGRES|DATABASE' | head -10 || echo 'Twenty config not found at expected location'\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

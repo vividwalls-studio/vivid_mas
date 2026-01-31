@@ -1,0 +1,493 @@
+{
+    "name": "Business Manager Agent",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "business-management-director-agent",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "id": "webhook-main",
+        "name": "Business Manager Chat Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [250, 300],
+        "webhookId": "business-management-director-agent"
+      },
+      {
+        "parameters": {
+          "inputSource": "jsonExample",
+          "jsonExample": "{\n  \"directive_type\": \"strategic_planning\",\n  \"directive_id\": \"dir_YYYYMMDD_XXX\",\n  \"source\": \"business_manager\",\n  \"target\": \"business_management_director\",\n  \"priority\": \"high\",\n  \"deadline\": \"2025-01-31T23:59:59Z\",\n  \"strategic_brief\": {\n    \"objective\": \"Develop Q1 Strategic Initiative\",\n    \"scope\": \"company_wide\",\n    \"budget_allocation\": 250000,\n    \"expected_roi\": 0.35\n  }\n}"
+        },
+        "id": "workflow-trigger",
+        "name": "When Executed by Another Workflow",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [250, 100]
+      },
+      {
+        "parameters": {
+          "values": {
+            "string": [
+              {
+                "name": "agent_input",
+                "value": "={{ $json.chatInput || $json.input || $json.message || JSON.stringify($json) }}"
+              },
+              {
+                "name": "sessionId",
+                "value": "={{ $json.sessionId || $json.session_id || $json.directive_id || 'business_mgmt_' + Date.now() }}"
+              },
+              {
+                "name": "session_id",
+                "value": "={{ $json.sessionId || $json.session_id || $json.directive_id || 'business_mgmt_' + Date.now() }}"
+              },
+              {
+                "name": "input_type",
+                "value": "={{ $json.chatInput ? 'chat' : ($json.directive_type ? 'directive' : 'chat') }}"
+              },
+              {
+                "name": "original_data",
+                "value": "={{ $json }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "prepare-input",
+        "name": "Prepare Input",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [450, 200]
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ $json.agent_input }}",
+          "options": {
+            "systemMessage": "You are the Business Management Director for VividWalls, an e-commerce platform specializing in abstract art. You are responsible for strategic oversight, resource management, and cross-functional coordination.\n\n## Communication Mode\nCurrent mode: {{ $json.input_type }}\n- Chat Mode: Respond conversationally to user queries\n- Directive Mode: Process formal business directives\n\n## Core Responsibilities\n- Developing and executing business strategies aligned with company vision\n- Managing resource allocation and budget oversight across departments\n- Coordinating cross-functional initiatives\n- Monitoring business performance and strategic metrics\n- Making executive decisions on strategic direction and investments\n- Overseeing agent coordination and workflow optimization\n\n## Key Performance Indicators\n- Overall business growth rate > 20% annually\n- Resource utilization efficiency > 85%\n- Cross-departmental coordination effectiveness > 90%\n- Strategic initiative completion rate > 95%\n\n## Direct Reports\n- Marketing Director\n- Sales Director\n- Operations Director\n- Customer Experience Director\n- Product Director\n- Finance Director\n- Analytics Director\n- Technology Director\n- Creative Director\n\nWhen responding:\n- Be helpful, professional, and strategic in your guidance\n- Provide clear, actionable insights\n- Draw on your knowledge of business operations\n- Coordinate with other departments when needed\n- Always maintain your role as the strategic leader"
+          }
+        },
+        "id": "agent-node",
+        "name": "Business Manager Agent",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 1.9,
+        "position": [750, 200]
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $('Prepare Input').item.json.input_type }}",
+                      "rightValue": "chat",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Chat"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $('Prepare Input').item.json.input_type }}",
+                      "rightValue": "directive",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Directive"
+              }
+            ]
+          },
+          "options": {
+            "fallbackOutput": "extra"
+          }
+        },
+        "id": "route-response",
+        "name": "Route Response Type",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [950, 200]
+      },
+      {
+        "parameters": {
+          "values": {
+            "string": [
+              {
+                "name": "id",
+                "value": "={{ 'msg_' + Date.now() }}"
+              },
+              {
+                "name": "content",
+                "value": "={{ $json.output || $json.text || $json.response || $json.message || $json.answer || JSON.stringify($json) }}"
+              },
+              {
+                "name": "timestamp",
+                "value": "={{ new Date().toISOString() }}"
+              },
+              {
+                "name": "agentName",
+                "value": "Business Manager"
+              },
+              {
+                "name": "status",
+                "value": "success"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "format-chat",
+        "name": "Format Chat Response",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [1150, 100]
+      },
+      {
+        "parameters": {
+          "values": {
+            "string": [
+              {
+                "name": "response_type",
+                "value": "strategic_execution"
+              },
+              {
+                "name": "response_id",
+                "value": "={{ 'resp_' + Date.now() }}"
+              },
+              {
+                "name": "directive_id",
+                "value": "={{ $json.original_data.directive_id }}"
+              },
+              {
+                "name": "execution_status",
+                "value": "completed"
+              },
+              {
+                "name": "strategic_output",
+                "value": "={{ $json.output || $json.text || $json }}"
+              },
+              {
+                "name": "timestamp",
+                "value": "={{ new Date().toISOString() }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "format-directive",
+        "name": "Format Directive Response",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [1150, 300]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify($json) }}",
+          "options": {
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            }
+          }
+        },
+        "id": "respond-webhook",
+        "name": "Respond to Webhook",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.2,
+        "position": [1350, 200]
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-4o"
+          },
+          "options": {
+            "temperature": 0.7,
+            "maxTokens": 2000
+          }
+        },
+        "id": "openai-model",
+        "name": "OpenAI Chat Model",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [750, 400],
+        "credentials": {
+          "openAiApi": {
+            "id": "ktM70nRxsXMA9jQA",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sessionKey": "={{ $input.item.json.sessionId || $input.item.json.session_id || 'session_' + Date.now() + '_' + Math.random().toString(36).substring(7) }}",
+          "tableName": "n8n_chat_memory"
+        },
+        "id": "memory",
+        "name": "Memory",
+        "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+        "typeVersion": 1.3,
+        "position": [750, 500],
+        "credentials": {
+          "postgres": {
+            "id": "A84NDuNHTbqn50Xe",
+            "name": "Postgres account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "retrieve-as-tool",
+          "toolName": "business_management_knowledge",
+          "toolDescription": "Access comprehensive business strategies, management frameworks, executive decision models, and VividWalls business context",
+          "options": {}
+        },
+        "id": "knowledge-base",
+        "name": "Business Management Knowledge Base",
+        "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+        "typeVersion": 1.1,
+        "position": [750, 600],
+        "credentials": {
+          "postgres": {
+            "id": "A84NDuNHTbqn50Xe",
+            "name": "Postgres account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "embeddings",
+        "name": "Embeddings OpenAI",
+        "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+        "typeVersion": 1.2,
+        "position": [750, 700],
+        "credentials": {
+          "openAiApi": {
+            "id": "ktM70nRxsXMA9jQA",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "endpointUrl": "http://vividwalls-business-manager-prompts:8161/stream",
+          "serverTransport": "httpStreamable"
+        },
+        "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+        "typeVersion": 1.1,
+        "position": [950, 600],
+        "id": "mcp-prompts",
+        "name": "Business Manager Prompts MCP"
+      },
+      {
+        "parameters": {
+          "endpointUrl": "http://vividwalls-business-manager-resource:8115/stream",
+          "serverTransport": "httpStreamable"
+        },
+        "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+        "typeVersion": 1.1,
+        "position": [950, 700],
+        "id": "mcp-resources",
+        "name": "Business Manager Resources MCP"
+      }
+    ],
+    "connections": {
+      "Business Manager Chat Webhook": {
+        "main": [
+          [
+            {
+              "node": "Prepare Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Prepare Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Input": {
+        "main": [
+          [
+            {
+              "node": "Business Manager Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Business Manager Agent": {
+        "main": [
+          [
+            {
+              "node": "Route Response Type",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Route Response Type": {
+        "main": [
+          [
+            {
+              "node": "Format Chat Response",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Format Directive Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Chat Response": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Directive Response": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Business Manager Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Memory": {
+        "ai_memory": [
+          [
+            {
+              "node": "Business Manager Agent",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Business Management Knowledge Base": {
+        "ai_tool": [
+          [
+            {
+              "node": "Business Manager Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Embeddings OpenAI": {
+        "ai_embedding": [
+          [
+            {
+              "node": "Business Management Knowledge Base",
+              "type": "ai_embedding",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Business Manager Prompts MCP": {
+        "ai_tool": [
+          [
+            {
+              "node": "Business Manager Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Business Manager Resources MCP": {
+        "ai_tool": [
+          [
+            {
+              "node": "Business Manager Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "pinData": {},
+    "meta": {
+      "templateCredsSetupCompleted": true,
+      "instanceId": "d8c98c7335776e04cc3cf40527eb4aeb8cb18606c0e1a169e66c3bc56059553e"
+    },
+    "tags": []
+  }

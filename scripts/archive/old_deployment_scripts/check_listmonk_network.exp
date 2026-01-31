@@ -1,0 +1,56 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check the network setup
+send "echo '=== Docker Networks ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker network ls | grep -E 'vivid|listmonk'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check if both containers are on the same network
+send "echo '\n=== Containers on vivid_mas network ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker inspect listmonk listmonk-postgres | grep -A 5 'NetworkMode\\|Networks' | head -20\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check the actual connection string ListMonk is using
+send "echo '\n=== ListMonk Container Environment ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker exec listmonk env | grep -E 'POSTGRES|DB|HOST' || echo 'Cannot access container'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check if config file is mounted correctly
+send "echo '\n=== ListMonk Config Mount ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker inspect listmonk | grep -A 5 'Mounts' | head -15\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check the actual error in more detail
+send "echo '\n=== ListMonk Full Error ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker logs listmonk 2>&1 | grep -E 'error|Error|ERROR|connecting' | tail -10\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

@@ -1,0 +1,74 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Check localai_n8n_storage for database
+send "echo '=== Checking localai_n8n_storage for database ==='\r"
+expect "# "
+send "docker run --rm -v localai_n8n_storage:/data alpine find /data -name '*.sqlite' -o -name '*.db' 2>&1\r"
+expect "# "
+send "docker run --rm -v localai_n8n_storage:/data alpine ls -lh /data/database.sqlite 2>&1\r"
+expect "# "
+
+# Check n8n_storage for database
+send "echo '\\n=== Checking n8n_storage for database ==='\r"
+expect "# "
+send "docker run --rm -v n8n_storage:/data alpine find /data -name '*.sqlite' -o -name '*.db' 2>&1\r"
+expect "# "
+
+# Check vivid_mas_n8n_storage for database
+send "echo '\\n=== Checking vivid_mas_n8n_storage for database ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine find /data -name '*.sqlite' -o -name '*.db' 2>&1\r"
+expect "# "
+
+# Check current n8n container for database
+send "echo '\\n=== Checking current n8n container for database ==='\r"
+expect "# "
+send "docker exec n8n ls -lh /home/node/.n8n/database.sqlite 2>&1 || echo 'No database in container'\r"
+expect "# "
+
+# Look for databases in all volumes
+send "echo '\\n=== Searching all volumes for n8n databases ==='\r"
+expect "# "
+send "for vol in \\$(docker volume ls -q); do echo \"Checking volume: \\$vol\"; docker run --rm -v \\$vol:/data alpine find /data -name 'database.sqlite' -size +1M 2>&1 | grep -v \"No such file\" | grep -v \"Permission denied\" | head -5; done\r"
+expect "# "
+
+# Check n8n environment variables
+send "echo '\\n=== N8N Database Configuration ==='\r"
+expect "# "
+send "docker exec n8n printenv | grep -i database || echo 'No database env vars'\r"
+expect "# "
+
+# Check docker-compose for database configuration
+send "echo '\\n=== Docker Compose Database Config ==='\r"
+expect "# "
+send "grep -A5 -B5 'database\\|sqlite' docker-compose.yml | head -20\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

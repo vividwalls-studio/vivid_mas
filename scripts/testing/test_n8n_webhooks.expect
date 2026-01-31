@@ -1,0 +1,151 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+puts "========================================="
+puts "Testing n8n Webhooks After Restart"
+puts "========================================="
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        puts "\nConnected successfully!"
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}
+
+puts "\n1. Checking n8n version..."
+send "docker exec n8n n8n --version 2>&1\r"
+expect "root@*"
+
+puts "\n2. Checking active workflows..."
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT name, active FROM workflow_entity WHERE active = true;\" 2>&1 | head -20\r"
+expect "root@*"
+
+puts "\n3. Testing webhook-test endpoint..."
+send "curl -X POST http://localhost:5678/webhook-test/test \\\r"
+send "  -H 'Content-Type: application/json' \\\r"
+send "  -d '{\"test\":true,\"timestamp\":\"'\$(date -u +\"%Y-%m-%dT%H:%M:%SZ\")'\"}' 2>&1\r"
+expect "root@*"
+
+puts "\n4. Testing agent-hub webhook..."
+send "curl -X POST http://localhost:5678/webhook/agent-hub \\\r"
+send "  -H 'Content-Type: application/json' \\\r"
+send "  -d '{\"action\":\"test\",\"agent\":\"business-manager\"}' 2>&1\r"
+expect "root@*"
+
+puts "\n5. Testing Business Manager webhook..."
+send "curl -X POST http://localhost:5678/webhook/JmIg9sAxJo9FasR4 \\\r"
+send "  -H 'Content-Type: application/json' \\\r"
+send "  -d '{\"command\":\"status\",\"timestamp\":\"'\$(date -u +\"%Y-%m-%dT%H:%M:%SZ\")'\"}' 2>&1\r"
+expect "root@*"
+
+puts "\n6. Creating test HTML page..."
+send "cat > /var/www/test/webhook-test-working.html << 'ENDHTML'\r"
+send {<!DOCTYPE html>
+<html>
+<head>
+    <title>n8n Webhook Test - v1.106.3</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+        h1 { color: #333; }
+        .status { padding: 10px; background: #e8f4e8; border-radius: 5px; margin: 10px 0; }
+        button { padding: 10px 20px; background: #667eea; color: white; border: none; cursor: pointer; margin: 5px; border-radius: 5px; }
+        button:hover { background: #5567d8; }
+        #result { margin-top: 20px; padding: 20px; background: #f0f0f0; font-family: monospace; white-space: pre-wrap; border-radius: 5px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>n8n Webhook Test Interface</h1>
+        <div class="status">
+            <strong>n8n Version:</strong> 1.106.3<br>
+            <strong>Status:</strong> <span class="success">Running</span><br>
+            <strong>URL:</strong> https://n8n.vividwalls.blog
+        </div>
+        
+        <h2>Test Webhooks</h2>
+        <button onclick="testWebhook('test')">Test Simple Webhook</button>
+        <button onclick="testWebhook('agent-hub')">Test Agent Hub</button>
+        <button onclick="testWebhook('business-manager', 'JmIg9sAxJo9FasR4')">Test Business Manager</button>
+        <button onclick="testWebhook('marketing-director')">Test Marketing Director</button>
+        
+        <div id="result">Click a button to test webhooks...</div>
+    </div>
+    
+    <script>
+        async function testWebhook(endpoint, workflowId = null) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = `Testing ${endpoint}...\n`;
+            
+            const urls = workflowId 
+                ? [`https://n8n.vividwalls.blog/webhook/${workflowId}`]
+                : [
+                    `https://n8n.vividwalls.blog/webhook/${endpoint}`,
+                    `https://n8n.vividwalls.blog/webhook-test/${endpoint}`
+                  ];
+            
+            for (const url of urls) {
+                resultDiv.textContent += `\nTrying: ${url}\n`;
+                
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            test: true, 
+                            endpoint: endpoint,
+                            timestamp: new Date().toISOString(),
+                            message: 'Testing webhook after n8n restart'
+                        })
+                    });
+                    
+                    const text = await response.text();
+                    
+                    if (response.ok) {
+                        resultDiv.innerHTML += `<span class="success">✓ SUCCESS (${response.status})</span>\n`;
+                        resultDiv.textContent += `Response: ${text.substring(0, 500)}\n`;
+                    } else {
+                        resultDiv.innerHTML += `<span class="error">✗ FAILED (${response.status})</span>\n`;
+                        resultDiv.textContent += `Error: ${text.substring(0, 200)}\n`;
+                    }
+                } catch (error) {
+                    resultDiv.innerHTML += `<span class="error">✗ ERROR: ${error.message}</span>\n`;
+                }
+            }
+            
+            resultDiv.textContent += '\n--- Test Complete ---';
+        }
+    </script>
+</body>
+</html>}
+send "\rENDHTML\r"
+expect "root@*"
+
+puts "\n========================================="
+puts "Webhook Testing Complete!"
+puts "Access test page at: http://157.230.13.13:8888/webhook-test-working.html"
+puts "n8n UI: https://n8n.vividwalls.blog"
+puts "========================================="
+
+send "exit\r"
+expect eof

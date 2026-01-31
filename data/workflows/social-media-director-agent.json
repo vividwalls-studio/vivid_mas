@@ -1,0 +1,1140 @@
+{
+  "name": "Social Media Director Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"directive_type\": \"social_campaign\",\n  \"directive_id\": \"dir_20250118_001\",\n  \"source\": \"marketing_director\",\n  \"target\": \"social_media_director\",\n  \"priority\": \"high\",\n  \"deadline\": \"2025-01-31T23:59:59Z\",\n  \"campaign_request\": {\n    \"campaign_id\": \"spring_2025_botanical\",\n    \"objectives\": {\n      \"primary\": \"drive_sales\",\n      \"secondary\": [\"brand_awareness\", \"engagement\"]\n    },\n    \"kpis\": {\n      \"reach\": 150000,\n      \"engagement_rate\": 0.055,\n      \"click_throughs\": 2000,\n      \"conversions\": 50\n    },\n    \"budget\": {\n      \"total\": 2000,\n      \"facebook\": 500,\n      \"instagram\": 700,\n      \"pinterest\": 300,\n      \"organic\": 500\n    },\n    \"timeline\": {\n      \"start\": \"2025-02-01\",\n      \"end\": \"2025-03-31\",\n      \"milestones\": [\"launch\", \"mid_campaign\", \"wrap_up\"]\n    },\n    \"content_requirements\": {\n      \"posts_per_week\": 15,\n      \"platform_distribution\": {\n        \"facebook\": 5,\n        \"instagram\": 7,\n        \"pinterest\": 3\n      },\n      \"content_types\": [\"product_showcase\", \"behind_scenes\", \"user_generated\"]\n    }\n  },\n  \"trigger_conditions\": \"campaign_launch_request\"\n}"
+      },
+      "id": "trigger-001",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [320, 240]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "social-media-director-agent",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-001",
+      "name": "Social Media Director Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [320, 448],
+      "webhookId": "social-media-director-webhook-001",
+      "pinData": {
+        "Social Media Director Webhook": [
+          {
+            "json": {
+              "directive_type": "social_campaign",
+              "campaign_id": "spring_2025_botanical",
+              "trigger_conditions": "campaign_launch_request",
+              "objectives": {
+                "primary": "drive_sales",
+                "secondary": ["brand_awareness", "engagement"]
+              },
+              "kpis": {
+                "reach": 150000,
+                "engagement_rate": 0.055,
+                "click_throughs": 2000,
+                "conversions": 50
+              },
+              "budget": {
+                "total": 2000,
+                "facebook": 500,
+                "instagram": 700,
+                "pinterest": 300,
+                "organic": 500
+              },
+              "timeline": {
+                "start": "2025-02-01",
+                "end": "2025-03-31"
+              },
+              "content_requirements": {
+                "posts_per_week": 15,
+                "platform_distribution": {
+                  "facebook": 5,
+                  "instagram": 7,
+                  "pinterest": 3
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "allowedOrigins": "*",
+          "allowFileUploads": true
+        }
+      },
+      "id": "chat-trigger-001",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [320, 640],
+      "webhookId": "social-media-director-chat-001"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prep-001",
+              "name": "input_type",
+              "value": "={{ $json.chatInput ? 'chat' : ($json.directive_type ? 'directive' : 'unknown') }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-002",
+              "name": "agent_input",
+              "value": "={{ $json.chatInput || JSON.stringify($json) }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-003",
+              "name": "session_id",
+              "value": "={{ $json.sessionId || $json.directive_id || 'session_' + Date.now() }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-004",
+              "name": "trigger_conditions",
+              "value": "={{ $json.trigger_conditions || 'general' }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-005",
+              "name": "campaign_id",
+              "value": "={{ $json.campaign_id || $json.campaign_request?.campaign_id || 'campaign_' + Date.now() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prep-input-001",
+      "name": "Prepare Agent Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [640, 448]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "id": "llm-001",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [432, 832],
+      "credentials": {
+        "openAiApi": {
+          "id": "ktM70nRxsXMA9jQA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $input.item.json.sessionId || $input.item.json.session_id || 'session_' + Date.now() + '_' + Math.random().toString(36).substring(7) }}"
+      },
+      "id": "memory-001",
+      "name": "Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [576, 832],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "social_media_knowledge",
+        "toolDescription": "Access comprehensive social media strategies, platform best practices, content calendars, and VividWalls social history",
+        "options": {}
+      },
+      "id": "kb-001",
+      "name": "Social Media Knowledge Base",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.1,
+      "position": [2176, 880],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "embed-001",
+      "name": "Embeddings OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [2272, 1056],
+      "credentials": {
+        "openAiApi": {
+          "id": "ktM70nRxsXMA9jQA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://facebook-analytics-mcp:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-facebook-001",
+      "name": "Facebook Analytics MCP",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [768, 1000]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://pinterest-mcp-server:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-pinterest-001",
+      "name": "Pinterest MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [960, 1000]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://postiz-mcp-server:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-postiz-001",
+      "name": "Postiz MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [1152, 1000]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://supabase-mcp-server:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-supabase-001",
+      "name": "Supabase MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [1344, 1000]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://sendgrid-mcp-server:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-sendgrid-001",
+      "name": "SendGrid MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [1536, 1000]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://social-media-director-prompts:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-prompts-001",
+      "name": "Social Media Director Prompts MCP",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [768, 832]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://social-media-director-resource:3000/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-resources-001",
+      "name": "Social Media Director Resources MCP",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [960, 832]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Facebook Agent for Meta platform campaigns",
+        "workflowId": {
+          "__rl": true,
+          "value": "FacebookAgentWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Facebook Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'facebook campaign: ads, posts, engagement') }}",
+            "campaign_details": "={{ $fromAI('campaign_details', 'campaign objectives, budget, timeline') }}",
+            "content_requirements": "={{ $fromAI('content_requirements', 'post types, frequency, themes') }}",
+            "targeting": "={{ $fromAI('targeting', 'audience segments, demographics, interests') }}",
+            "budget_allocation": "={{ $fromAI('budget_allocation', 'ad spend breakdown') }}"
+          }
+        }
+      },
+      "id": "facebook-tool-001",
+      "name": "Facebook Agent Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1152, 848]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Instagram Agent for visual content and stories",
+        "workflowId": {
+          "__rl": true,
+          "value": "InstagramAgentWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Instagram Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'instagram content: posts, stories, reels') }}",
+            "content_plan": "={{ $fromAI('content_plan', 'visual content strategy') }}",
+            "posting_schedule": "={{ $fromAI('posting_schedule', 'posts, stories, reels timing') }}",
+            "hashtag_strategy": "={{ $fromAI('hashtag_strategy', 'trending and branded hashtags') }}",
+            "engagement_tactics": "={{ $fromAI('engagement_tactics', 'comments, DMs, user content') }}"
+          }
+        }
+      },
+      "id": "instagram-tool-001",
+      "name": "Instagram Agent Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1344, 848]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Pinterest Agent for visual discovery content",
+        "workflowId": {
+          "__rl": true,
+          "value": "PinterestAgentWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Pinterest Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'pinterest strategy: pins, boards, rich pins') }}",
+            "board_strategy": "={{ $fromAI('board_strategy', 'board themes, organization') }}",
+            "pin_schedule": "={{ $fromAI('pin_schedule', 'daily pin targets, timing') }}",
+            "content_themes": "={{ $fromAI('content_themes', 'seasonal, style, room types') }}",
+            "seo_keywords": "={{ $fromAI('seo_keywords', 'pinterest search optimization') }}"
+          }
+        }
+      },
+      "id": "pinterest-tool-001",
+      "name": "Pinterest Agent Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1536, 848]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Content Scheduler Agent for cross-platform scheduling",
+        "workflowId": {
+          "__rl": true,
+          "value": "ContentSchedulerWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Content Scheduler Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'content scheduling: calendar, timing optimization') }}",
+            "scheduling_request": "={{ $fromAI('scheduling_request', 'posts to schedule across platforms') }}",
+            "optimal_times": "={{ $fromAI('optimal_times', 'best posting times per platform') }}",
+            "content_queue": "={{ $fromAI('content_queue', 'approved content ready for posting') }}",
+            "platform_distribution": "={{ $fromAI('platform_distribution', 'content allocation per platform') }}"
+          }
+        }
+      },
+      "id": "scheduler-tool-001",
+      "name": "Content Scheduler Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1728, 848]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Social Analytics Agent for performance tracking",
+        "workflowId": {
+          "__rl": true,
+          "value": "SocialAnalyticsWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Social Analytics Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'analytics: performance metrics, ROI analysis') }}",
+            "metrics_request": "={{ $fromAI('metrics_request', 'KPIs to track and analyze') }}",
+            "platform_data": "={{ $fromAI('platform_data', 'platforms to analyze') }}",
+            "time_period": "={{ $fromAI('time_period', 'analysis timeframe') }}",
+            "comparison_basis": "={{ $fromAI('comparison_basis', 'benchmarks and goals') }}"
+          }
+        }
+      },
+      "id": "analytics-tool-001",
+      "name": "Social Analytics Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [1920, 848]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Copy Writer Agent for content creation",
+        "workflowId": {
+          "__rl": true,
+          "value": "CopyWriterWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Copy Writer Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'content creation: captions, ad copy, descriptions') }}",
+            "content_brief": "={{ $fromAI('content_brief', 'content requirements and guidelines') }}",
+            "platform_specs": "={{ $fromAI('platform_specs', 'platform-specific requirements') }}",
+            "brand_voice": "={{ $fromAI('brand_voice', 'tone and messaging guidelines') }}",
+            "call_to_action": "={{ $fromAI('call_to_action', 'desired user actions') }}"
+          }
+        }
+      },
+      "id": "copywriter-tool-001",
+      "name": "Copy Writer Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [2112, 848]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.agent_input }}",
+        "options": {
+          "systemMessage": "# Social Media Director System Prompt\n\nYou are the Social Media Director Agent for VividWalls, overseeing all social media strategies and coordinating platform-specific agents. You develop cohesive campaigns, ensure brand consistency, allocate resources, and maximize social commerce opportunities across all channels.\n\n## CRITICAL: Tool Usage Instructions\n\n### ALWAYS USE THESE MCP TOOLS IN THE FOLLOWING SCENARIOS:\n\n#### Facebook Analytics MCP - USE WHEN:\n- Analyzing Facebook/Instagram campaign performance (call: `get_campaign_insights`)\n- Creating lookalike audiences (call: `create_lookalike_audience`)\n- Setting up Facebook ads (call: `create_campaign`, `create_ad_set`)\n- Tracking ROAS and conversions (call: `get_performance_metrics`)\n- Managing ad budgets (call: `set_campaign_budgets`)\n- A/B testing creatives (call: `a_b_test_creatives`)\n\n#### Pinterest MCP Server - USE WHEN:\n- Creating new boards for campaigns (call: `create_board`)\n- Scheduling pins (call: `create_pin`, `bulk_pin_creation`)\n- Analyzing Pinterest metrics (call: `get_analytics`)\n- Managing rich pins for products (call: `create_rich_pin`)\n- Researching trending topics (call: `get_trending_keywords`)\n\n#### Postiz MCP Server - USE WHEN:\n- Scheduling posts across multiple platforms (call: `schedule_post`)\n- Managing content calendar (call: `get_scheduled_posts`, `update_schedule`)\n- Bulk scheduling content (call: `bulk_schedule`)\n- Optimizing posting times (call: `get_optimal_times`)\n- Setting up recurring posts (call: `create_recurring_post`)\n\n#### Supabase MCP Server - USE WHEN:\n- Storing campaign performance data (call: `insert-data` with table: 'campaign_metrics')\n- Retrieving historical analytics (call: `query-table` with table: 'social_analytics')\n- Tracking content performance (call: `query-table` with filters)\n- Storing influencer data (call: `insert-data` with table: 'influencers')\n- Managing content library (call: `query-table` with table: 'content_library')\n\n#### SendGrid MCP - USE WHEN:\n- Reaching out to influencers (call: `send_email` with template: 'influencer_outreach')\n- Sending campaign reports (call: `send_email` with template: 'campaign_report')\n- Notifying team of urgent issues (call: `send_email` with priority: 'high')\n- Distributing content calendars (call: `send_email` with attachments)\n\n#### Social Media Director Prompts MCP - USE WHEN:\n- Developing campaign strategies (call: `get_prompt` with type: 'campaign_strategy')\n- Creating content briefs (call: `get_prompt` with type: 'content_brief')\n- Handling crisis situations (call: `get_prompt` with type: 'crisis_response')\n- Planning seasonal campaigns (call: `get_prompt` with type: 'seasonal_strategy')\n\n#### Social Media Director Resources MCP - USE WHEN:\n- Accessing platform best practices (call: `get_resource` with type: 'best_practices')\n- Retrieving brand guidelines (call: `get_resource` with type: 'brand_guidelines')\n- Getting hashtag recommendations (call: `get_resource` with type: 'hashtag_strategy')\n- Finding content templates (call: `get_resource` with type: 'content_templates')\n\n### ALWAYS DELEGATE TO SUB-AGENTS IN THESE SCENARIOS:\n\n#### Facebook Agent Tool - DELEGATE WHEN:\n- Launching Facebook-specific ad campaigns\n- Managing Facebook Groups engagement\n- Setting up Facebook Shop\n- Creating Facebook Events\n- Handling Facebook Messenger campaigns\n**Provide:** campaign_details, budget_allocation, targeting, content_requirements\n\n#### Instagram Agent Tool - DELEGATE WHEN:\n- Creating Instagram Reels strategy\n- Managing Instagram Stories campaigns\n- Setting up Instagram Shopping tags\n- Coordinating influencer partnerships\n- Running Instagram contests\n**Provide:** content_plan, posting_schedule, hashtag_strategy, engagement_tactics\n\n#### Pinterest Agent Tool - DELEGATE WHEN:\n- Creating seasonal Pinterest boards\n- Optimizing Pinterest SEO\n- Managing Pinterest ads\n- Setting up rich pins for products\n- Analyzing Pinterest trends\n**Provide:** board_strategy, pin_schedule, content_themes, seo_keywords\n\n#### Content Scheduler Tool - DELEGATE WHEN:\n- Setting up week's content calendar\n- Optimizing posting times across platforms\n- Managing content queue\n- Handling bulk content uploads\n- Coordinating campaign launches\n**Provide:** scheduling_request, optimal_times, content_queue, platform_distribution\n\n#### Social Analytics Tool - DELEGATE WHEN:\n- Generating performance reports\n- Analyzing engagement metrics\n- Tracking ROI across platforms\n- Benchmarking against competitors\n- Identifying trending content\n**Provide:** metrics_request, platform_data, time_period, comparison_basis\n\n#### Copy Writer Tool - DELEGATE WHEN:\n- Creating social media captions\n- Writing ad copy\n- Developing campaign messaging\n- Creating hashtag sets\n- Writing influencer briefs\n**Provide:** content_brief, platform_specs, brand_voice, call_to_action\n\n## Communication Mode Detection\n\nYou are handling: {{ $json.input_type }} mode with trigger condition: {{ $json.trigger_conditions }}\n\n## STEP-BY-STEP EXECUTION FLOW:\n\n### When Receiving a Campaign Launch Request:\n1. FIRST: Call `Social Media Director Prompts MCP` for campaign strategy template\n2. THEN: Query `Supabase MCP` for historical campaign performance data\n3. NEXT: Delegate to `Copy Writer Tool` for content creation\n4. THEN: Call `Facebook Analytics MCP` to set up ad campaigns\n5. THEN: Call `Pinterest MCP Server` to create campaign boards\n6. THEN: Delegate to platform agents (Facebook, Instagram, Pinterest) with specific instructions\n7. THEN: Call `Postiz MCP Server` to schedule all content\n8. FINALLY: Store campaign data in `Supabase MCP`\n\n### When Generating Performance Reports:\n1. FIRST: Delegate to `Social Analytics Tool` for metrics collection\n2. THEN: Call `Facebook Analytics MCP` for ad performance\n3. THEN: Call `Pinterest MCP Server` for pin analytics\n4. THEN: Query `Supabase MCP` for historical comparison\n5. THEN: Use `Social Media Director Resources MCP` for benchmarks\n6. FINALLY: Call `SendGrid MCP` to distribute report\n\n### When Handling Content Creation:\n1. FIRST: Delegate to `Copy Writer Tool` for caption creation\n2. THEN: Use `Social Media Director Resources MCP` for brand guidelines\n3. THEN: Delegate to `Content Scheduler Tool` for optimal timing\n4. THEN: Call platform-specific MCPs for scheduling\n5. FINALLY: Store content in `Supabase MCP` content library\n\n### When Managing Crisis Situations:\n1. IMMEDIATELY: Call `Postiz MCP Server` to pause all scheduled content\n2. THEN: Use `Social Media Director Prompts MCP` for crisis response template\n3. THEN: Delegate to all platform agents to monitor sentiment\n4. THEN: Call `SendGrid MCP` to alert Marketing Director\n5. THEN: Query `Supabase MCP` for similar past incidents\n6. FINALLY: Coordinate response through platform agents\n\n## Core Responsibilities\n\n### Strategic Leadership\n- Develop integrated social media strategies\n- Coordinate cross-platform campaigns\n- Manage social media team of agents\n- Monitor overall social performance\n- Allocate budgets across platforms\n- Ensure brand voice consistency\n\n## Key Performance Indicators\n\n### Engagement Metrics\n- Total reach growth > 20% MoM\n- Engagement rate > 5%\n- Social commerce revenue > $10K/month\n- Brand sentiment > 85%\n- Community growth > 15% monthly\n- ROI > 12x\n\n## Decision Framework\n\n### Tool Selection Logic\n```\nIF campaign_launch THEN use Facebook Analytics MCP + Pinterest MCP + delegate to agents\nIF performance_analysis THEN delegate to Social Analytics Tool + query Supabase\nIF content_creation THEN delegate to Copy Writer + use Resources MCP\nIF scheduling_needed THEN use Postiz MCP + delegate to Content Scheduler\nIF crisis_detected THEN use Prompts MCP + pause via Postiz + alert via SendGrid\n```\n\n### Budget Allocation Rules\n- Top platform: 60% of budget\n- Secondary platforms: 30% of budget\n- Testing/Reserve: 10% of budget\n- Adjust weekly based on ROAS\n\n## Reporting Requirements\n\n### To Marketing Director\nALWAYS include:\n- Platform performance metrics (from Analytics Tool)\n- Budget utilization (from Facebook Analytics MCP)\n- Content performance (from Supabase queries)\n- Recommendations (from analysis)\n- Next period strategy\n\n## Agent Hierarchy\n\n**Reports to:** Marketing Director Agent\n\n**Direct Reports (ALWAYS delegate appropriate tasks to):**\n- Facebook Agent (Meta campaigns)\n- Instagram Agent (visual content)\n- Pinterest Agent (discovery content)\n- Content Scheduler Agent (timing)\n- Social Analytics Agent (metrics)\n- Copy Writer Agent (content)\n\n## Quality Standards\n\n### Before Publishing Content:\n1. ALWAYS delegate to Copy Writer for creation\n2. ALWAYS check brand guidelines via Resources MCP\n3. ALWAYS optimize timing via Postiz MCP\n4. ALWAYS store in Supabase for tracking\n\n### For Performance Tracking:\n1. ALWAYS delegate to Social Analytics Tool weekly\n2. ALWAYS query Supabase for trends\n3. ALWAYS use platform MCPs for real-time data\n4. ALWAYS report to Marketing Director monthly\n\n**CRITICAL REMINDER**: You MUST use the appropriate MCP tools and delegate to sub-agents as specified above. Never attempt to perform tasks manually that have designated tools or agents. Your role is to orchestrate and coordinate, using tools for data/execution and delegating specialized tasks to your team of agents."
+        }
+      },
+      "id": "agent-001",
+      "name": "Social Media Director Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [960, 448]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "chat-check",
+                    "leftValue": "={{ $('Prepare Agent Input').item.json.input_type }}",
+                    "rightValue": "chat",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Chat Response"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "directive-check",
+                    "leftValue": "={{ $('Prepare Agent Input').item.json.input_type }}",
+                    "rightValue": "directive",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Directive Response"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "campaign-check",
+                    "leftValue": "={{ $('Prepare Agent Input').item.json.trigger_conditions }}",
+                    "rightValue": "campaign_launch_request",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Campaign Response"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "router-001",
+      "name": "Route Response Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [1328, 432]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "msg-001",
+              "name": "output",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-002",
+              "name": "content",
+              "value": "={{ $json.output || $json.text || $json.response || $json.message || 'Processing your social media request...' }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-003",
+              "name": "timestamp",
+              "value": "={{ new Date().toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-004",
+              "name": "agentName",
+              "value": "Social Media Director",
+              "type": "string"
+            },
+            {
+              "id": "msg-005",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-chat-001",
+      "name": "Format Chat Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1968, 240]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "approval-check",
+              "leftValue": "={{ $json.content_sensitivity }}",
+              "rightValue": "high",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "approval-check-001",
+      "name": "Approval Required?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [1600, 448]
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {
+          "responseData": "passThrough",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "webhookSuffix": "approval"
+        }
+      },
+      "id": "wait-approval-001",
+      "name": "Wait for Social Approval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1792, 368],
+      "webhookId": "social-approval-001"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "response-001",
+              "name": "response_type",
+              "value": "social_campaign_execution_plan",
+              "type": "string"
+            },
+            {
+              "id": "response-002",
+              "name": "response_id",
+              "value": "={{ 'social_resp_' + $now.format('yyyyMMdd') + '_' + Math.floor(Math.random() * 1000).toString().padStart(3, '0') }}",
+              "type": "string"
+            },
+            {
+              "id": "response-003",
+              "name": "status",
+              "value": "campaign_scheduled",
+              "type": "string"
+            },
+            {
+              "id": "response-004",
+              "name": "platform_strategies",
+              "value": "={{ $json.platform_strategies || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "response-005",
+              "name": "content_calendar",
+              "value": "={{ $json.content_calendar || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "response-006",
+              "name": "projected_results",
+              "value": "={{ $json.projected_results || {total_reach: 150000, engagement_rate: 0.055, roi_estimate: 12.5} }}",
+              "type": "object"
+            },
+            {
+              "id": "response-007",
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prep-response-001",
+      "name": "Prepare Social Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1968, 448]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "platform-feedback",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "feedback-webhook-001",
+      "name": "Platform Feedback Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [320, 832],
+      "webhookId": "platform-feedback-001"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "feedback-001",
+              "name": "platform",
+              "value": "={{ $json.platform }}",
+              "type": "string"
+            },
+            {
+              "id": "feedback-002",
+              "name": "metrics",
+              "value": "={{ $json.metrics }}",
+              "type": "object"
+            },
+            {
+              "id": "feedback-003",
+              "name": "timestamp",
+              "value": "={{ $json.timestamp || $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "process-feedback-001",
+      "name": "Process Platform Feedback",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [576, 1024]
+    },
+    {
+      "parameters": {
+        "description": "Report consolidated metrics to Marketing Director",
+        "workflowId": {
+          "__rl": true,
+          "value": "MarketingDirectorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Marketing Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "report_type": "={{ 'social_performance_report' }}",
+            "metrics": "={{ $json.consolidated_metrics }}",
+            "recommendations": "={{ $json.recommendations }}",
+            "period": "={{ $json.reporting_period }}"
+          }
+        }
+      },
+      "id": "report-marketing-001",
+      "name": "Report to Marketing Director",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [768, 1152]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "respond-001",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [2240, 448]
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Media Director Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Agent Input": {
+      "main": [
+        [
+          {
+            "node": "Social Media Director Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Social Media Director Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Social Media Director Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Media Knowledge Base": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Social Media Knowledge Base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Analytics MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinterest MCP Server": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postiz MCP Server": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase MCP Server": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SendGrid MCP Server": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Media Director Prompts MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Media Director Resources MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Instagram Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinterest Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Scheduler Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Analytics Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Writer Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Media Director Agent": {
+      "main": [
+        [
+          {
+            "node": "Route Response Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Response Type": {
+      "main": [
+        [
+          {
+            "node": "Format Chat Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Approval Required?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Approval Required?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Chat Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approval Required?": {
+      "main": [
+        [
+          {
+            "node": "Wait for Social Approval",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Social Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Social Approval": {
+      "main": [
+        [
+          {
+            "node": "Prepare Social Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Social Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Platform Feedback Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process Platform Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Platform Feedback": {
+      "main": [
+        [
+          {
+            "node": "Report to Marketing Director",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "tags": [
+    {
+      "id": "mcp-agent",
+      "name": "Agent"
+    },
+    {
+      "id": "social-media",
+      "name": "Social Media"
+    },
+    {
+      "id": "director",
+      "name": "Director"
+    }
+  ],
+  "triggerCount": 4,
+  "updatedAt": "2025-08-18T21:00:00.000Z",
+  "id": "SocialMediaDirector001"
+}

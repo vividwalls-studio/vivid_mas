@@ -1,0 +1,53 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Testing Twenty CRM MCP Server ==='\r"
+        expect "root@*"
+        
+        # Check if MCP server exists
+        send "echo '\n1. Checking MCP server location:'\r"
+        expect "root@*"
+        send "ls -la /opt/mcp-servers/core/twenty-mcp-server/\r"
+        expect "root@*"
+        
+        # Check configuration
+        send "echo '\n2. Checking Twenty MCP configuration:'\r"
+        expect "root@*"
+        send "cat /opt/mcp-servers/core/twenty-mcp-server/.env 2>/dev/null || echo 'No .env file found'\r"
+        expect "root@*"
+        
+        # Test the MCP server directly
+        send "echo '\n3. Testing MCP server startup:'\r"
+        expect "root@*"
+        send "cd /opt/mcp-servers/core/twenty-mcp-server && npm run build 2>&1 | tail -10\r"
+        expect "root@*"
+        
+        # Check if the server can start
+        send "echo '\n4. Testing server execution:'\r"
+        expect "root@*"
+        send "cd /opt/mcp-servers/core/twenty-mcp-server && timeout 5 node build/index.js 2>&1 || echo 'Server test complete'\r"
+        expect "root@*"
+        
+        # Check Twenty CRM API endpoint
+        send "echo '\n5. Testing Twenty CRM API endpoint:'\r"
+        expect "root@*"
+        send "curl -s -o /dev/null -w '%{http_code}' https://crm.vividwalls.blog/api || echo ' - API endpoint check'\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

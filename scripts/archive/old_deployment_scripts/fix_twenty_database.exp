@@ -1,0 +1,191 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Fix Twenty docker-compose.yml
+send "cd /root/twenty-crm\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+send "echo '=== Fixing Twenty docker-compose.yml ==='\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+# Create fixed docker-compose.yml
+send "cat > docker-compose.yml << 'EOF'\r"
+expect "> "
+send "version: '3.8'\r"
+expect "> "
+send "\r"
+expect "> "
+send "services:\r"
+expect "> "
+send "  server:\r"
+expect "> "
+send "    image: twentycrm/twenty:latest\r"
+expect "> "
+send "    ports:\r"
+expect "> "
+send "      - \"3010:3000\"\r"
+expect "> "
+send "    environment:\r"
+expect "> "
+send "      - PORT=3000\r"
+expect "> "
+send "      - PG_DATABASE_URL=postgres://twenty:twenty@db:5432/twenty\r"
+expect "> "
+send "      - REDIS_URL=redis://redis:6379\r"
+expect "> "
+send "      - ENABLE_DB_MIGRATIONS=true\r"
+expect "> "
+send "      - SIGN_IN_PREFILLED=true\r"
+expect "> "
+send "      - STORAGE_TYPE=local\r"
+expect "> "
+send "      - STORAGE_LOCAL_PATH=.local-storage\r"
+expect "> "
+send "      - ACCESS_TOKEN_SECRET=replace_me_with_a_random_string\r"
+expect "> "
+send "      - LOGIN_TOKEN_SECRET=replace_me_with_a_random_string\r"
+expect "> "
+send "      - REFRESH_TOKEN_SECRET=replace_me_with_a_random_string\r"
+expect "> "
+send "      - FILE_TOKEN_SECRET=replace_me_with_a_random_string\r"
+expect "> "
+send "    depends_on:\r"
+expect "> "
+send "      db:\r"
+expect "> "
+send "        condition: service_healthy\r"
+expect "> "
+send "      redis:\r"
+expect "> "
+send "        condition: service_started\r"
+expect "> "
+send "    healthcheck:\r"
+expect "> "
+send "      test: \[\"CMD\", \"curl\", \"-f\", \"http://localhost:3000/healthz\"\]\r"
+expect "> "
+send "      interval: 10s\r"
+expect "> "
+send "      timeout: 3s\r"
+expect "> "
+send "      retries: 10\r"
+expect "> "
+send "    volumes:\r"
+expect "> "
+send "      - twenty_storage:/app/.local-storage\r"
+expect "> "
+send "\r"
+expect "> "
+send "  db:\r"
+expect "> "
+send "    image: postgres:16\r"
+expect "> "
+send "    environment:\r"
+expect "> "
+send "      - POSTGRES_USER=twenty\r"
+expect "> "
+send "      - POSTGRES_PASSWORD=twenty\r"
+expect "> "
+send "      - POSTGRES_DB=twenty\r"
+expect "> "
+send "    volumes:\r"
+expect "> "
+send "      - twenty_db_data:/var/lib/postgresql/data\r"
+expect "> "
+send "    healthcheck:\r"
+expect "> "
+send "      test: \[\"CMD-SHELL\", \"pg_isready -U twenty\"\]\r"
+expect "> "
+send "      interval: 10s\r"
+expect "> "
+send "      timeout: 3s\r"
+expect "> "
+send "      retries: 10\r"
+expect "> "
+send "\r"
+expect "> "
+send "  redis:\r"
+expect "> "
+send "    image: redis\r"
+expect "> "
+send "    command: redis-server --save 60 1 --loglevel warning\r"
+expect "> "
+send "    volumes:\r"
+expect "> "
+send "      - twenty_redis_data:/data\r"
+expect "> "
+send "\r"
+expect "> "
+send "volumes:\r"
+expect "> "
+send "  twenty_db_data:\r"
+expect "> "
+send "  twenty_redis_data:\r"
+expect "> "
+send "  twenty_storage:\r"
+expect "> "
+send "EOF\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+# Stop and remove all containers
+send "echo '\n=== Stopping and removing all Twenty containers ==='\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+send "docker-compose down -v\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+# Start Twenty CRM fresh
+send "echo '\n=== Starting Twenty CRM fresh on port 3010 ==='\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+send "docker-compose up -d\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+# Wait for containers to start
+send "sleep 20\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+# Check status
+send "echo '\n=== Checking Twenty CRM status ==='\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+send "docker-compose ps\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+# Check port
+send "echo '\n=== Checking port 3010 ==='\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+send "docker ps | grep 3010\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+# Check Caddyfile and reload
+send "echo '\n=== Checking Caddyfile ==='\r"
+expect "root@VividWalls-Studio-MAS:~/twenty-crm#"
+
+send "cd /root/vivid_mas\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+send "tail -5 Caddyfile\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+send "docker exec caddy caddy reload --config /etc/caddy/Caddyfile\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+# Exit
+send "exit\r"
+expect eof

@@ -1,0 +1,29 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect "Enter passphrase for key*"
+send "freedom\r"
+
+# Wait for prompt
+expect "root@*"
+
+# Check Caddy logs
+send "docker logs caddy --tail=20\r"
+expect "root@*"
+
+# Check if crm.vividwalls.blog is in the Caddyfile
+send "cd /home/vivid/vivid_mas && grep -n 'crm.vividwalls.blog' Caddyfile\r"
+expect "root@*"
+
+# Test local connection
+send "curl -I http://localhost:3000\r"
+expect "root@*"
+
+# Exit
+send "exit\r"
+expect eof

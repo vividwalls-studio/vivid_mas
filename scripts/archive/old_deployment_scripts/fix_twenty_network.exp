@@ -1,0 +1,65 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Fixing Twenty Network Configuration ==='\r"
+        expect "root@*"
+        
+        send "cd /opt/twenty/packages/twenty-docker\r"
+        expect "root@*"
+        
+        # Remove the existing twenty_default network
+        send "docker network rm twenty_default 2>/dev/null || echo 'Network already removed'\r"
+        expect "root@*"
+        
+        # Update docker-compose to use vivid_mas network
+        send "echo '\nUpdating docker-compose to use vivid_mas network...'\r"
+        expect "root@*"
+        
+        # Add network configuration to docker-compose.override.yml
+        send "cat > docker-compose.override.yml << 'EOF'\r"
+        send "networks:\r"
+        send "  default:\r"
+        send "    name: vivid_mas\r"
+        send "    external: true\r"
+        send "EOF\r"
+        expect "root@*"
+        
+        # Now start the containers
+        send "echo '\nStarting Twenty CRM on vivid_mas network...'\r"
+        expect "root@*"
+        send "docker-compose up -d\r"
+        expect "root@*"
+        
+        # Wait for containers to start
+        send "sleep 20\r"
+        expect "root@*"
+        
+        # Check status
+        send "echo '\n=== Twenty CRM Status ==='\r"
+        expect "root@*"
+        send "docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Networks}}' | grep twenty\r"
+        expect "root@*"
+        
+        # Check logs
+        send "echo '\n=== Twenty Server Startup Logs ==='\r"
+        expect "root@*"
+        send "docker logs twenty-server-1 --tail 20 2>&1\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

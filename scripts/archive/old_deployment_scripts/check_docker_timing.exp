@@ -1,0 +1,50 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+expect {
+    "Enter passphrase for key*" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@*" {
+        send "echo '=== Container Creation Times ==='\r"
+        expect "root@*"
+        
+        send "docker ps -a --format 'table {{.Names}}\t{{.CreatedAt}}\t{{.Status}}' | grep -E 'postgres|langfuse|twenty|searxng' | head -20\r"
+        expect "root@*"
+        
+        send "echo '\n=== System Journal - Docker Service ==='\r"
+        expect "root@*"
+        
+        send "journalctl -u docker --since '2025-07-02' | grep -E 'postgres|5433|port.*already' | tail -30\r"
+        expect "root@*"
+        
+        send "echo '\n=== Docker Events - Container Start/Stop ==='\r"
+        expect "root@*"
+        
+        send "docker events --since '20h' --until '1s' --filter event=start --filter event=die | grep -E 'postgres|langfuse|twenty|searxng' | tail -20\r"
+        expect "root@*"
+        
+        send "echo '\n=== When containers were created ==='\r"
+        expect "root@*"
+        
+        send "docker inspect vivid_mas-postgres-1 postgres | grep -E 'Created|StartedAt' | head -10\r"
+        expect "root@*"
+        
+        send "echo '\n=== Check docker-compose.yml on server ==='\r"
+        expect "root@*"
+        
+        send "grep -n 'DB_POSTGRESDB_HOST' /root/vivid_mas/docker-compose.yml\r"
+        expect "root@*"
+        
+        send "exit\r"
+        expect eof
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}

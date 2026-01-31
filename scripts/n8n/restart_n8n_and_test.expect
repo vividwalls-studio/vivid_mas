@@ -1,0 +1,175 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+puts "Connecting to DigitalOcean droplet..."
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        puts "\nConnected successfully!"
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}
+
+# Check disk space after cleanup
+puts "\nChecking disk space..."
+send "df -h / | grep vda1\r"
+expect "root@*"
+
+# Restart n8n to reload webhooks
+puts "\nRestarting n8n container..."
+send "cd /root/vivid_mas && docker-compose restart n8n\r"
+expect "root@*"
+
+# Wait for n8n to start
+puts "\nWaiting for n8n to start..."
+send "sleep 10\r"
+expect "root@*"
+
+# Check n8n status
+send "docker ps | grep n8n\r"
+expect "root@*"
+
+# Check active workflows in database
+puts "\nChecking active workflows..."
+send "docker exec postgres psql -U postgres -d postgres -t -c \"SELECT name, active FROM workflow_entity WHERE active = true;\" 2>&1\r"
+expect "root@*"
+
+# Test the agent-hub webhook
+puts "\nTesting agent-hub webhook..."
+send "curl -X POST http://localhost:5678/webhook/agent-hub \\\r"
+send "  -H 'Content-Type: application/json' \\\r"
+send "  -d '{\"agent\":\"business-manager\",\"action\":\"test\"}' 2>&1\r"
+expect "root@*"
+
+# Check n8n logs for webhook registration
+puts "\nChecking n8n logs..."
+send "docker logs n8n --tail 20 2>&1 | grep -i 'webhook\\|registered\\|started' | tail -10\r"
+expect "root@*"
+
+# Create updated test page
+puts "\nCreating updated test page..."
+send "cat > /var/www/test/agent-hub-test.html << 'EOF'\r"
+send {<!DOCTYPE html>
+<html>
+<head>
+    <title>Agent Hub Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+        .agent-select { margin: 20px 0; }
+        select, button { padding: 10px; margin: 5px; font-size: 16px; }
+        button { background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #5a67d8; }
+        #result { margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 4px; white-space: pre-wrap; font-family: monospace; min-height: 100px; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 VividWalls Agent Hub Testing</h1>
+        
+        <div class="agent-select">
+            <select id="agentSelect">
+                <option value="business-manager">Business Manager</option>
+                <option value="marketing-director">Marketing Director</option>
+                <option value="social-media">Social Media Director</option>
+                <option value="data-analytics">Data Analytics</option>
+                <option value="sales">Sales Agent</option>
+            </select>
+            <button onclick="testAgent()">Test Agent Webhook</button>
+        </div>
+        
+        <div id="result">Ready to test...</div>
+    </div>
+    
+    <script>
+        async function testAgent() {
+            const agent = document.getElementById('agentSelect').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = `Testing ${agent}...\n`;
+            
+            const payload = {
+                agent: agent,
+                action: 'test',
+                timestamp: new Date().toISOString(),
+                request: `Frontend test for ${agent}`
+            };
+            
+            try {
+                // Try multiple endpoints
+                const endpoints = [
+                    'https://n8n.vividwalls.blog/webhook/agent-hub',
+                    'https://n8n.vividwalls.blog/webhook/F6Atigcod1nIYAw1',
+                    `https://n8n.vividwalls.blog/webhook/${agent}`
+                ];
+                
+                let success = false;
+                for (const url of endpoints) {
+                    resultDiv.innerHTML += `\nTrying: ${url}\n`;
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    const text = await response.text();
+                    
+                    if (response.ok) {
+                        resultDiv.innerHTML += `<span class="success">✓ SUCCESS at ${url}</span>\n`;
+                        resultDiv.innerHTML += `Response: ${text}\n`;
+                        success = true;
+                        break;
+                    } else {
+                        resultDiv.innerHTML += `<span class="error">✗ Failed (${response.status})</span>\n`;
+                    }
+                }
+                
+                if (!success) {
+                    resultDiv.innerHTML += '\n<span class="error">All endpoints failed. Check n8n configuration.</span>';
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<span class="error">Error: ${error.message}</span>`;
+            }
+        }
+        
+        // Test on load
+        window.onload = () => {
+            console.log('Agent Hub Test Page Loaded');
+        };
+    </script>
+</body>
+</html>}
+send "\rEOF\r"
+expect "root@*"
+
+puts "\n\nTest page available at:"
+puts "  http://157.230.13.13:8888/agent-hub-test.html"
+puts "\nDirect webhook endpoints:"
+puts "  https://n8n.vividwalls.blog/webhook/agent-hub"
+puts "  https://n8n.vividwalls.blog/webhook/F6Atigcod1nIYAw1"
+
+send "exit\r"
+expect eof

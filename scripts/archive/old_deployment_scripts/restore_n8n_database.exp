@@ -1,0 +1,84 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Stop n8n
+send "echo '=== Stopping n8n to restore database ==='\r"
+expect "# "
+send "docker compose stop n8n\r"
+expect "# "
+
+# Copy database from localai_n8n_storage to vivid_mas_n8n_storage
+send "echo '=== Copying database from localai_n8n_storage to current n8n volume ==='\r"
+expect "# "
+send "docker run --rm -v localai_n8n_storage:/source -v vivid_mas_n8n_storage:/target alpine cp /source/database.sqlite /target/database.sqlite\r"
+expect "# "
+
+# Set proper permissions
+send "echo '=== Setting proper permissions ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine chown 1000:1000 /data/database.sqlite\r"
+expect "# "
+
+# Verify the copy
+send "echo '=== Verifying database copy ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine ls -lh /data/database.sqlite\r"
+expect "# "
+
+# Start n8n
+send "echo '=== Starting n8n with restored database ==='\r"
+expect "# "
+send "docker compose up -d n8n\r"
+expect "# "
+
+# Wait for n8n to start
+send "echo 'Waiting for n8n to start...'\r"
+expect "# "
+send "sleep 30\r"
+expect "# "
+
+# Check n8n status
+send "echo '=== Checking n8n status ==='\r"
+expect "# "
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Check logs
+send "echo '=== Checking n8n logs ==='\r"
+expect "# "
+send "docker logs n8n --tail 20 2>&1 | grep -E 'Initializing|ready|accessible|started|error|workflows' | tail -10\r"
+expect "# "
+
+# Try to count workflows via API
+send "echo '=== Testing n8n API to count workflows ==='\r"
+expect "# "
+send "curl -s http://localhost:5678/api/v1/workflows | python3 -c \"import sys, json; data = json.load(sys.stdin); print(f'Total workflows: {len(data.get(\\\"data\\\", []))}')\" 2>&1 || echo 'API not ready yet'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

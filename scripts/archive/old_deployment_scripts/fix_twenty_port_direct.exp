@@ -1,0 +1,49 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Stop Twenty using docker directly
+send "echo '=== Stopping Twenty CRM containers ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker stop twenty-server-1 twenty-redis-1 twenty-db-1\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker rm twenty-server-1 twenty-redis-1 twenty-db-1\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Find Twenty compose file in vivid_mas
+send "echo '\n=== Looking for Twenty compose file ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cd /root/vivid_mas\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+send "ls -la | grep -i twenty || echo 'No twenty files found'\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+# Check if Twenty is in main docker-compose.yml
+send "grep -n 'twentycrm\\|twenty:' docker-compose.yml | head -10 || echo 'Twenty not in main compose'\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+# Check for separate Twenty compose files
+send "ls -la docker-compose.twenty.yml docker-compose-twenty.yml twenty-docker-compose.yml 2>/dev/null || echo 'No separate Twenty compose file'\r"
+expect "root@VividWalls-Studio-MAS:/root/vivid_mas#"
+
+# Exit
+send "exit\r"
+expect eof

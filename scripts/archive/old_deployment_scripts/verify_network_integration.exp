@@ -1,0 +1,70 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect "Enter passphrase for key*"
+send "freedom\r"
+
+# Wait for prompt
+expect "root@*"
+
+# Connect Caddy to vivid_mas network if not already connected
+send "docker network connect vivid_mas caddy 2>/dev/null || echo 'Caddy already connected'\r"
+expect "root@*"
+
+# List all containers on vivid_mas network
+send "docker network inspect vivid_mas --format '{{range .Containers}}{{.Name}} {{end}}' | tr ' ' '\\n' | sort | grep -E '(twenty|n8n|supabase|caddy)'\r"
+expect "root@*"
+
+# Test connectivity from Twenty to other MAS services
+send "echo '=== Testing Twenty CRM Network Connectivity ==='\r"
+expect "root@*"
+
+# Test n8n webhook access from Twenty
+send "docker exec twenty-server-1 wget -qO- --spider http://n8n:5678 2>&1 | head -1\r"
+expect "root@*"
+
+# Test if Twenty can be accessed by n8n
+send "docker exec n8n wget -qO- --spider http://twenty-server-1:3000 2>&1 | head -1\r"
+expect "root@*"
+
+# Check if other services can reach Twenty through its hostname
+send "docker exec caddy wget -qO- --spider http://twenty-server-1:3000 2>&1 | head -1\r"
+expect "root@*"
+
+# Create a docker-compose override to persist the network configuration
+send "cd /opt/twenty/packages/twenty-docker\r"
+expect "root@*"
+
+send "cat > docker-compose.override.yml << 'EOF'
+services:
+  server:
+    networks:
+      - default
+      - vivid_mas_network
+  db:
+    networks:
+      - default
+      - vivid_mas_network
+  redis:
+    networks:
+      - default
+      - vivid_mas_network
+
+networks:
+  vivid_mas_network:
+    external: true
+    name: vivid_mas
+EOF\r"
+expect "root@*"
+
+send "echo 'Network integration complete!'\r"
+expect "root@*"
+
+# Exit
+send "exit\r"
+expect eof

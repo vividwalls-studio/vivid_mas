@@ -1,0 +1,37 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i ~/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect "Enter passphrase for key*"
+send "freedom\r"
+
+# Wait for prompt
+expect "root@*"
+
+# Reload Caddy configuration
+send "cd /home/vivid/vivid_mas\r"
+expect "root@*"
+
+# Force Caddy to reload its configuration
+send "docker exec caddy caddy reload --config /etc/caddy/Caddyfile\r"
+expect "root@*"
+
+# Wait a moment
+send "sleep 3\r"
+expect "root@*"
+
+# Check if certificate is being obtained
+send "docker logs caddy --tail=10 | grep -i crm\r"
+expect "root@*"
+
+# Test HTTPS locally
+send "curl -I https://crm.vividwalls.blog\r"
+expect "root@*"
+
+# Exit
+send "exit\r"
+expect eof

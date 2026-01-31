@@ -1,0 +1,88 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Stop n8n
+send "echo '=== Stopping n8n ==='\r"
+expect "# "
+send "docker compose stop n8n\r"
+expect "# "
+
+# Check for any newly created n8n databases in postgres
+send "echo '=== Checking for multiple n8n databases ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -c \"SELECT datname FROM pg_database WHERE datname LIKE '%n8n%';\"\r"
+expect "# "
+
+# Check for n8n tables in default postgres database
+send "echo '=== Listing all tables in postgres database ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;\" | grep -E 'workflow|execution|credentials' | head -20\r"
+expect "# "
+
+# Remove any SQLite databases from n8n volume
+send "echo '=== Removing any SQLite databases from n8n volume ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine find /data -name '*.sqlite' -delete\r"
+expect "# "
+
+# Check if n8n created new database files
+send "echo '=== Checking n8n volume for new database files ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine find /data -type f -name 'database*' -o -name '*.db' -o -name '*.sqlite' | head -10\r"
+expect "# "
+
+# Ensure n8n uses existing postgres database with correct password
+send "echo '=== Checking postgres password in .env ==='\r"
+expect "# "
+send "grep POSTGRES_PASSWORD .env\r"
+expect "# "
+
+# Start n8n with explicit database connection
+send "echo '=== Starting n8n with explicit database connection ==='\r"
+expect "# "
+send "docker compose up -d n8n\r"
+expect "# "
+
+# Wait a bit
+send "sleep 20\r"
+expect "# "
+
+# Check n8n logs for database initialization
+send "echo '=== Checking n8n startup logs ==='\r"
+expect "# "
+send "docker logs n8n 2>&1 | grep -i 'database\\|table\\|migration\\|postgres' | head -20\r"
+expect "# "
+
+# Verify workflow count
+send "echo '=== Verifying workflow count in database ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c 'SELECT COUNT(*) as workflows FROM workflow_entity;'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

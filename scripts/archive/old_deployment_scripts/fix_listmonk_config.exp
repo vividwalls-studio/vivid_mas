@@ -1,0 +1,74 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Check the config file
+send "echo '=== ListMonk Config File ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cat /opt/mcp-servers/listmonk-email-marketing/config/listmonk.toml | grep -A 5 -B 5 'host\\|postgres' | head -20\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check if we need to update the config
+send "echo '\n=== Current Database Host Setting ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "grep 'host.*=' /opt/mcp-servers/listmonk-email-marketing/config/listmonk.toml\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Create a backup of the config
+send "echo '\n=== Creating Config Backup ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cp /opt/mcp-servers/listmonk-email-marketing/config/listmonk.toml /opt/mcp-servers/listmonk-email-marketing/config/listmonk.toml.backup\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Fix the config to point to the postgres container
+send "echo '\n=== Fixing Database Host ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "sed -i 's/host = \"localhost\"/host = \"listmonk-postgres\"/' /opt/mcp-servers/listmonk-email-marketing/config/listmonk.toml\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Verify the change
+send "echo '\n=== Verifying Config Change ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "grep 'host.*=' /opt/mcp-servers/listmonk-email-marketing/config/listmonk.toml\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Restart the ListMonk container
+send "echo '\n=== Restarting ListMonk Container ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker restart listmonk\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Wait for it to start
+send "sleep 5\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check if it's now running
+send "echo '\n=== Checking ListMonk Status ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker ps | grep listmonk\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

@@ -1,0 +1,77 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+puts "Restarting n8n with stable version..."
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        puts "\nConnected successfully!"
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}
+
+# Remove any failed containers
+send "docker rm -f n8n 2>/dev/null\r"
+expect "root@*"
+
+# Check disk space
+send "df -h / | grep vda1\r"
+expect "root@*"
+
+# Start n8n with the image that was working before
+puts "\nStarting n8n..."
+send "docker run -d --name n8n \\\r"
+send "  --network vivid_mas \\\r"
+send "  -p 5678:5678 \\\r"
+send "  -e DB_TYPE=postgresdb \\\r"
+send "  -e DB_POSTGRESDB_HOST=postgres \\\r"
+send "  -e DB_POSTGRESDB_PORT=5432 \\\r"
+send "  -e DB_POSTGRESDB_DATABASE=postgres \\\r"
+send "  -e DB_POSTGRESDB_USER=postgres \\\r"
+send "  -e DB_POSTGRESDB_PASSWORD=myqP9lSMLobnuIfkUpXQzZg07 \\\r"
+send "  -e N8N_ENCRYPTION_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZDAxYzZjZC1lNjY5LTQ4YWQtYTY5ZS1mMDU0YTY4NjU1YzQiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzUwNDQ5MzEzfQ.uBJrDT3a0pQdA5hA28Zf5egmhFLryv8DUNLvsoleXcs \\\r"
+send "  -e N8N_HOST=n8n.vividwalls.blog \\\r"
+send "  -e N8N_PORT=5678 \\\r"
+send "  -e N8N_PROTOCOL=https \\\r"
+send "  -e WEBHOOK_URL=https://n8n.vividwalls.blog/ \\\r"
+send "  -e GENERIC_TIMEZONE=America/New_York \\\r"
+send "  -v vivid_mas_n8n_storage:/home/node/.n8n \\\r"
+send "  -v /opt/mcp-servers:/opt/mcp-servers:ro \\\r"
+send "  --restart unless-stopped \\\r"
+send "  docker.n8n.io/n8nio/n8n:latest\r"
+expect "root@*"
+
+# Wait for startup
+send "sleep 15\r"
+expect "root@*"
+
+# Check status
+send "docker ps | grep n8n\r"
+expect "root@*"
+
+# Check logs
+send "docker logs n8n --tail 10 2>&1\r"
+expect "root@*"
+
+puts "\nn8n restart attempted!"
+
+send "exit\r"
+expect eof

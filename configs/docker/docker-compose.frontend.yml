@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  # =============================================================================
+  # VividWalls MAS Frontend Application
+  # =============================================================================
+  vivid-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: vividwalls/mas-frontend:latest
+    container_name: vivid-frontend
+    restart: unless-stopped
+    ports:
+      - "3003:3000"
+    environment:
+      # Application Environment
+      - NODE_ENV=production
+      - PORT=3000
+      
+      # API Endpoints
+      - NEXT_PUBLIC_N8N_URL=https://n8n.vividwalls.blog
+      - NEXT_PUBLIC_SUPABASE_URL=https://supabase.vividwalls.blog
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - NEXT_PUBLIC_API_URL=https://api.vividwalls.blog
+      - NEXT_PUBLIC_WEBSOCKET_URL=wss://ws.vividwalls.blog
+      
+      # Feature Flags
+      - NEXT_PUBLIC_ENABLE_AUTH=true
+      - NEXT_PUBLIC_ENABLE_REALTIME=true
+      - NEXT_PUBLIC_ENABLE_ANALYTICS=true
+      
+      # Telemetry
+      - NEXT_TELEMETRY_DISABLED=1
+    volumes:
+      # Mount source code for development (remove in production)
+      # - ./frontend:/app
+      # Persist Next.js cache
+      - frontend_cache:/app/.next/cache
+      # Persist node_modules (for faster rebuilds)
+      - frontend_modules:/app/node_modules
+    networks:
+      - vivid_mas
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "com.vividwalls.service=frontend"
+      - "com.vividwalls.description=VividWalls MAS Frontend Application"
+      - "traefik.enable=false"  # We're using Caddy instead
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # =============================================================================
+  # API Gateway (Optional - for backend integration)
+  # =============================================================================
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    image: vividwalls/mas-api-gateway:latest
+    container_name: vivid-api-gateway
+    restart: unless-stopped
+    ports:
+      - "3004:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      
+      # Service URLs (internal network)
+      - N8N_URL=http://n8n:5678
+      - SUPABASE_URL=http://supabase-kong:8000
+      - POSTGRES_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres
+      
+      # Authentication
+      - JWT_SECRET=${JWT_SECRET}
+      - SESSION_SECRET=${SESSION_SECRET}
+      
+      # Redis for caching/sessions
+      - REDIS_URL=redis://redis:6379
+      
+      # Rate Limiting
+      - RATE_LIMIT_WINDOW=15m
+      - RATE_LIMIT_MAX=100
+    networks:
+      - vivid_mas
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.vividwalls.service=api-gateway"
+      - "com.vividwalls.description=API Gateway for frontend-backend communication"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  frontend_cache:
+    name: vivid_mas_frontend_cache
+  frontend_modules:
+    name: vivid_mas_frontend_modules
+
+networks:
+  vivid_mas:
+    external: true

@@ -1,0 +1,158 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+puts "========================================="
+puts "SAFE n8n Restart - Preserving ALL Data"
+puts "========================================="
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        puts "\nConnected successfully!"
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}
+
+# Navigate to project directory
+send "cd /root/vivid_mas\r"
+expect "root@*"
+
+# CRITICAL: Verify database before doing anything
+puts "\n1. VERIFYING DATABASE CONNECTION..."
+puts "   Checking workflow count in PostgreSQL..."
+send "docker exec postgres psql -U postgres -d postgres -t -c 'SELECT COUNT(*) FROM workflow_entity;' 2>&1\r"
+expect "root@*"
+
+# Check current n8n status
+puts "\n2. Checking current n8n status..."
+send "docker ps -a | grep n8n\r"
+expect "root@*"
+
+# Check disk space
+puts "\n3. Checking disk space..."
+send "df -h / | grep vda1\r"
+expect "root@*"
+
+# CRITICAL: Backup current state
+puts "\n4. Creating safety backup..."
+set backup_date [clock format [clock seconds] -format "%Y%m%d_%H%M%S"]
+send "mkdir -p /root/backups/n8n-safety-$backup_date\r"
+expect "root@*"
+
+# Backup workflows from database
+send "docker exec postgres pg_dump -U postgres -d postgres -t workflow_entity > /root/backups/n8n-safety-$backup_date/workflows.sql\r"
+expect "root@*"
+
+# Backup credentials from database
+send "docker exec postgres pg_dump -U postgres -d postgres -t credentials_entity > /root/backups/n8n-safety-$backup_date/credentials.sql\r"
+expect "root@*"
+
+# Verify backup
+send "ls -la /root/backups/n8n-safety-$backup_date/\r"
+expect "root@*"
+
+# Check if n8n container exists
+puts "\n5. Checking n8n container..."
+send "docker inspect n8n >/dev/null 2>&1 && echo 'EXISTS' || echo 'NOT_EXISTS'\r"
+expect {
+    "EXISTS" {
+        puts "   Container exists, will stop and remove it..."
+        send "docker stop n8n\r"
+        expect "root@*"
+        send "docker rm n8n\r"
+        expect "root@*"
+    }
+    "NOT_EXISTS" {
+        puts "   No existing container to remove"
+    }
+}
+
+# Clean up any disk space issues
+puts "\n6. Cleaning up disk space if needed..."
+send "docker system prune -f\r"
+expect "root@*"
+
+# CRITICAL: Use docker-compose to maintain all settings
+puts "\n7. Starting n8n using docker-compose (preserves all settings)..."
+send "docker-compose up -d n8n\r"
+expect -timeout 60 "root@*"
+
+# Wait for n8n to fully start
+puts "\n8. Waiting for n8n to initialize..."
+send "sleep 30\r"
+expect "root@*"
+
+# Verify n8n is running
+puts "\n9. Verifying n8n is running..."
+send "docker ps | grep n8n\r"
+expect "root@*"
+
+# Check n8n logs for errors
+puts "\n10. Checking n8n logs..."
+send "docker logs n8n --tail 30 2>&1 | grep -E 'started|error|Error|failed|Failed'\r"
+expect "root@*"
+
+# CRITICAL: Verify database connection
+puts "\n11. VERIFYING DATABASE CONNECTION..."
+send "docker logs n8n 2>&1 | grep -E 'database|Database|postgres|connected' | tail -5\r"
+expect "root@*"
+
+# CRITICAL: Verify workflows are still there
+puts "\n12. VERIFYING WORKFLOWS ARE INTACT..."
+send "docker exec postgres psql -U postgres -d postgres -t -c 'SELECT COUNT(*) FROM workflow_entity;' 2>&1\r"
+expect "root@*"
+
+# Check active workflows
+puts "\n13. Checking active workflows..."
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT name, active FROM workflow_entity WHERE active = true LIMIT 10;\"\r"
+expect "root@*"
+
+# Test n8n health endpoint
+puts "\n14. Testing n8n health endpoint..."
+send "curl -s http://localhost:5678/healthz || echo 'HEALTH_CHECK_FAILED'\r"
+expect "root@*"
+
+# Check n8n version
+puts "\n15. Checking n8n version..."
+send "docker exec n8n n8n --version 2>&1 || echo 'VERSION_CHECK_FAILED'\r"
+expect "root@*"
+
+# Test webhook endpoint
+puts "\n16. Testing webhook functionality..."
+send "curl -X POST http://localhost:5678/webhook-test/test -H 'Content-Type: application/json' -d '{\"test\":true}' 2>&1 | head -20\r"
+expect "root@*"
+
+# Final status check
+puts "\n17. Final status check..."
+send "docker ps | grep n8n\r"
+expect "root@*"
+
+puts "\n========================================="
+puts "SAFE n8n RESTART COMPLETE!"
+puts "========================================="
+puts "Backup location: /root/backups/n8n-safety-$backup_date/"
+puts "Access n8n at: https://n8n.vividwalls.blog"
+puts ""
+puts "IMPORTANT: Verify your workflows are working at:"
+puts "https://n8n.vividwalls.blog"
+puts "========================================="
+
+send "exit\r"
+expect eof

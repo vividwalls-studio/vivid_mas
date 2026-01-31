@@ -1,0 +1,129 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+puts "========================================="
+puts "CRITICAL: Clean Containerd & Start n8n"
+puts "========================================="
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        puts "\nConnected successfully!"
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}
+
+puts "\n1. Checking /run/containerd usage..."
+send "df -h /run\r"
+expect "root@*"
+
+send "du -sh /run/containerd 2>/dev/null\r"
+expect "root@*"
+
+puts "\n2. Stopping Docker service to clean containerd..."
+send "systemctl stop docker\r"
+expect "root@*"
+
+puts "\n3. Cleaning containerd runtime directories..."
+send "rm -rf /run/containerd/io.containerd.runtime.v2.task/*\r"
+expect "root@*"
+
+send "rm -rf /run/containerd/io.containerd.grpc.v1.cri/sandboxes/*\r"
+expect "root@*"
+
+send "rm -rf /run/containerd/runc/*\r"
+expect "root@*"
+
+send "rm -rf /run/docker/runtime-runc/*\r"
+expect "root@*"
+
+puts "\n4. Cleaning Docker runtime..."
+send "rm -rf /var/run/docker/runtime-runc/moby/*\r"
+expect "root@*"
+
+puts "\n5. Starting Docker service..."
+send "systemctl start docker\r"
+expect "root@*"
+
+send "sleep 5\r"
+expect "root@*"
+
+puts "\n6. Checking space after cleanup..."
+send "df -h /run\r"
+expect "root@*"
+
+puts "\n7. Removing old n8n container..."
+send "docker rm -f n8n 2>/dev/null || true\r"
+expect "root@*"
+
+puts "\n8. Loading environment variables..."
+send "cd /root/vivid_mas\r"
+expect "root@*"
+send "source .env\r"
+expect "root@*"
+
+puts "\n9. Starting n8n container..."
+send "docker run -d --name n8n \\\r"
+send "  --network vivid_mas \\\r"
+send "  -p 5678:5678 \\\r"
+send "  -e DB_TYPE=postgresdb \\\r"
+send "  -e DB_POSTGRESDB_HOST=postgres \\\r"
+send "  -e DB_POSTGRESDB_PORT=5432 \\\r"
+send "  -e DB_POSTGRESDB_DATABASE=postgres \\\r"
+send "  -e DB_POSTGRESDB_USER=postgres \\\r"
+send "  -e DB_POSTGRESDB_PASSWORD=\"\$POSTGRES_PASSWORD\" \\\r"
+send "  -e N8N_ENCRYPTION_KEY=\"\$N8N_ENCRYPTION_KEY\" \\\r"
+send "  -e N8N_HOST=n8n.vividwalls.blog \\\r"
+send "  -e N8N_PORT=5678 \\\r"
+send "  -e N8N_PROTOCOL=https \\\r"
+send "  -e WEBHOOK_URL=https://n8n.vividwalls.blog/ \\\r"
+send "  -e GENERIC_TIMEZONE=America/New_York \\\r"
+send "  -v vivid_mas_n8n_storage:/home/node/.n8n \\\r"
+send "  -v /opt/mcp-servers:/opt/mcp-servers:ro \\\r"
+send "  --restart unless-stopped \\\r"
+send "  n8nio/n8n:latest\r"
+expect "root@*"
+
+puts "\n10. Waiting for n8n to start..."
+send "sleep 20\r"
+expect "root@*"
+
+puts "\n11. Checking n8n status..."
+send "docker ps | grep n8n\r"
+expect "root@*"
+
+puts "\n12. Checking n8n logs..."
+send "docker logs n8n --tail 10 2>&1\r"
+expect "root@*"
+
+puts "\n13. Testing health endpoint..."
+send "curl -s http://localhost:5678/healthz\r"
+expect "root@*"
+
+puts "\n14. Final status..."
+send "docker ps --format 'table {{.Names}}\t{{.Status}}' | grep -E 'n8n|postgres'\r"
+expect "root@*"
+
+puts "\n========================================="
+puts "Containerd cleanup and n8n start complete!"
+puts "========================================="
+
+send "exit\r"
+expect eof

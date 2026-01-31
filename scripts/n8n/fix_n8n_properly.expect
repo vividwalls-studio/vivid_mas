@@ -1,0 +1,137 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+puts "========================================="
+puts "FIX n8n with Direct Docker Run"
+puts "========================================="
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        puts "\nConnected successfully!"
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}
+
+# Navigate to project directory
+send "cd /root/vivid_mas\r"
+expect "root@*"
+
+# Check disk space
+puts "\n1. Checking disk space..."
+send "df -h / | grep vda1\r"
+expect "root@*"
+
+# Check postgres container status
+puts "\n2. Checking postgres container..."
+send "docker ps | grep postgres\r"
+expect "root@*"
+
+# Remove any existing n8n container
+puts "\n3. Removing any existing n8n container..."
+send "docker rm -f n8n 2>/dev/null || true\r"
+expect "root@*"
+
+# Load environment variables
+puts "\n4. Loading environment variables..."
+send "source /root/vivid_mas/.env\r"
+expect "root@*"
+
+# Verify critical environment variables
+puts "\n5. Verifying environment variables..."
+send "echo \"POSTGRES_PASSWORD: \$POSTGRES_PASSWORD\"\r"
+expect "root@*"
+send "echo \"N8N_ENCRYPTION_KEY: \${N8N_ENCRYPTION_KEY:0:20}...\"\r"
+expect "root@*"
+
+# Start n8n with direct docker run command
+puts "\n6. Starting n8n with direct docker run..."
+send "docker run -d --name n8n \\\r"
+send "  --network vivid_mas \\\r"
+send "  -p 5678:5678 \\\r"
+send "  -e DB_TYPE=postgresdb \\\r"
+send "  -e DB_POSTGRESDB_HOST=postgres \\\r"
+send "  -e DB_POSTGRESDB_PORT=5432 \\\r"
+send "  -e DB_POSTGRESDB_DATABASE=postgres \\\r"
+send "  -e DB_POSTGRESDB_USER=postgres \\\r"
+send "  -e DB_POSTGRESDB_PASSWORD=\$POSTGRES_PASSWORD \\\r"
+send "  -e N8N_ENCRYPTION_KEY=\"\$N8N_ENCRYPTION_KEY\" \\\r"
+send "  -e N8N_HOST=n8n.vividwalls.blog \\\r"
+send "  -e N8N_PORT=5678 \\\r"
+send "  -e N8N_PROTOCOL=https \\\r"
+send "  -e WEBHOOK_URL=https://n8n.vividwalls.blog/ \\\r"
+send "  -e GENERIC_TIMEZONE=America/New_York \\\r"
+send "  -e N8N_METRICS=true \\\r"
+send "  -e EXECUTIONS_PROCESS=main \\\r"
+send "  -v vivid_mas_n8n_storage:/home/node/.n8n \\\r"
+send "  -v /opt/mcp-servers:/opt/mcp-servers:ro \\\r"
+send "  -v /root/vivid_mas/n8n/backup:/backup \\\r"
+send "  -v /root/vivid_mas/shared:/data/shared \\\r"
+send "  --restart unless-stopped \\\r"
+send "  n8nio/n8n:latest\r"
+expect "root@*"
+
+# Wait for n8n to start
+puts "\n7. Waiting for n8n to initialize..."
+send "sleep 30\r"
+expect "root@*"
+
+# Check if n8n is running
+puts "\n8. Checking n8n status..."
+send "docker ps | grep n8n\r"
+expect "root@*"
+
+# Check n8n logs
+puts "\n9. Checking n8n logs for errors..."
+send "docker logs n8n --tail 20 2>&1 | grep -v 'Initializing'\r"
+expect "root@*"
+
+# Test health endpoint
+puts "\n10. Testing n8n health endpoint..."
+send "curl -s http://localhost:5678/healthz || echo 'NOT_READY'\r"
+expect "root@*"
+
+# Check n8n version
+puts "\n11. Checking n8n version..."
+send "docker exec n8n n8n --version 2>&1 || echo 'Container not ready'\r"
+expect "root@*"
+
+# Test connection to postgres from n8n
+puts "\n12. Testing database connection from n8n..."
+send "docker exec n8n nc -zv postgres 5432 2>&1\r"
+expect "root@*"
+
+# Check workflow count in database
+puts "\n13. Checking workflows in database..."
+send "docker exec postgres psql -U postgres -d postgres -t -c 'SELECT COUNT(*) FROM workflow_entity;' 2>/dev/null || echo 'Database check failed'\r"
+expect "root@*"
+
+# Final status
+puts "\n14. Final container status..."
+send "docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' | grep -E 'NAMES|n8n|postgres'\r"
+expect "root@*"
+
+puts "\n========================================="
+puts "n8n Fix Complete!"
+puts "Access at: https://n8n.vividwalls.blog"
+puts "========================================="
+
+send "exit\r"
+expect eof

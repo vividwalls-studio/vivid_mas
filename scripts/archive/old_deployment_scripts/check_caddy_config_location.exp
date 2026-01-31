@@ -1,0 +1,56 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Find Caddyfile location
+send "echo '=== Finding Caddyfile ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "find /home /root -name 'Caddyfile' -type f 2>/dev/null | head -5\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check the main project location
+send "echo '\n=== Checking Project Caddyfile ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cat /root/vivid_mas/Caddyfile | grep -A 5 -B 5 -i 'listmonk\\|9003' | head -20\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check if Caddy is running
+send "echo '\n=== Caddy Container Status ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "docker ps | grep caddy\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check ListMonk accessibility
+send "echo '\n=== Testing ListMonk Access ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "curl -s -o /dev/null -w '%{http_code}' http://localhost:9003/api/health && echo ' - ListMonk on localhost:9003' || echo ' - ListMonk not accessible on localhost:9003'\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Check DNS for listmonk subdomain
+send "echo '\n=== DNS Check for listmonk.vividwalls.blog ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "dig +short listmonk.vividwalls.blog\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+# Exit
+send "exit\r"
+expect eof

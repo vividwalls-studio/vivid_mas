@@ -1,0 +1,27 @@
+# Testing requirements for VividWalls MAS improvements
+
+# Core testing frameworks
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+pytest-benchmark==4.0.0
+
+# Database drivers
+psycopg2-binary==2.9.9
+neo4j==5.17.0
+redis==5.0.1
+
+# Performance and monitoring
+psutil==5.9.6
+numpy==1.26.2
+
+# Utilities
+python-dotenv==1.0.0
+pydantic==2.5.2
+
+# Test reporting
+pytest-html==4.1.1
+pytest-json-report==1.5.0
+
+# Logging and debugging
+colorlog==6.8.0

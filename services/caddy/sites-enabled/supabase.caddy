@@ -1,0 +1,34 @@
+# Supabase
+{$SUPABASE_HOSTNAME} {
+    # Enable compression
+    encode zstd gzip
+
+    # Security headers
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy strict-origin-when-cross-origin
+        Strict-Transport-Security "max-age=31536000"
+        Permissions-Policy "accelerometer=(),camera=(),geolocation=(),gyroscope=(),magnetometer=(),microphone=(),payment=(),usb=()"
+        -Server
+    }
+
+    # Health check endpoint
+    handle /health {
+        respond "OK" 200
+    }
+
+    # Logging
+    log {
+        output file /var/log/caddy/supabase.log
+        format json
+    }
+
+    # Reverse proxy to Supabase
+    reverse_proxy supabase-kong:8000 {
+        header_up X-Forwarded-Port {http.request.port}
+        header_up X-Real-IP {http.request.remote.host}
+        header_up Connection "close"
+    }
+}

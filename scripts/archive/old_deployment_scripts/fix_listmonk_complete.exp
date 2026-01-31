@@ -1,0 +1,171 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+# SSH into the droplet
+spawn ssh -i /Users/kinglerbercy/.ssh/digitalocean root@157.230.13.13
+
+# Handle passphrase
+expect {
+    "Enter passphrase for key" {
+        send "freedom\r"
+        exp_continue
+    }
+    "root@VividWalls-Studio-MAS:~#" {
+        # We're logged in
+    }
+}
+
+# Clean up everything first
+send "echo '=== Cleaning Up Old ListMonk ==='\r"
+expect "root@VividWalls-Studio-MAS:~#"
+
+send "cd /opt/mcp-servers/listmonk-email-marketing\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker stop listmonk listmonk-postgres 2>/dev/null || true\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker rm listmonk listmonk-postgres 2>/dev/null || true\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Create a working docker-compose without config mount and without port conflict
+send "echo '\n=== Creating Working Docker Compose ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "cat > docker-compose.listmonk.yml << 'EOF'\r"
+send "version: '3.7'\r"
+send "\r"
+send "services:\r"
+send "  listmonk-postgres:\r"
+send "    image: postgres:15-alpine\r"
+send "    container_name: listmonk-postgres\r"
+send "    environment:\r"
+send "      POSTGRES_USER: listmonk\r"
+send "      POSTGRES_PASSWORD: \${LISTMONK_DB_PASSWORD:-listmonk123}\r"
+send "      POSTGRES_DB: listmonk\r"
+send "    volumes:\r"
+send "      - postgres_data:/var/lib/postgresql/data\r"
+send "    networks:\r"
+send "      - vivid_mas\r"
+send "    healthcheck:\r"
+send "      test: \[\"CMD-SHELL\", \"pg_isready -U listmonk\"\]\r"
+send "      interval: 10s\r"
+send "      timeout: 5s\r"
+send "      retries: 5\r"
+send "\r"
+send "  listmonk:\r"
+send "    image: listmonk/listmonk:latest\r"
+send "    container_name: listmonk\r"
+send "    ports:\r"
+send "      - \"127.0.0.1:9003:9000\"\r"
+send "    environment:\r"
+send "      LISTMONK_app__address: \"0.0.0.0:9000\"\r"
+send "      LISTMONK_db__host: listmonk-postgres\r"
+send "      LISTMONK_db__port: 5432\r"
+send "      LISTMONK_db__user: listmonk\r"
+send "      LISTMONK_db__password: \${LISTMONK_DB_PASSWORD:-listmonk123}\r"
+send "      LISTMONK_db__database: listmonk\r"
+send "      LISTMONK_db__ssl_mode: disable\r"
+send "      LISTMONK_smtp__enabled: false\r"
+send "    depends_on:\r"
+send "      listmonk-postgres:\r"
+send "        condition: service_healthy\r"
+send "    networks:\r"
+send "      - vivid_mas\r"
+send "    command: sh -c \"rm -f config.toml && ./listmonk\"\r"
+send "\r"
+send "volumes:\r"
+send "  postgres_data:\r"
+send "\r"
+send "networks:\r"
+send "  vivid_mas:\r"
+send "    external: true\r"
+send "EOF\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Start postgres first
+send "echo '\n=== Starting PostgreSQL ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker-compose -f docker-compose.listmonk.yml up -d listmonk-postgres\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "sleep 15\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Initialize the database
+send "echo '\n=== Initializing Database ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker run --rm --network vivid_mas \\\r"
+send "  -e LISTMONK_db__host=listmonk-postgres \\\r"
+send "  -e LISTMONK_db__port=5432 \\\r"
+send "  -e LISTMONK_db__user=listmonk \\\r"
+send "  -e LISTMONK_db__password=listmonk123 \\\r"
+send "  -e LISTMONK_db__database=listmonk \\\r"
+send "  -e LISTMONK_db__ssl_mode=disable \\\r"
+send "  listmonk/listmonk:latest sh -c 'rm -f config.toml && ./listmonk --install --yes'\r"
+expect -timeout 30 {
+    "installation complete" {
+        send "echo 'Installation successful'\r"
+    }
+    "already exists" {
+        send "echo 'Already installed'\r"
+    }
+    timeout {
+        send "\003"
+        send "echo 'Installation timeout or failed'\r"
+    }
+}
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Start ListMonk
+send "echo '\n=== Starting ListMonk ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker-compose -f docker-compose.listmonk.yml up -d listmonk\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Wait for startup
+send "sleep 15\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Check status
+send "echo '\n=== Container Status ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker ps | grep listmonk\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Check logs
+send "echo '\n=== ListMonk Logs ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "docker logs listmonk --tail 15 2>&1\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Test API
+send "echo '\n=== Testing ListMonk API ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "curl -s http://localhost:9003/api/health\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Test web interface
+send "echo '\n=== Testing Web Interface ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "curl -s -o /dev/null -w 'HTTP Status: %{http_code}\\n' http://localhost:9003/\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Test external access
+send "echo '\n=== Testing External Access ==='\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+send "curl -s -o /dev/null -w 'HTTP Status: %{http_code}\\n' https://listmonk.vividwalls.blog/\r"
+expect "root@VividWalls-Studio-MAS:/opt/mcp-servers/listmonk-email-marketing#"
+
+# Exit
+send "exit\r"
+expect eof

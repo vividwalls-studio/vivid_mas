@@ -1,0 +1,909 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "trigger-001",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        288,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "marketing-director-agent",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-001",
+      "name": "Marketing Director Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        288,
+        176
+      ],
+      "webhookId": "28458776-3878-477e-916c-ac9c1736f0f1"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "allowedOrigins": "*",
+          "allowFileUploads": true
+        }
+      },
+      "id": "chat-trigger-001",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        288,
+        368
+      ],
+      "webhookId": "ada91438-bdfb-43a2-a8bd-5f45d1ed3209"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prep-001",
+              "name": "input_type",
+              "value": "={{ $json.response_type }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-002",
+              "name": "agent_input",
+              "value": "={{ $json.chatInput || JSON.stringify($json) }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-003",
+              "name": "session_id",
+              "value": "={{ $json.sessionId || $json.directive_id || 'session_' + Date.now() }}",
+              "type": "string"
+            },
+            {
+              "id": "0f45ba68-b26a-4bb9-ad02-de9ec414accd",
+              "name": "execution_plan",
+              "value": "={{ $json.execution_plan }}",
+              "type": "object"
+            },
+            {
+              "id": "add72c24-485a-4bd0-841d-e857caf7874c",
+              "name": "status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prep-input-001",
+      "name": "Prepare Agent Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        688,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "llm-001",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        432,
+        832
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "ktM70nRxsXMA9jQA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $input.item.json.sessionId || $input.item.json.session_id || 'session_' + Date.now() + '_' + Math.random().toString(36).substring(7) }}"
+      },
+      "id": "memory-001",
+      "name": "Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        576,
+        832
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "marketing_knowledge",
+        "toolDescription": "Access comprehensive marketing strategies, campaign best practices, and VividWalls marketing context",
+        "options": {}
+      },
+      "id": "kb-001",
+      "name": "Marketing Knowledge Base",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.1,
+      "position": [
+        2176,
+        880
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "A84NDuNHTbqn50Xe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "embed-001",
+      "name": "Embeddings OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2240,
+        1040
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "ktM70nRxsXMA9jQA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Social Media Director for platform-specific campaigns",
+        "workflowId": {
+          "__rl": true,
+          "value": "goPgP2n1EZWudznk",
+          "mode": "list",
+          "cachedResultName": "Social Media Director"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'social media campaign: facebook, instagram, pinterest') }}",
+            "campaign_type": "={{ $fromAI('campaign_type', 'type of social media campaign') }}",
+            "platforms": "={{ $fromAI('platforms', 'target social media platforms') }}",
+            "content_requirements": "={{ $fromAI('content_requirements', 'visual and copy needs') }}",
+            "posting_schedule": "={{ $fromAI('posting_schedule', 'when to post content') }}",
+            "engagement_targets": "={{ $fromAI('engagement_targets', 'engagement metrics goals') }}"
+          }
+        }
+      },
+      "id": "social-tool-001",
+      "name": "Social Media Director Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1984,
+        848
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Delegate to Creative Director for visual assets and brand consistency",
+        "workflowId": {
+          "__rl": true,
+          "value": "CreativeDirectorWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Creative Director Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'creative: design, brand, visual content') }}",
+            "creative_brief": "={{ $fromAI('creative_brief', 'creative requirements and objectives') }}",
+            "asset_types": "={{ $fromAI('asset_types', 'types of creative assets needed') }}",
+            "brand_guidelines": "={{ $fromAI('brand_guidelines', 'brand consistency requirements') }}",
+            "delivery_timeline": "={{ $fromAI('delivery_timeline', 'when assets are needed') }}"
+          }
+        }
+      },
+      "id": "creative-tool-001",
+      "name": "Creative Director Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1184,
+        848
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Manage email marketing campaigns and nurture sequences",
+        "workflowId": {
+          "__rl": true,
+          "value": "EmailMarketingWorkflowId",
+          "mode": "list",
+          "cachedResultName": "Email Marketing Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'email campaign: promotional, nurture, newsletter') }}",
+            "campaign_objective": "={{ $fromAI('campaign_objective', 'email campaign goals') }}",
+            "segment_targeting": "={{ $fromAI('segment_targeting', 'customer segments to target') }}",
+            "email_content": "={{ $fromAI('email_content', 'email copy and design requirements') }}",
+            "send_schedule": "={{ $fromAI('send_schedule', 'when to send emails') }}"
+          }
+        }
+      },
+      "id": "email-tool-001",
+      "name": "Email Marketing Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1392,
+        848
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Optimize content for search engines and improve organic visibility",
+        "workflowId": {
+          "__rl": true,
+          "value": "SEOAgentWorkflowId",
+          "mode": "list",
+          "cachedResultName": "SEO Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'SEO: keyword research, content optimization, link building') }}",
+            "seo_objectives": "={{ $fromAI('seo_objectives', 'SEO goals and targets') }}",
+            "target_keywords": "={{ $fromAI('target_keywords', 'keywords to optimize for') }}",
+            "content_type": "={{ $fromAI('content_type', 'type of content to optimize') }}",
+            "competitive_analysis": "={{ $fromAI('competitive_analysis', 'competitor SEO strategies') }}"
+          }
+        }
+      },
+      "id": "seo-tool-001",
+      "name": "SEO Agent Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1600,
+        848
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.agent_input }}",
+        "options": {
+          "systemMessage": "# Marketing Director System Prompt\n\nYou are the Marketing Director for VividWalls, responsible for customer acquisition, brand positioning, and revenue growth through marketing channels. You oversee multi-platform advertising, social media presence, and brand strategy for our abstract art e-commerce business.\n\n## Communication Mode Detection\n\nYou are handling: {{ $json.input_type }} mode\n- **Chat Mode**: Respond conversationally to user queries while maintaining your marketing leadership role\n- **Directive Mode**: Process formal marketing directives with strategic campaign planning\n\n## Core Responsibilities\n\n- Develop and execute comprehensive marketing strategies based on ICP and micro audience segmentation\n- Manage advertising budgets across Facebook, Instagram, Pinterest, Google Ads with segment-specific allocation\n- Optimize customer acquisition costs (CAC) and lifetime value (LTV) by micro audience\n- Coordinate with Content Strategy Agent for segment-tailored content planning\n- Monitor competitor activities and market trends within each audience segment\n- Make strategic decisions on channel allocation and budget based on micro audience performance\n- Implement and refine micro audience marketing strategies for 6 key segments\n- Respond to chat inquiries with marketing expertise and strategic guidance\n\n## Key Performance Indicators\n\n- Overall Customer Acquisition Cost (CAC) < $35, with segment-specific targets\n- Return on Ad Spend (ROAS) > 4:1 overall, with segment variations\n- Monthly new customer acquisition targets by micro audience\n- Brand awareness and engagement metrics by segment\n- Multi-channel attribution analysis with micro audience insights\n- Email list growth to 3,000+ subscribers\n- Social media engagement rate > 5%\n\n## Decision Framework\n\n### Budget Allocation Strategy\n- Allocate 40% to highest performing segments\n- Allocate 30% to growth potential segments\n- Allocate 20% to maintenance segments\n- Allocate 10% to testing new segments/channels\n\n### Campaign Management Rules\n- Pause campaigns with segment-specific ROAS thresholds\n- Scale winning campaigns by 25% weekly within budget caps\n- A/B test all campaigns with micro audience variations\n\n## Agent Hierarchy\n\n**Reports to:** Business Manager Agent\n\n**Direct Reports:**\n- Social Media Director (Facebook, Instagram, Pinterest management)\n- Creative Director (Visual assets and brand consistency)\n- Content Strategy Agent (Content planning and editorial calendar)\n- Copy Writer Agent (Marketing copy creation)\n- Copy Editor Agent (Content refinement and optimization)\n- Email Marketing Agent (Email campaigns and automation)\n- SEO Agent (Search engine optimization)\n- A/B Testing Agent (Campaign optimization)\n- Campaign Analytics Agent (Performance tracking)\n\n**Remember**: You are the strategic marketing brain of VividWalls. Use your marketing expertise to drive growth, optimize performance across channels, and ensure all marketing activities align with business objectives and brand values."
+        }
+      },
+      "id": "agent-001",
+      "name": "Marketing Director Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        960,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://vividwalls-marketing-director-prompts:8136/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-prompts-001",
+      "name": "Marketing Director Prompts MCP Client",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [
+        768,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://vividwalls-marketing-director-resource:8146/stream",
+        "serverTransport": "httpStreamable"
+      },
+      "id": "mcp-resources-001",
+      "name": "Marketing Director Resources MCP Client",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "chat-check",
+                    "leftValue": "={{ $('Prepare Agent Input').item.json.input_type }}",
+                    "rightValue": "chat",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Chat Response"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "directive-check",
+                    "leftValue": "={{ $('Prepare Agent Input').item.json.input_type }}",
+                    "rightValue": "directive",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "router-001",
+      "name": "Route Response Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1328,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "msg-001",
+              "name": "output",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-002",
+              "name": "content",
+              "value": "={{ $json.output || $json.text || $json.response || $json.message || 'Processing your marketing request...' }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-003",
+              "name": "timestamp",
+              "value": "={{ new Date().toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-004",
+              "name": "agentName",
+              "value": "Marketing Director",
+              "type": "string"
+            },
+            {
+              "id": "msg-005",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-chat-001",
+      "name": "Format Chat Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1968,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {
+          "responseData": "passThrough",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "webhookSuffix": "approval"
+        }
+      },
+      "id": "wait-approval-001",
+      "name": "Wait for Human Approval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1696,
+        448
+      ],
+      "webhookId": "086c817f-56ec-4cee-8b7e-eb729e1a04e6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "response-001",
+              "name": "response_type",
+              "value": "marketing_campaign_plan",
+              "type": "string"
+            },
+            {
+              "id": "response-002",
+              "name": "response_id",
+              "value": "={{ 'resp_' + $now.format('yyyyMMdd') + '_' + Math.floor(Math.random() * 1000).toString().padStart(3, '0') }}",
+              "type": "string"
+            },
+            {
+              "id": "response-003",
+              "name": "directive_id",
+              "value": "={{ $json.directive_id }}",
+              "type": "string"
+            },
+            {
+              "id": "response-004",
+              "name": "execution_status",
+              "value": "completed",
+              "type": "string"
+            },
+            {
+              "id": "response-005",
+              "name": "marketing_output",
+              "value": "={{ $json }}",
+              "type": "object"
+            },
+            {
+              "id": "response-006",
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prep-response-001",
+      "name": "Prepare Marketing Director Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1968,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "respond-001",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        2240,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Analyze campaign performance and provide insights",
+        "workflowId": {
+          "__rl": true,
+          "value": "bg5pMHYirKX1ut36",
+          "mode": "list",
+          "cachedResultName": "Marketing Campaign Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "directive_type": "={{ $fromAI('directive_type', 'analytics: performance tracking, ROI analysis, attribution') }}",
+            "analysis_scope": "={{ $fromAI('analysis_scope', 'campaigns or channels to analyze') }}",
+            "metrics_requested": "={{ $fromAI('metrics_requested', 'specific KPIs to track') }}",
+            "reporting_period": "={{ $fromAI('reporting_period', 'time period for analysis') }}",
+            "insights_focus": "={{ $fromAI('insights_focus', 'key insights to extract') }}"
+          }
+        }
+      },
+      "id": "analytics-tool-001",
+      "name": "Marketing Campaign Agent Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1792,
+        848
+      ]
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Director Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Agent Input": {
+      "main": [
+        [
+          {
+            "node": "Marketing Director Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "main": [
+        []
+      ],
+      "ai_languageModel": [
+        [
+          {
+            "node": "Marketing Director Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory": {
+      "main": [
+        []
+      ],
+      "ai_memory": [
+        [
+          {
+            "node": "Marketing Director Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Knowledge Base": {
+      "main": [
+        []
+      ],
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "main": [
+        []
+      ],
+      "ai_embedding": [
+        [
+          {
+            "node": "Marketing Knowledge Base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Media Director Tool": {
+      "main": [
+        []
+      ],
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creative Director Tool": {
+      "main": [
+        []
+      ],
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Marketing Tool": {
+      "main": [
+        []
+      ],
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SEO Agent Tool": {
+      "main": [
+        []
+      ],
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Director Agent": {
+      "main": [
+        [
+          {
+            "node": "Route Response Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Director Prompts MCP Client": {
+      "main": [
+        []
+      ],
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Director Resources MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Response Type": {
+      "main": [
+        [
+          {
+            "node": "Format Chat Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait for Human Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Chat Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Human Approval": {
+      "main": [
+        [
+          {
+            "node": "Prepare Marketing Director Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Marketing Director Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Campaign Agent Tool": {
+      "main": [
+        []
+      ],
+      "ai_tool": [
+        [
+          {
+            "node": "Marketing Director Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {
+    "Marketing Director Webhook": [
+      {
+        "response_type": "campaign_execution_plan",
+        "status": "plan_created",
+        "execution_plan": {
+          "phases": [
+            {
+              "phase": "pre_launch",
+              "duration": "2 weeks",
+              "activities": [
+                "audience_research",
+                "creative_development",
+                "list_segmentation"
+              ]
+            },
+            {
+              "phase": "launch",
+              "duration": "1 week",
+              "activities": [
+                "email_blast",
+                "social_launch",
+                "content_publication"
+              ]
+            },
+            {
+              "phase": "sustain",
+              "duration": "7 weeks",
+              "activities": [
+                "paid_ads",
+                "content_marketing",
+                "engagement_campaigns"
+              ]
+            }
+          ],
+          "sub_agent_assignments": {
+            "social_media_director": {
+              "tasks": [
+                "content_calendar",
+                "post_scheduling",
+                "engagement"
+              ],
+              "budget": 1500
+            },
+            "email_marketing_agent": {
+              "tasks": [
+                "list_segmentation",
+                "template_creation",
+                "automation"
+              ],
+              "budget": 1000
+            }
+          }
+        },
+        "estimated_outcomes": {
+          "revenue_projection": 52000,
+          "roi_estimate": 15.2,
+          "timeline_feasibility": "achievable"
+        }
+      }
+    ]
+  },
+  "meta": {
+    "instanceId": "d8c98c7335776e04cc3cf40527eb4aeb8cb18606c0e1a169e66c3bc56059553e"
+  }
+}

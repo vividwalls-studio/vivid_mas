@@ -1,0 +1,72 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to the project directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# Check n8n is running
+send "echo '=== Checking n8n container status ==='\r"
+expect "# "
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Test n8n UI access
+send "echo '\\n=== Testing n8n UI access ==='\r"
+expect "# "
+send "curl -s http://localhost:5678 | grep -o '<title>.*</title>'\r"
+expect "# "
+
+# Check if n8n can list workflows via API
+send "echo '\\n=== Testing n8n API (requires authentication) ==='\r"
+expect "# "
+send "curl -s http://localhost:5678/api/v1 | head -5\r"
+expect "# "
+
+# Find Business Manager workflow
+send "echo '\\n=== Finding Business Manager workflow in database ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT id, name, active FROM workflow_entity WHERE name LIKE '%Business Manager%' LIMIT 5;\"\r"
+expect "# "
+
+# Check for workflow with specific ID
+send "echo '\\n=== Checking for workflow czgQFXq4Bh6Ho3q3 ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT id, name, active FROM workflow_entity WHERE id = 'czgQFXq4Bh6Ho3q3';\"\r"
+expect "# "
+
+# List all active workflows
+send "echo '\\n=== Listing active workflows ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT COUNT(*) as active_count FROM workflow_entity WHERE active = true;\"\r"
+expect "# "
+
+# Check webhook_entity table
+send "echo '\\n=== Checking webhook configurations ==='\r"
+expect "# "
+send "docker exec postgres psql -U postgres -d postgres -c \"SELECT COUNT(*) FROM webhook_entity;\" 2>&1 || echo 'No webhook_entity table'\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

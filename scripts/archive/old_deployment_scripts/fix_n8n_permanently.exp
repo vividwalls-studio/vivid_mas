@@ -1,0 +1,84 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Navigate to directory
+send "cd /root/vivid_mas\r"
+expect "# "
+
+# First, clean up any auto-generated configs
+send "echo '=== Cleaning up auto-generated configs ==='\r"
+expect "# "
+send "docker run --rm -v vivid_mas_n8n_storage:/data alpine rm -rf /data/.n8n/config\r"
+expect "# "
+
+# Check docker-compose.yml to see how environment is set
+send "echo '\n=== Current docker-compose n8n environment section ==='\r"
+expect "# "
+send "grep -A15 '^  n8n:' docker-compose.yml | grep -A10 'environment:'\r"
+expect "# "
+
+# The issue is that docker-compose is using "- N8N_ENCRYPTION_KEY" syntax without "="
+# This means it's looking for the env var but if not found, n8n auto-generates
+# Let's explicitly set it in docker-compose
+send "echo '\n=== Backing up docker-compose.yml ==='\r"
+expect "# "
+send "cp docker-compose.yml docker-compose.yml.backup-encryption-fix\r"
+expect "# "
+
+# Update docker-compose to explicitly set the key
+send "echo '\n=== Fixing docker-compose.yml to use explicit key ==='\r"
+expect "# "
+send "sed -i 's/- N8N_ENCRYPTION_KEY$/- N8N_ENCRYPTION_KEY=pAyfxPn9h2yqv32GtzSLA73h2IdZ1n88/g' docker-compose.yml\r"
+expect "# "
+
+# Verify the change
+send "echo '\n=== Verifying the change ==='\r"
+expect "# "
+send "grep 'N8N_ENCRYPTION_KEY' docker-compose.yml\r"
+expect "# "
+
+# Now start n8n with the explicit key
+send "echo '\n=== Starting n8n with explicit key ==='\r"
+expect "# "
+send "docker compose up -d n8n caddy\r"
+expect "# "
+
+# Wait for startup
+send "sleep 20\r"
+expect "# "
+
+# Check status
+send "echo '\n=== Checking n8n status ==='\r"
+expect "# "
+send "docker ps | grep n8n\r"
+expect "# "
+
+# Check logs
+send "echo '\n=== Checking n8n logs ==='\r"
+expect "# "
+send "docker logs n8n --tail 15 2>&1\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

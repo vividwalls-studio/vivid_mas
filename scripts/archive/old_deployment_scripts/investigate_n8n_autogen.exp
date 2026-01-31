@@ -1,0 +1,56 @@
+#!/usr/bin/expect -f
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_path "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+# SSH to the server with key
+spawn ssh -i $key_path $user@$host
+
+# Handle passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        expect {
+            "Welcome" { }
+            "#" { }
+        }
+    }
+    "#" { }
+}
+
+# Check docker-compose.yml for n8n settings
+send "echo '=== Checking docker-compose.yml n8n configuration ==='\r"
+expect "# "
+send "grep -A30 '^  n8n:' /root/vivid_mas/docker-compose.yml\r"
+expect "# "
+
+# Check if there's an n8n-import service that might be causing issues
+send "echo '\n=== Checking for n8n-import service ==='\r"
+expect "# "
+send "grep -A20 'n8n-import:' /root/vivid_mas/docker-compose.yml\r"
+expect "# "
+
+# Check n8n environment variables
+send "echo '\n=== Checking n8n environment in docker-compose ==='\r"
+expect "# "
+send "grep -B5 -A10 'N8N_ENCRYPTION_KEY' /root/vivid_mas/docker-compose.yml\r"
+expect "# "
+
+# Look for any command that might generate keys
+send "echo '\n=== Checking for key generation commands ==='\r"
+expect "# "
+send "grep -i 'generate' /root/vivid_mas/docker-compose.yml | grep -v '^#'\r"
+expect "# "
+
+# Check n8n docker image behavior
+send "echo '\n=== Testing n8n behavior without env var ==='\r"
+expect "# "
+send "docker run --rm n8nio/n8n:latest n8n --help 2>&1 | head -20\r"
+expect "# "
+
+# Exit
+send "exit\r"
+expect eof

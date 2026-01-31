@@ -1,0 +1,664 @@
+{
+  "name": "VividWalls Data Analytics Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "trigger-001",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [288, 100]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "data-analytics-agent",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-001",
+      "name": "Data Analytics Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [288, 300],
+      "webhookId": "data-analytics-agent-webhook"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "chat-trigger-001",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [288, 500],
+      "webhookId": "data-analytics-chat"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression", 
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-001",
+      "name": "Daily Analytics Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [288, 700]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prep-001",
+              "name": "request_type",
+              "value": "={{ $json.request_type || 'dashboard' }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-002",
+              "name": "agent_input",
+              "value": "={{ $json.chatInput || JSON.stringify($json) }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-003",
+              "name": "session_id",
+              "value": "={{ $json.sessionId || 'analytics_' + Date.now() }}",
+              "type": "string"
+            },
+            {
+              "id": "prep-004",
+              "name": "timeframe",
+              "value": "={{ $json.timeframe || { period: 'last_30_days' } }}",
+              "type": "object"
+            },
+            {
+              "id": "prep-005",
+              "name": "data_requirements",
+              "value": "={{ $json.data_requirements || { metrics: ['revenue', 'customers', 'operations'] } }}",
+              "type": "object"
+            },
+            {
+              "id": "prep-006",
+              "name": "urgency",
+              "value": "={{ $json.urgency || 'standard' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prep-input-001",
+      "name": "Prepare Analytics Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [600, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Create analytics session\nconst sessionData = {\n  sessionId: $input.first().json.session_id,\n  requestType: $input.first().json.request_type,\n  timeframe: $input.first().json.timeframe,\n  dataRequirements: $input.first().json.data_requirements,\n  urgency: $input.first().json.urgency,\n  timestamp: new Date().toISOString(),\n  requestSource: $input.first().json.trigger_source || 'manual'\n};\n\nreturn [{ json: sessionData }];"
+      },
+      "id": "session-001",
+      "name": "Create Session Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [800, 400]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ 'Analyze the following data request:\\n\\nRequest Type: ' + $json.requestType + '\\nTimeframe: ' + JSON.stringify($json.timeframe) + '\\nData Requirements: ' + JSON.stringify($json.dataRequirements) + '\\n\\nProvide comprehensive analytics based on these requirements. Include KPIs, trends, and actionable insights.' }}",
+        "hasOutputParser": true
+      },
+      "id": "agent-001",
+      "name": "AI Analytics Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [1000, 400]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {
+          "temperature": 0.3,
+          "maxTokens": 4096
+        }
+      },
+      "id": "llm-001",
+      "name": "OpenAI GPT-4o",
+      "type": "@n8n/n8n-nodes-langchain.lmOpenAi",
+      "typeVersion": 1.6,
+      "position": [1000, 600]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Access Shopify e-commerce metrics including sales, inventory, and customer data",
+        "method": "POST",
+        "url": "={{ $env.MCP_SERVER_URL }}/shopify-mcp-server/tools/get-metrics",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ metrics: $json.dataRequirements.metrics, timeframe: $json.timeframe }) }}",
+        "headers": {
+          "values": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "id": "tool-shopify",
+      "name": "Shopify Analytics Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.2,
+      "position": [1000, 800]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Access marketing analytics aggregated from all channels",
+        "method": "POST",
+        "url": "={{ $env.MCP_SERVER_URL }}/marketing-aggregator/tools/get-channel-metrics",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channels: ['email', 'social', 'paid'], period: $json.timeframe.period }) }}",
+        "headers": {
+          "values": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "id": "tool-marketing",
+      "name": "Marketing Analytics Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.2,
+      "position": [1000, 1000]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Access pre-computed analytics prompts for data analysis",
+        "method": "POST",
+        "url": "={{ $env.MCP_SERVER_URL }}/data-analytics-prompts/prompts/generate-kpi-dashboard",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ kpi_data: $json, period: $json.timeframe.period }) }}",
+        "headers": {
+          "values": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "id": "tool-prompts",
+      "name": "Analytics Prompts Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.2,
+      "position": [1000, 1200]
+    },
+    {
+      "parameters": {
+        "content": "## Data Analytics Agent Memory\n\nThis PostgreSQL memory stores analytics sessions and maintains context across requests."
+      },
+      "id": "memory-001",
+      "name": "PostgreSQL Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.1,
+      "position": [800, 600],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-connection",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process analytics results\nconst agentOutput = $input.first().json;\nconst sessionData = $node['Create Session Context'].json;\n\n// Parse agent response\nlet analyticsResponse;\ntry {\n  analyticsResponse = typeof agentOutput.output === 'string' ? \n    JSON.parse(agentOutput.output) : agentOutput.output;\n} catch (e) {\n  analyticsResponse = {\n    text: agentOutput.output,\n    kpis: {},\n    insights: []\n  };\n}\n\n// Format comprehensive response\nconst response = {\n  responseType: 'analytics_report',\n  responseId: `resp_${Date.now()}`,\n  sessionId: sessionData.sessionId,\n  requestType: sessionData.requestType,\n  status: 'completed',\n  timestamp: new Date().toISOString(),\n  \n  executiveSummary: {\n    overallHealth: calculateHealthScore(analyticsResponse.kpis),\n    keyHighlights: extractHighlights(analyticsResponse),\n    recommendations: analyticsResponse.recommendations || []\n  },\n  \n  performanceMetrics: {\n    kpis: analyticsResponse.kpis || {},\n    trends: analyticsResponse.trends || {},\n    benchmarks: analyticsResponse.benchmarks || {}\n  },\n  \n  insights: analyticsResponse.insights || [],\n  \n  dataQuality: {\n    completeness: 0.95,\n    sources: ['shopify', 'marketing', 'supabase'],\n    lastUpdated: new Date().toISOString()\n  },\n  \n  nextActions: generateActionItems(analyticsResponse)\n};\n\nfunction calculateHealthScore(kpis) {\n  // Simple health score calculation\n  let score = 70; // Base score\n  if (kpis?.revenue?.growth > 0) score += 10;\n  if (kpis?.customers?.retention > 0.8) score += 10;\n  if (kpis?.operations?.efficiency > 0.9) score += 10;\n  return Math.min(100, score);\n}\n\nfunction extractHighlights(data) {\n  const highlights = [];\n  if (data.kpis?.revenue?.growth) {\n    highlights.push(`Revenue growth: ${(data.kpis.revenue.growth * 100).toFixed(1)}%`);\n  }\n  if (data.insights?.length > 0) {\n    highlights.push(data.insights[0]);\n  }\n  return highlights.slice(0, 3);\n}\n\nfunction generateActionItems(data) {\n  const actions = [];\n  if (data.recommendations) {\n    data.recommendations.forEach(rec => {\n      actions.push({\n        action: rec.action || rec,\n        priority: rec.priority || 'medium',\n        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()\n      });\n    });\n  }\n  return actions;\n}\n\nreturn [{ json: response }];"
+      },
+      "id": "process-001",
+      "name": "Process Analytics Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, 400]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "analytics_reports",
+        "columns": "report_id,request_type,session_id,executive_summary,performance_metrics,insights,data_quality,created_at",
+        "additionalFields": {}
+      },
+      "id": "store-001",
+      "name": "Store Analytics Report",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1600, 400],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-connection",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-001",
+              "leftValue": "={{ $json.urgency }}",
+              "rightValue": "immediate",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-urgency",
+      "name": "Check Urgency",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [1800, 400]
+    },
+    {
+      "parameters": {
+        "workflowId": "analytics-director-workflow",
+        "workflowData": "={{ JSON.stringify({ notification_type: 'urgent_analytics', report: $json }) }}"
+      },
+      "id": "notify-director",
+      "name": "Notify Analytics Director",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [2000, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-002",
+              "leftValue": "={{ $json.executiveSummary.overallHealth }}",
+              "rightValue": 70,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-health",
+      "name": "Check Health Score",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [2000, 500]
+    },
+    {
+      "parameters": {
+        "workflowId": "business-manager-workflow",
+        "workflowData": "={{ JSON.stringify({ alert_type: 'low_health_score', health_score: $json.executiveSummary.overallHealth, report: $json }) }}"
+      },
+      "id": "alert-manager",
+      "name": "Alert Business Manager",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [2200, 600]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "response-001",
+              "name": "status",
+              "value": "completed",
+              "type": "string"
+            },
+            {
+              "id": "response-002",
+              "name": "responseId",
+              "value": "={{ $json.responseId }}",
+              "type": "string"
+            },
+            {
+              "id": "response-003",
+              "name": "executiveSummary",
+              "value": "={{ $json.executiveSummary }}",
+              "type": "object"
+            },
+            {
+              "id": "response-004",
+              "name": "performanceMetrics",
+              "value": "={{ $json.performanceMetrics }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2400, 400]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2600, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle errors gracefully\nconst error = $input.first().error || {};\nconst sessionId = $node['Prepare Analytics Input']?.json?.session_id || 'error_session';\n\nreturn [{ \n  json: {\n    responseType: 'analytics_error',\n    responseId: `error_${Date.now()}`,\n    sessionId,\n    status: 'error',\n    error: {\n      message: error.message || 'Unknown error occurred',\n      code: error.code || 'ANALYTICS_ERROR',\n      timestamp: new Date().toISOString()\n    },\n    fallbackMessage: 'Unable to complete analytics request. Please try again.'\n  }\n}];"
+      },
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, 800],
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare Analytics Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Analytics Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Analytics Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Prepare Analytics Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Analytics Schedule": {
+      "main": [
+        [
+          {
+            "node": "Prepare Analytics Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Analytics Input": {
+      "main": [
+        [
+          {
+            "node": "Create Session Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Session Context": {
+      "main": [
+        [
+          {
+            "node": "AI Analytics Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Analytics Agent": {
+      "main": [
+        [
+          {
+            "node": "Process Analytics Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI GPT-4o": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Analytics Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify Analytics Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Analytics Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing Analytics Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Analytics Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analytics Prompts Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Analytics Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PostgreSQL Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Analytics Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Analytics Response": {
+      "main": [
+        [
+          {
+            "node": "Store Analytics Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Analytics Report": {
+      "main": [
+        [
+          {
+            "node": "Check Urgency",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Urgency": {
+      "main": [
+        [
+          {
+            "node": "Notify Analytics Director",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Health Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Analytics Director": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Health Score": {
+      "main": [
+        [
+          {
+            "node": "Alert Business Manager",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert Business Manager": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all",
+    "errorWorkflow": "error-handler-workflow"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "id": "tag-001",
+      "name": "VividWalls MAS"
+    },
+    {
+      "id": "tag-002", 
+      "name": "Analytics"
+    },
+    {
+      "id": "tag-003",
+      "name": "Data Hub"
+    }
+  ],
+  "triggerCount": 4,
+  "updatedAt": "2024-12-20T10:00:00.000Z",
+  "versionId": "1.0.0"
+}

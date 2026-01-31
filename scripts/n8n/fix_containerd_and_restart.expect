@@ -1,0 +1,123 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+# SSH connection details
+set host "157.230.13.13"
+set user "root"
+set key_file "~/.ssh/digitalocean"
+set passphrase "freedom"
+
+puts "========================================="
+puts "Fixing containerd and restarting n8n"
+puts "========================================="
+
+# Start SSH connection
+spawn ssh -i $key_file $user@$host
+
+# Handle SSH key passphrase
+expect {
+    "Enter passphrase" {
+        send "$passphrase\r"
+        exp_continue
+    }
+    "root@*" {
+        puts "\nConnected successfully!"
+    }
+    timeout {
+        puts "Connection timeout"
+        exit 1
+    }
+}
+
+# Check disk usage
+puts "\n1. Current disk usage:"
+send "df -h /\r"
+expect "root@*"
+
+# Check containerd directory
+puts "\n2. Checking /run/containerd usage:"
+send "du -sh /run/containerd 2>/dev/null\r"
+expect "root@*"
+
+# Stop Docker service temporarily
+puts "\n3. Stopping Docker service..."
+send "systemctl stop docker\r"
+expect "root@*"
+
+# Clean containerd runtime
+puts "\n4. Cleaning containerd runtime..."
+send "rm -rf /run/containerd/io.containerd.runtime.v2.task/*\r"
+expect "root@*"
+send "rm -rf /run/containerd/io.containerd.grpc.v1.cri/sandboxes/*\r"
+expect "root@*"
+send "rm -rf /var/lib/containerd/io.containerd.content.v1.content/ingest/*\r"
+expect "root@*"
+
+# Clean Docker runtime
+puts "\n5. Cleaning Docker runtime..."
+send "rm -rf /var/lib/docker/containers/*\r"
+expect "root@*"
+send "rm -rf /var/lib/docker/tmp/*\r"
+expect "root@*"
+
+# Start Docker service
+puts "\n6. Starting Docker service..."
+send "systemctl start docker\r"
+expect "root@*"
+
+# Wait for Docker to be ready
+send "sleep 5\r"
+expect "root@*"
+
+# Verify Docker is working
+puts "\n7. Verifying Docker..."
+send "docker version --format '{{.Server.Version}}'\r"
+expect "root@*"
+
+# Check disk space after cleanup
+puts "\n8. Disk usage after cleanup:"
+send "df -h /\r"
+expect "root@*"
+
+# Start n8n with working configuration
+puts "\n9. Starting n8n container..."
+send "cd /root/vivid_mas\r"
+expect "root@*"
+
+# Use docker-compose to start n8n properly
+puts "\n10. Using docker-compose to start n8n..."
+send "docker-compose up -d n8n\r"
+expect "root@*"
+
+# Wait for startup
+puts "\n11. Waiting for n8n to start..."
+send "sleep 20\r"
+expect "root@*"
+
+# Check if n8n is running
+puts "\n12. Checking n8n status..."
+send "docker ps | grep n8n\r"
+expect "root@*"
+
+# Check n8n logs
+puts "\n13. Checking n8n logs..."
+send "docker logs n8n --tail 20 2>&1\r"
+expect "root@*"
+
+# Test health endpoint
+puts "\n14. Testing n8n health..."
+send "curl -s http://localhost:5678/healthz\r"
+expect "root@*"
+
+# Check workflows count
+puts "\n15. Verifying workflows..."
+send "docker exec postgres psql -U postgres -d postgres -t -c 'SELECT COUNT(*) FROM workflow_entity;'\r"
+expect "root@*"
+
+puts "\n========================================="
+puts "Containerd cleanup and n8n restart complete!"
+puts "========================================="
+
+send "exit\r"
+expect eof
