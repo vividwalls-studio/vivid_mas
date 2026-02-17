@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # =============================================================================
+  # TWENTY CRM - Modern CRM Platform
+  # =============================================================================
+  # Note: Now uses consolidated PostgreSQL instance
+
+  twenty-redis:
+    image: valkey/valkey:8-alpine
+    container_name: twenty-redis
+    restart: unless-stopped
+    volumes:
+      - twenty_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  twenty-server:
+    image: twentycrm/twenty:latest
+    container_name: twenty-server
+    restart: unless-stopped
+    environment:
+      # Database configuration - using consolidated PostgreSQL
+      - PG_DATABASE_URL=postgres://twenty_user:${TWENTY_DB_PASSWORD}@postgres:5432/twenty
+      # Redis configuration
+      - REDIS_HOST=twenty-redis
+      - REDIS_PORT=6379
+      - REDIS_URL=redis://twenty-redis:6379
+      # Application configuration
+      - SERVER_URL=https://twenty.vividwalls.blog
+      - FRONT_BASE_URL=https://twenty.vividwalls.blog
+      - APP_SECRET=twenty_access_token_secret_vivid_mas_2024
+      - ACCESS_TOKEN_SECRET=${TWENTY_ACCESS_TOKEN_SECRET:-change_me_access_token}
+      - LOGIN_TOKEN_SECRET=${TWENTY_LOGIN_TOKEN_SECRET:-change_me_login_token}
+      - REFRESH_TOKEN_SECRET=${TWENTY_REFRESH_TOKEN_SECRET:-change_me_refresh_token}
+      - FILE_TOKEN_SECRET=${TWENTY_FILE_TOKEN_SECRET:-change_me_file_token}
+      # Email configuration (optional)
+      - EMAIL_FROM_ADDRESS=${TWENTY_EMAIL_FROM:-noreply@vividwalls.blog}
+      - EMAIL_SYSTEM_ADDRESS=${TWENTY_EMAIL_SYSTEM:-system@vividwalls.blog}
+      # Storage configuration
+      - STORAGE_TYPE=local
+      - STORAGE_LOCAL_PATH=/app/data
+      # Analytics
+      - TELEMETRY_ENABLED=false
+      - ANALYTICS_ENABLED=false
+    volumes:
+      - twenty_data:/app/data
+    ports:
+      - "3020:3000"
+    depends_on:
+      twenty-redis:
+        condition: service_healthy
+        required: true
+    external_links:
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  twenty_redis_data:
+  twenty_data:
+
+# All services use the vivid_mas network
+networks:
+  default:
+    name: vivid_mas
+    external: true

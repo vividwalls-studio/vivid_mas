@@ -1,0 +1,64 @@
+version: '3.8'
+
+# CRITICAL: All services must use the vivid_mas network
+networks:
+  default:
+    name: vivid_mas
+    external: true
+
+# CRITICAL: Load environment variables from root .env file
+# This ensures N8N_ENCRYPTION_KEY is loaded correctly
+
+services:
+  # =============================================================================
+  # N8N WORKFLOW AUTOMATION
+  # =============================================================================
+  # Note: This service depends on external postgres and redis containers
+  # Make sure they are running first: docker ps | grep -E "postgres|redis"
+  
+  n8n:
+    image: n8nio/n8n:1.108.2
+    container_name: n8n
+    restart: unless-stopped
+    environment:
+      # Database configuration - CRITICAL: Must use 'postgres' not 'db'
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n_fresh
+      - DB_POSTGRESDB_USER=postgres
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+      # N8N configuration
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://n8n.vividwalls.blog
+      - N8N_EDITOR_BASE_URL=https://n8n.vividwalls.blog
+      # CRITICAL: Encryption key must match exactly - DO NOT USE DEFAULTS!
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - N8N_USER_MANAGEMENT_JWT_SECRET=${N8N_USER_MANAGEMENT_JWT_SECRET}
+      # Execution settings
+      - EXECUTIONS_PROCESS=main
+      - N8N_METRICS=true
+      - GENERIC_TIMEZONE=America/Los_Angeles
+    volumes:
+      # CRITICAL: MCP servers volume mount - now consolidated under vivid_mas
+      - /root/vivid_mas/services/mcp-servers:/opt/mcp-servers:ro
+      # N8N data volumes
+      - n8n_storage:/home/node/.n8n
+      - ./backup:/backup
+      - ../../shared:/data/shared
+    ports:
+      - "5678:5678"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    external_links:
+      - postgres
+      - redis
+
+volumes:
+  n8n_storage:

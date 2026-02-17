@@ -1,0 +1,63 @@
+version: '3.8'
+
+# CRITICAL: All services must use the vivid_mas network
+networks:
+  default:
+    name: vivid_mas
+    external: true
+
+services:
+  # Consolidated PostgreSQL database using Supabase image (shared by all services)
+  # This includes all Supabase extensions: pgvector, pgjwt, pgsodium, etc.
+  postgres:
+    image: supabase/postgres:15.8.1.112
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: 5432
+      POSTGRES_PORT: 5432
+      PGPASSWORD: ${POSTGRES_PASSWORD:-supabase123}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-supabase123}
+      PGDATABASE: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+    volumes:
+      - postgres_storage:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d/init-scripts
+    ports:
+      - "5433:5432"  # External port 5433 to avoid conflicts
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - log_min_messages=fatal
+      - -c
+      - max_connections=200
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - effective_cache_size=1GB
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis cache (used by n8n for queue management)
+  redis:
+    image: valkey/valkey:8-alpine
+    container_name: redis
+    restart: unless-stopped
+    volumes:
+      - redis_storage:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_storage:
+  redis_storage:

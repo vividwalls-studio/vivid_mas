@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  sales-crm-mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vividwalls-sales-crm-mcp-server
+    restart: unless-stopped
+    ports:
+      - "4048:4029"
+    environment:
+      - NODE_ENV=production
+      - PORT=4029
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+    networks:
+      - vivid_mas
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4029/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.vividwalls.service=sales-crm-mcp-server"
+      - "com.vividwalls.type=mcp-server"
+      - "com.vividwalls.transport=http+sse"
+
+networks:
+  vivid_mas:
+    external: true

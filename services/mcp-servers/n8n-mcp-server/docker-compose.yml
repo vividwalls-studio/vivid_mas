@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  n8n:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vividwalls-n8n
+    restart: unless-stopped
+    ports:
+      - "8111:8111"
+    environment:
+      - NODE_ENV=production
+      - MCP_TRANSPORT=http
+      - HTTP_PORT=8111
+      - HTTP_HOST=0.0.0.0
+      - PORT=8111
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+      - N8N_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzZWMyMDZhNS05ZGVjLTRlNTktOGMzZS00OTRkYWY2ZWRhZjYiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzU1OTk2OTQwfQ.CYm3Dvw5AHWou3-sBMXJvecye7jFWxo-0Z2axVCY-xs
+      - N8N_BASE_URL=http://n8n:5678
+      - N8N_API_URL=http://n8n:5678/api/v1
+    networks:
+      - vivid_mas
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8111/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.vividwalls.service=n8n"
+      - "com.vividwalls.type=mcp-server"
+      - "com.vividwalls.transport=http+sse"
+
+networks:
+  vivid_mas:
+    external: true

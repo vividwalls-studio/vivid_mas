@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  business-manager-prompts:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vividwalls-business-manager-prompts
+    restart: unless-stopped
+    ports:
+      - "8161:8161"
+    environment:
+      - NODE_ENV=production
+      - MCP_TRANSPORT=http
+      - HTTP_PORT=8161
+      - HTTP_HOST=0.0.0.0
+      - PORT=8161
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+    networks:
+      - vivid_mas
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8161/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.vividwalls.service=business-manager-prompts"
+      - "com.vividwalls.type=mcp-server"
+      - "com.vividwalls.transport=http+sse"
+
+networks:
+  vivid_mas:
+    external: true

@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  sendgrid-mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vividwalls-sendgrid-mcp-server
+    restart: unless-stopped
+    ports:
+      - "4044:4030"
+    environment:
+      - NODE_ENV=production
+      - MCP_TRANSPORT=http
+      - PORT=4030
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+    networks:
+      - vivid_mas
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4030/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.vividwalls.service=sendgrid-mcp-server"
+      - "com.vividwalls.type=mcp-server"
+      - "com.vividwalls.transport=http+sse"
+
+networks:
+  vivid_mas:
+    external: true

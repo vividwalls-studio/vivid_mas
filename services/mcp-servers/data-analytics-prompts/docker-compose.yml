@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  data-analytics-prompts:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vividwalls-data-analytics-prompts
+    restart: unless-stopped
+    ports:
+      - "8148:8148"
+    environment:
+      - NODE_ENV=production
+      - MCP_TRANSPORT=http
+      - HTTP_PORT=8148
+      - HTTP_HOST=0.0.0.0
+      - PORT=8148
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+    networks:
+      - vivid_mas
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8148/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.vividwalls.service=data-analytics-prompts"
+      - "com.vividwalls.type=mcp-server"
+      - "com.vividwalls.transport=http+sse"
+
+networks:
+  vivid_mas:
+    external: true

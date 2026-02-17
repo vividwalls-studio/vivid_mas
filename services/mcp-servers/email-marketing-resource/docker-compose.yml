@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  email-marketing-resource:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vividwalls-email-marketing-resource
+    restart: unless-stopped
+    ports:
+      - "8144:8144"
+    environment:
+      - NODE_ENV=production
+      - MCP_TRANSPORT=http
+      - HTTP_PORT=8144
+      - HTTP_HOST=0.0.0.0
+      - PORT=8144
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+    networks:
+      - vivid_mas
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8144/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.vividwalls.service=email-marketing-resource"
+      - "com.vividwalls.type=mcp-server"
+      - "com.vividwalls.transport=http+sse"
+
+networks:
+  vivid_mas:
+    external: true

@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  color-psychology:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vividwalls-color-psychology
+    restart: unless-stopped
+    ports:
+      - "4039:4039"
+    environment:
+      - NODE_ENV=production
+      - MCP_TRANSPORT=http
+      - HTTP_PORT=4039
+      - HTTP_HOST=0.0.0.0
+      - PORT=4039
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    networks:
+      - vivid_mas
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4039/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.vividwalls.service=color-psychology"
+      - "com.vividwalls.type=mcp-server"
+      - "com.vividwalls.transport=http+sse"
+
+networks:
+  vivid_mas:
+    external: true

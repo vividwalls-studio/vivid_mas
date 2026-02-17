@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  shopify-mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vividwalls-shopify-mcp-server
+    restart: unless-stopped
+    ports:
+      - "4041:4041"
+    environment:
+      - MCP_TRANSPORT=http
+      - NODE_ENV=production
+      - PORT=4041
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+    networks:
+      - vivid_mas
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:4041/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.vividwalls.service=shopify-mcp-server"
+      - "com.vividwalls.type=mcp-server"
+      - "com.vividwalls.transport=http+sse"
+
+networks:
+  vivid_mas:
+    external: true

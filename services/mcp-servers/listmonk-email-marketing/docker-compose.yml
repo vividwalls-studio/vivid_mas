@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  listmonk-email-marketing-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vividwalls-listmonk-email-marketing
+    ports:
+      - "9000:8149"
+    environment:
+      - NODE_ENV=production
+      - MCP_TRANSPORT=http
+      - HTTP_PORT=8149
+      - HTTP_HOST=0.0.0.0
+      - MCP_HTTP_PORT=8149
+      - MCP_HTTP_HOST=0.0.0.0
+      - PORT=8149
+      - HOST=0.0.0.0
+      # Email provider configuration
+      - EMAIL_PROVIDER=${EMAIL_PROVIDER:-sendgrid}
+      - EMAIL_API_KEY=${EMAIL_API_KEY}
+      # SendGrid specific (if using SendGrid)
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY:-${EMAIL_API_KEY}}
+      # Mailchimp specific (if using Mailchimp)  
+      - MAILCHIMP_API_KEY=${MAILCHIMP_API_KEY:-${EMAIL_API_KEY}}
+      # VividWalls branding
+      - SENDER_EMAIL=${SENDER_EMAIL:-hello@vividwalls.com}
+      - SENDER_NAME=${SENDER_NAME:-VividWalls}
+      - COMPANY_NAME=${COMPANY_NAME:-VividWalls}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8149/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - vivid_mas
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.listmonk-email-mcp.rule=PathPrefix(`/email-marketing`)"
+      - "traefik.http.routers.listmonk-email-mcp.entrypoints=web"
+      - "traefik.http.services.listmonk-email-mcp.loadbalancer.server.port=8149"
+      - "com.vividwalls.service=listmonk-email-marketing-mcp"
+      - "com.vividwalls.version=1.0.0"
+
+networks:
+  vivid_mas:
+    external: true

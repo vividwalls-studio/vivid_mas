@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  copy-editor-resource:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vividwalls-copy-editor-resource
+    restart: unless-stopped
+    ports:
+      - "8141:8141"
+    environment:
+      - NODE_ENV=production
+      - TRANSPORT=http
+      - PORT=8141
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+    networks:
+      - vivid_mas
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8141/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.vividwalls.service=copy-editor-resource"
+      - "com.vividwalls.type=mcp-server"
+      - "com.vividwalls.transport=streamable-http"
+
+networks:
+  vivid_mas:
+    external: true

@@ -1,0 +1,51 @@
+version: '3.8'
+
+# CRITICAL: All services must use the vivid_mas network
+networks:
+  default:
+    name: vivid_mas
+    external: true
+
+services:
+  # =============================================================================
+  # CADDY REVERSE PROXY
+  # =============================================================================
+  # Caddy serves as the main reverse proxy for all services in the vivid_mas ecosystem
+  # It handles SSL certificates automatically and routes traffic to appropriate services
+  
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"      # HTTP port
+      - "443:443"    # HTTPS port
+    volumes:
+      # Main Caddyfile configuration
+      - ../../Caddyfile:/etc/caddy/Caddyfile:ro
+      # Sites-enabled directory for modular configuration
+      - ./sites-enabled:/etc/caddy/sites-enabled:ro
+      # Caddy data directory (certificates, etc.)
+      - caddy_data:/data
+      # Caddy config directory
+      - caddy_config:/config
+    environment:
+      # Automatically agree to ACME terms for SSL certificates
+      - ACME_AGREE=true
+    # Dependencies:
+    # Caddy depends on the following services being available:
+    # - n8n (n8n.vividwalls.blog)
+    # - open-webui (openwebui.vividwalls.blog)
+    # - langfuse (langfuse.vividwalls.blog)
+    # - searxng (searxng.vividwalls.blog)
+    # - wordpress-multisite (main domain and subdomains)
+    # - Other services configured in Caddyfile
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  caddy_data:
+    # Stores SSL certificates and other Caddy data
+  caddy_config:
+    # Stores Caddy configuration

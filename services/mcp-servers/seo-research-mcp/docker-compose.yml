@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  seo-research-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vividwalls-seo-research-mcp
+    restart: unless-stopped
+    ports:
+      - "8122:8122"
+    environment:
+      - NODE_ENV=production
+      - MCP_TRANSPORT=http
+      - HTTP_PORT=8122
+      - HTTP_HOST=0.0.0.0
+      - PORT=8122
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+    networks:
+      - vivid_mas
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8150/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.vividwalls.service=seo-research-mcp"
+      - "com.vividwalls.type=mcp-server"
+      - "com.vividwalls.transport=http+sse"
+
+networks:
+  vivid_mas:
+    external: true

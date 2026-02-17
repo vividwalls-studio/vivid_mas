@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  neo4j-mcp-server:
+    build: .
+    container_name: vividwalls-neo4j-mcp
+    ports:
+      - "4050:4046"
+    environment:
+      - NODE_ENV=production
+      - PORT=4046
+      - HOST=0.0.0.0
+      # Neo4j connection settings
+      - NEO4J_URI=${NEO4J_URI:-bolt://neo4j:7687}
+      - NEO4J_USERNAME=${NEO4J_USERNAME:-neo4j}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:-password}
+      - NEO4J_DATABASE=${NEO4J_DATABASE:-neo4j}
+      # Aura API settings (optional)
+      - AURA_CLIENT_ID=${AURA_CLIENT_ID}
+      - AURA_CLIENT_SECRET=${AURA_CLIENT_SECRET}
+      - AURA_TENANT_ID=${AURA_TENANT_ID}
+    networks:
+      - vivid_mas
+    restart: unless-stopped
+    depends_on:
+      - neo4j
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:4046/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  neo4j:
+    image: neo4j:5-community
+    container_name: neo4j-db
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/password
+      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_apoc_export_file_enabled=true
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4J_apoc_import_file_use__neo4j__config=true
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+      - neo4j_plugins:/plugins
+    networks:
+      - vivid_mas
+    restart: unless-stopped
+
+networks:
+  vivid_mas:
+    external: true
+volumes:
+  neo4j_data:
+  neo4j_logs:
+  neo4j_import:
+  neo4j_plugins:

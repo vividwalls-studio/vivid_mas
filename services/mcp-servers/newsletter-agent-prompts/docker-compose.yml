@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  newsletter-agent-prompts:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vividwalls-newsletter-agent-prompts
+    restart: unless-stopped
+    ports:
+      - "8144:8144"
+    environment:
+      - NODE_ENV=production
+      - MCP_TRANSPORT=http
+      - HTTP_PORT=8144
+      - HTTP_HOST=0.0.0.0
+      - PORT=8144
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+    networks:
+      - vivid_mas
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8146/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.vividwalls.service=newsletter-agent-prompts"
+      - "com.vividwalls.type=mcp-server"
+      - "com.vividwalls.transport=http+sse"
+
+networks:
+  vivid_mas:
+    external: true

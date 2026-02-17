@@ -1,0 +1,324 @@
+version: '3.8'
+
+# CRITICAL: All services must use the vivid_mas network
+networks:
+  default:
+    name: vivid_mas
+    external: true
+
+services:
+  # =============================================================================
+  # SUPABASE STACK - Main Database Platform
+  # =============================================================================
+  
+  # Kong API Gateway - Entry point for all API requests
+  kong:
+    image: kong:2.8.1
+    container_name: supabase-kong
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+    volumes:
+      - ./config/kong.yml:/var/lib/kong/kong.yml:ro
+    # depends_on removed - connecting to external postgres container
+
+  # Supabase Studio - Web dashboard
+  studio:
+    image: supabase/studio:2025.05.19-sha-3487831
+    container_name: supabase-studio
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "const h=require(\"http\"),o=require(\"os\");h.get(\"http://\"+o.hostname()+\":3000/\",r=>{if(r.statusCode>=500)process.exit(1)}).on(\"error\",()=>process.exit(1))"]
+      timeout: 15s
+      interval: 15s
+      retries: 3
+    environment:
+      STUDIO_PG_META_URL: http://meta:8080
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DEFAULT_ORGANIZATION_NAME: vividwalls
+      DEFAULT_PROJECT_NAME: vividwalls
+      SUPABASE_PUBLIC_URL: https://supabase.vividwalls.blog
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzUyNTMwNDEwLCJleHAiOjIwNjc4OTA0MTB9.KjRSD5V2EEB-5_MDxWtpM0nRPq5wqzhJ1zJkCEAdLs0
+      SUPABASE_SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3NTI1MzA0MTAsImV4cCI6MjA2Nzg5MDQxMH0.uiXb76KsKu3NAk9BbQIM0zPqelxJX9XTHXo1O1B9vhg
+
+  # Note: PostgreSQL database now consolidated - using external postgres container
+
+  # PostgREST - REST API server
+  rest:
+    image: postgrest/postgrest:v12.2.0
+    container_name: supabase-rest
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@postgres:5432/postgres
+      PGRST_DB_SCHEMAS: public,storage,graphql_public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: CMl9X2lC-ane2RR4xDtqPkDAkfQNooTOmMzfBYYcBts
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: CMl9X2lC-ane2RR4xDtqPkDAkfQNooTOmMzfBYYcBts
+      PGRST_APP_SETTINGS_JWT_EXP: 3600
+    # depends_on removed - connecting to external postgres container
+
+  # Realtime server
+  realtime:
+    image: supabase/realtime:v2.34.47
+    container_name: supabase-realtime
+    restart: unless-stopped
+    ulimits:
+      nofile:
+        soft: 131072
+        hard: 131072
+    healthcheck:
+      test: ["CMD", "bash", "-c", "printf \\0 > /dev/tcp/localhost/4000"]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    environment:
+      PORT: 4000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: supabase_realtime_admin
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: postgres
+      DB_AFTER_CONNECT_QUERY: 'SET search_path TO _realtime'
+      DB_ENC_KEY: supabaserealtime
+      API_JWT_SECRET: CMl9X2lC-ane2RR4xDtqPkDAkfQNooTOmMzfBYYcBts
+      FLY_ALLOC_ID: fly123
+      FLY_APP_NAME: realtime
+      SECRET_KEY_BASE: UpNVntn3cDxHJpq99YMc1T1AQgQpc8kfYTuRgBiYa15BLrx8etQoXz3gZv1/u2oq
+      ERL_AFLAGS: -proto_dist inet_tcp
+      ENABLE_TAILSCALE: "false"
+      DNS_NODES: "''"
+      RLIMIT_NOFILE: "131072"
+      APP_NAME: "realtime"
+    command: >
+      sh -c "/app/bin/migrate && /app/bin/realtime eval 'Realtime.Release.seeds(Realtime.Repo)' && /app/bin/server"
+    # depends_on removed - connecting to external postgres container
+
+  # Storage API
+  storage:
+    image: supabase/storage-api:v1.22.17
+    container_name: supabase-storage
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:5000/status"]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    environment:
+      ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzUyNTMwNDEwLCJleHAiOjIwNjc4OTA0MTB9.KjRSD5V2EEB-5_MDxWtpM0nRPq5wqzhJ1zJkCEAdLs0
+      SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3NTI1MzA0MTAsImV4cCI6MjA2Nzg5MDQxMH0.uiXb76KsKu3NAk9BbQIM0zPqelxJX9XTHXo1O1B9vhg
+      POSTGREST_URL: http://rest:3000
+      PGRST_JWT_SECRET: CMl9X2lC-ane2RR4xDtqPkDAkfQNooTOmMzfBYYcBts
+      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@postgres:5432/postgres
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: stub
+      REGION: stub
+      GLOBAL_S3_BUCKET: stub
+      ENABLE_IMAGE_TRANSFORMATION: "true"
+      IMGPROXY_URL: http://imgproxy:5001
+    volumes:
+      - ./volumes/storage:/var/lib/storage:z
+    depends_on:
+      rest:
+        condition: service_started
+      imgproxy:
+        condition: service_started
+
+  # Image proxy
+  imgproxy:
+    image: darthsim/imgproxy:v3.8.0
+    container_name: supabase-imgproxy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "imgproxy", "health"]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    environment:
+      IMGPROXY_BIND: ":5001"
+      IMGPROXY_LOCAL_FILESYSTEM_ROOT: /
+      IMGPROXY_USE_ETAG: "true"
+      IMGPROXY_ENABLE_WEBP_DETECTION: "true"
+    volumes:
+      - ./volumes/storage:/var/lib/storage:z
+
+  # Auth service
+  auth:
+    image: supabase/gotrue:v2.172.1
+    container_name: supabase-auth
+    restart: unless-stopped
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:9999/health"]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: https://supabase.vividwalls.blog
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@postgres:5432/postgres
+      GOTRUE_SITE_URL: https://supabase.vividwalls.blog
+      GOTRUE_URI_ALLOW_LIST: "*"
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_SECRET: CMl9X2lC-ane2RR4xDtqPkDAkfQNooTOmMzfBYYcBts
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: "false"
+      GOTRUE_MAILER_AUTOCONFIRM: "false"
+      GOTRUE_SMTP_ADMIN_EMAIL: kingler@vividwalls.co
+      GOTRUE_SMTP_HOST: smtp.gmail.com
+      GOTRUE_SMTP_PORT: 587
+      GOTRUE_SMTP_USER: ${SMTP_USER}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS}
+      GOTRUE_SMTP_SENDER_NAME: VividWalls
+      GOTRUE_MAILER_URLPATHS_INVITE: https://supabase.vividwalls.blog/auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: https://supabase.vividwalls.blog/auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_RECOVERY: https://supabase.vividwalls.blog/auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: https://supabase.vividwalls.blog/auth/v1/verify
+    # depends_on removed - connecting to external postgres container
+
+  # Postgres Meta
+  meta:
+    image: supabase/postgres-meta:v0.84.0
+    container_name: supabase-meta
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'node', '-e', 'require("http").get("http://localhost:8080/health", r=>{if(r.statusCode!==200)process.exit(1);r.resume();r.on("end",()=>process.exit(0))}).on("error",()=>process.exit(1))']
+      timeout: 15s
+      interval: 15s
+      retries: 3
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: postgres
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: postgres
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+    # depends_on removed - connecting to external postgres container
+
+  # Edge Functions
+  edge-functions:
+    image: supabase/edge-runtime:v1.67.4
+    container_name: supabase-edge-functions
+    restart: unless-stopped
+    command: ["start", "--main-service", "/home/deno/main"]
+    environment:
+      JWT_SECRET: CMl9X2lC-ane2RR4xDtqPkDAkfQNooTOmMzfBYYcBts
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzUyNTMwNDEwLCJleHAiOjIwNjc4OTA0MTB9.KjRSD5V2EEB-5_MDxWtpM0nRPq5wqzhJ1zJkCEAdLs0
+      SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3NTI1MzA0MTAsImV4cCI6MjA2Nzg5MDQxMH0.uiXb76KsKu3NAk9BbQIM0zPqelxJX9XTHXo1O1B9vhg
+      VERIFY_JWT: "false"
+    volumes:
+      - ./volumes/functions:/home/deno:z
+
+  # Connection Pooler
+  pooler:
+    image: pgbouncer/pgbouncer:latest
+    container_name: supabase-pooler
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+      - "6543:6543"
+    environment:
+      POOL_MODE: transaction
+      SERVER_RESET_QUERY: DISCARD ALL
+      MAX_CLIENT_CONN: 100
+      DEFAULT_POOL_SIZE: 20
+      RESERVE_POOL_SIZE: 3
+      SERVER_ROUND_ROBIN: 1
+      LOG_CONNECTIONS: 1
+      LOG_DISCONNECTIONS: 1
+      LOG_POOLER_ERRORS: 1
+      APPLICATION_NAME_ADD_HOST: 1
+      DATABASES_HOST: postgres
+      DATABASES_PORT: 5432
+      DATABASES_USER: postgres
+      DATABASES_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASES_DBNAME: postgres
+    volumes:
+      - ./volumes/pooler:/etc/pgbouncer
+    # depends_on:
+    #   db:
+    #     condition: service_healthy
+
+  # Analytics - Simplified configuration without gcloud
+  analytics:
+    image: supabase/logflare:1.12.0
+    container_name: supabase-analytics
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "http://localhost:4000/health"]
+      timeout: 5s
+      interval: 5s
+      retries: 10
+    environment:
+      LOG_LEVEL: warn
+      DB_USERNAME: supabase_admin
+      DB_DATABASE: postgres
+      DB_HOSTNAME: postgres
+      DB_PORT: 5432
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_SCHEMA: _analytics
+      LOGFLARE_NODE_HOST: 127.0.0.1
+      LOGFLARE_API_KEY: your-api-key
+      SINGLE_TENANT: true
+      LOGFLARE_MIN_CLUSTER_SIZE: 1
+      RELEASE_COOKIE: cookie
+      # Disable gcloud requirement
+      LOGFLARE_SINGLE_TENANT: true
+      LOGFLARE_SUPABASE_MODE: true
+      PHX_SERVER: true
+    volumes:
+      - ./gcloud.json:/opt/app/rel/logflare/releases/1.12.0/gcloud.json:ro
+    # depends_on:
+    #   db:
+    #     condition: service_healthy
+
+  # Vector extension
+  vector:
+    image: timberio/vector:0.30.0-alpine
+    container_name: supabase-vector
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "vector", "validate"]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    environment:
+      VECTOR_CONFIG: /etc/vector/vector.yml
+    volumes:
+      - ./config/vector.yml:/etc/vector/vector.yml:ro
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  db_data:
+  storage_data:
+
+# =============================================================================
+# NOTES
+# =============================================================================
+# 1. This service requires the vivid_mas network to be created first
+# 2. All services use dynamic IP addresses on the vivid_mas network
+# 3. Accessible via https://supabase.vividwalls.blog through Caddy reverse proxy
+# 4. Database accessible at localhost:5432 via connection pooler

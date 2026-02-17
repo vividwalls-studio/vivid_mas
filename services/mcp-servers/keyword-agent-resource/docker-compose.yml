@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  keyword-agent-resource:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vividwalls-keyword-agent-resource
+    restart: unless-stopped
+    ports:
+      - "8154:4014"
+    environment:
+      - NODE_ENV=production
+      - PORT=4014
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+    networks:
+      - vivid_mas
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4014/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.vividwalls.service=keyword-agent-resource"
+      - "com.vividwalls.type=mcp-server"
+      - "com.vividwalls.transport=http+sse"
+
+networks:
+  vivid_mas:
+    external: true

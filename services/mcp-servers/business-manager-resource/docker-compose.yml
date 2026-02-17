@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  business-manager-resource:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vividwalls-business-manager-resource
+    restart: unless-stopped
+    ports:
+      - "8115:8115"
+    environment:
+      - NODE_ENV=production
+      - MCP_TRANSPORT=http
+      - HTTP_PORT=8115
+      - HTTP_HOST=0.0.0.0
+      - PORT=8115
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+    networks:
+      - vivid_mas
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8115/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.vividwalls.service=business-manager-resource"
+      - "com.vividwalls.type=mcp-server"
+      - "com.vividwalls.transport=http+sse"
+
+networks:
+  vivid_mas:
+    external: true

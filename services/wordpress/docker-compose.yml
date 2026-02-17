@@ -1,0 +1,79 @@
+version: '3.8'
+
+# CRITICAL: All services must use the vivid_mas network
+networks:
+  default:
+    name: vivid_mas
+    external: true
+
+services:
+  # =============================================================================
+  # WORDPRESS MULTISITE
+  # =============================================================================
+  
+  # MySQL database for WordPress
+  wordpress-mysql:
+    image: mysql:8.0
+    container_name: wordpress-mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${WORDPRESS_DB_PASSWORD:-wordpress}
+      - MYSQL_DATABASE=wordpress
+      - MYSQL_USER=wordpress
+      - MYSQL_PASSWORD=${WORDPRESS_DB_PASSWORD:-wordpress}
+    volumes:
+      - wordpress_db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # WordPress Multisite installation
+  wordpress-multisite:
+    image: wordpress:6.4-php8.2-apache
+    container_name: wordpress-multisite
+    restart: unless-stopped
+    environment:
+      - WORDPRESS_DB_HOST=wordpress-mysql
+      - WORDPRESS_DB_USER=wordpress
+      - WORDPRESS_DB_PASSWORD=wordpress
+      - WORDPRESS_DB_NAME=wordpress
+      # Enable WordPress Multisite with subdirectory installation
+      # WORDPRESS_CONFIG_EXTRA disabled - multisite tables not yet created
+      # Enable after running WordPress multisite setup wizard
+    volumes:
+      - wordpress_data:/var/www/html
+    ports:
+      - "8080:80"
+    depends_on:
+      wordpress-mysql:
+        condition: service_healthy
+        required: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  wordpress_db:
+    # MySQL database storage
+  wordpress_data:
+    # WordPress files and uploads
+
+# =============================================================================
+# NOTES
+# =============================================================================
+# 1. This service requires the vivid_mas network to be created first
+# 2. WordPress is exposed on port 8080 and should be reverse proxied via Caddy
+# 3. Database password defaults to 'wordpress' but should be set via WORDPRESS_DB_PASSWORD env var
+# 4. Multisite is configured for subdirectory installation (not subdomain)
+# 5. Dependencies on external services:
+#    - Caddy reverse proxy for domain access
+#    - May integrate with n8n for automation workflows

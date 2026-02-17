@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  twenty-mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vividwalls-twenty-mcp-server
+    restart: unless-stopped
+    ports:
+      - "4047:4047"
+    environment:
+      - MCP_TRANSPORT=http
+      - NODE_ENV=production
+      - PORT=4047
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+    networks:
+      - vivid_mas
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:4047/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.vividwalls.service=twenty-mcp-server"
+      - "com.vividwalls.type=mcp-server"
+      - "com.vividwalls.transport=http+sse"
+
+networks:
+  vivid_mas:
+    external: true

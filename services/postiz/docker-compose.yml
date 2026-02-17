@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # =============================================================================
+  # POSTIZ - Social Media Management Platform
+  # =============================================================================
+  # Note: Now uses consolidated PostgreSQL instance
+
+  postiz-redis:
+    image: valkey/valkey:8-alpine
+    container_name: postiz-redis
+    restart: unless-stopped
+    volumes:
+      - postiz_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postiz:
+    image: ghcr.io/gitroomhq/postiz-app:latest
+    container_name: postiz
+    restart: unless-stopped
+    environment:
+      # Database configuration - using consolidated PostgreSQL
+      - DATABASE_URL=postgresql://postiz_user:postiz_secure_password_2024@postgres:5432/postiz
+      # Redis configuration
+      - REDIS_URL=redis://postiz-redis:6379
+      # Application configuration
+      - MAIN_URL=https://postiz.vividwalls.blog
+      - FRONTEND_URL=https://postiz.vividwalls.blog
+      - NEXT_PUBLIC_BACKEND_URL=https://postiz.vividwalls.blog/api
+      # Authentication
+      - JWT_SECRET=${POSTIZ_JWT_SECRET:-change_me_jwt_secret}
+      - ENCRYPT_SECRET=${POSTIZ_ENCRYPT_SECRET:-change_me_encrypt_secret}
+      # Upload configuration
+      - UPLOAD_DIRECTORY=/uploads
+      - CLOUDFLARE_ACCOUNT_ID=${POSTIZ_CLOUDFLARE_ACCOUNT_ID:-}
+      - CLOUDFLARE_ACCESS_KEY=${POSTIZ_CLOUDFLARE_ACCESS_KEY:-}
+      - CLOUDFLARE_SECRET_ACCESS_KEY=${POSTIZ_CLOUDFLARE_SECRET_ACCESS_KEY:-}
+      - CLOUDFLARE_BUCKETNAME=${POSTIZ_CLOUDFLARE_BUCKETNAME:-}
+      - CLOUDFLARE_BUCKET_URL=${POSTIZ_CLOUDFLARE_BUCKET_URL:-}
+      - CLOUDFLARE_REGION=${POSTIZ_CLOUDFLARE_REGION:-auto}
+      # Email configuration (optional)
+      - EMAIL_PROVIDER=${POSTIZ_EMAIL_PROVIDER:-}
+      - EMAIL_USER=${POSTIZ_EMAIL_USER:-}
+      - EMAIL_PASSWORD=${POSTIZ_EMAIL_PASSWORD:-}
+      # GitHub OAuth (optional)
+      - GITHUB_CLIENT_ID=${POSTIZ_GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${POSTIZ_GITHUB_CLIENT_SECRET:-}
+      # Google OAuth (optional)
+      - GOOGLE_CLIENT_ID=${POSTIZ_GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${POSTIZ_GOOGLE_CLIENT_SECRET:-}
+      # Analytics
+      - IS_GENERAL=true
+    volumes:
+      - postiz_uploads:/uploads
+    ports:
+      - "5000:5000"
+    depends_on:
+      postiz-redis:
+        condition: service_healthy
+        required: true
+    external_links:
+      - postgres
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  postiz_redis_data:
+  postiz_uploads:
+
+# All services use the vivid_mas network
+networks:
+  default:
+    name: vivid_mas
+    external: true

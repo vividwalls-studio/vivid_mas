@@ -1,0 +1,24 @@
+data_dir: /vector-data-dir
+
+api:
+  enabled: true
+  address: 127.0.0.1:8686
+  playground: false
+
+log_schema:
+  host_key: host
+  message_key: message
+  timestamp_key: timestamp
+
+sources:
+  in:
+    type: vector
+    address: 0.0.0.0:6000
+
+sinks:
+  out:
+    type: console
+    inputs: 
+      - in
+    encoding:
+      codec: json

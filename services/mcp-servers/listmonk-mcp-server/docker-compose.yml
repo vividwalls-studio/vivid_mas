@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  listmonk:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vividwalls-listmonk
+    restart: unless-stopped
+    ports:
+      - "4049:4049"
+    environment:
+      - NODE_ENV=production
+      - MCP_TRANSPORT=http
+      - MCP_HTTP_PORT=8117
+      - MCP_HTTP_HOST=0.0.0.0
+      - PORT=4049
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+      - LISTMONK_URL=http://listmonk:9000
+      - LISTMONK_USERNAME=admin
+      - LISTMONK_PASSWORD=listmonk-password
+    networks:
+      - vivid_mas
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8117/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.vividwalls.service=listmonk"
+      - "com.vividwalls.type=mcp-server"
+      - "com.vividwalls.transport=http+sse"
+
+networks:
+  vivid_mas:
+    external: true

@@ -1,0 +1,28 @@
+version: '3.8'
+
+networks:
+  default:
+    name: vivid_mas
+    external: true
+
+services:
+  mcp-python-runtime:
+    build: .
+    image: mcp-python-runtime:latest
+    container_name: mcp-python-runtime
+    restart: unless-stopped
+    volumes:
+      - ./:/opt/mcp-servers:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+    # This is a runtime container, it doesn't need to stay running
+    command: ["echo", "MCP Python Runtime Ready"]
+    
+  # Service for testing MCP servers
+  mcp-test:
+    image: mcp-python-runtime:latest
+    container_name: mcp-test
+    profiles: ["test"]
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: ["facebook-ads-creator-mcp"]

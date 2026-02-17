@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  facebook-campaign-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vividwalls-facebook-campaign-manager
+    restart: unless-stopped
+    ports:
+      - "8127:8127"
+    environment:
+      - NODE_ENV=production
+      - MCP_TRANSPORT=http
+      - HTTP_PORT=8127
+      - HTTP_HOST=0.0.0.0
+      - PORT=8127
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+      - FACEBOOK_ACCESS_TOKEN=${FACEBOOK_ACCESS_TOKEN:-}
+      - FB_APP_ID=${FB_APP_ID:-}
+      - FB_APP_SECRET=${FB_APP_SECRET:-}
+    env_file:
+      - .env
+    networks:
+      - vivid_mas
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8127/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  vivid_mas:
+    external: true
